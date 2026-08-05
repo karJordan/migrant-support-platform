@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mirgrantsupportplatform", "Mirgrantsupportplatform\Mirgrantsupportplatform.csproj", "{F3747673-0CA9-44CD-8EF4-3A6773EA8499}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MigrantSupportPlatform-API", "MigrantSupportPlatform-API\MigrantSupportPlatform-API.csproj", "{BC0DE0FC-5E79-47E0-B787-787191F3A4C8}"
 EndProject
 Global
@@ -17,18 +15,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{F3747673-0CA9-44CD-8EF4-3A6773EA8499}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F3747673-0CA9-44CD-8EF4-3A6773EA8499}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F3747673-0CA9-44CD-8EF4-3A6773EA8499}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{F3747673-0CA9-44CD-8EF4-3A6773EA8499}.Debug|x64.Build.0 = Debug|Any CPU
-		{F3747673-0CA9-44CD-8EF4-3A6773EA8499}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{F3747673-0CA9-44CD-8EF4-3A6773EA8499}.Debug|x86.Build.0 = Debug|Any CPU
-		{F3747673-0CA9-44CD-8EF4-3A6773EA8499}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F3747673-0CA9-44CD-8EF4-3A6773EA8499}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F3747673-0CA9-44CD-8EF4-3A6773EA8499}.Release|x64.ActiveCfg = Release|Any CPU
-		{F3747673-0CA9-44CD-8EF4-3A6773EA8499}.Release|x64.Build.0 = Release|Any CPU
-		{F3747673-0CA9-44CD-8EF4-3A6773EA8499}.Release|x86.ActiveCfg = Release|Any CPU
-		{F3747673-0CA9-44CD-8EF4-3A6773EA8499}.Release|x86.Build.0 = Release|Any CPU
 		{BC0DE0FC-5E79-47E0-B787-787191F3A4C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{BC0DE0FC-5E79-47E0-B787-787191F3A4C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BC0DE0FC-5E79-47E0-B787-787191F3A4C8}.Debug|x64.ActiveCfg = Debug|Any CPU
