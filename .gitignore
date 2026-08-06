@@ -363,4 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 
 # Local Migration files when building databse with Npgsql
-Migrations/*
+Migrations/*.DS_Store
