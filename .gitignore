@@ -363,4 +363,8 @@ MigrationBackup/
 FodyWeavers.xsd
 
 # Local Migration files when building databse with Npgsql
-Migrations/*.DS_Store
+Migrations/*
+MigrantSupportPlatform-Node/.env
+
+# macOS Finder metadata
+.DS_Store
