@@ -3,6 +3,7 @@ import "./globals.css";
 import { Poppins } from "next/font/google";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
+import MobileNav from "@/components/MobileNav";
 
 const poppins = Poppins({
   weight: ["400", "600"],
@@ -25,6 +26,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <NavBar />
         <main className="flex-1">{children}</main>
         <Footer />
+        <MobileNav />
         </body>
     </html>
   );

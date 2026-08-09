@@ -10,7 +10,7 @@ const navLinks = [
 
 export default function NavBar() {
     return (
-        <nav className="w-full flex items center justify-between px-8 py-4 border-b border-neutral/20 bg-white">
+        <nav className="hidden md:flex w-full items-center justify-between px-8 py-4 border-b border-neutral/20 bg-white">
             <Link href="/" className="text-lg font-semibold text-primary">
                 MigrantHub
             </Link>
