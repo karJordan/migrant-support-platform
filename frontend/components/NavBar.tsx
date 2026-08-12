@@ -30,13 +30,13 @@ export default function NavBar() {
             <div className="flex items-center gap-3">
                 <Link
                     href="/login"
-                    className="px-4 py-2 text-black rounded-lg hover:text-primary transition-colors"
+                    className="px-4 py-2 text-black font-bold rounded-lg hover:text-primary transition-colors"
                 >
                     Login
                 </Link>
                 <Link
                     href="/signup"
-                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/5 transition-colors"
+                    className="px-4 py-2 bg-primary font-bold text-white rounded-lg hover:bg-primary/5 transition-colors"
                 >
                     Sign Up
                 </Link>
