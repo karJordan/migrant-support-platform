@@ -27,13 +27,13 @@ async function handleSubmit(e: React.FormEvent) {
         });
 
         if (!response.ok) {
-            throw new Error("Failed to log in");
+            throw new Error("Could not connect to server");
         }
 
         // Redirect to the home page after successful login
         router.push("/");
     } catch (err) {
-        setError("Could not connect to server");
+        setError("Invalid username or password");
     } finally {
         setLoading(false);
     }
