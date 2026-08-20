@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuth } from "../context/AuthContext";
 
 const navLinks = [
     { label : "Home", href: "/" },
@@ -9,6 +13,15 @@ const navLinks = [
 ];
 
 export default function NavBar() {
+
+    const { user, logout } = useAuth();
+    const router = useRouter();
+
+    function handleLogout() {
+        logout();
+        router.push("/");
+    }
+
     return (
         <nav className="hidden md:flex w-full items-center justify-between px-8 py-4 border-b border-neutral/20 bg-white">
             <Link href="/" className="text-lg font-semibold text-primary">
@@ -28,6 +41,21 @@ export default function NavBar() {
             </div>
 
             <div className="flex items-center gap-3">
+                {user ? (
+                    <>
+                    <Link href="/dashboard" className="text-sm font-medium text-black hover:text-primary transition-colors"
+                    >
+              Dashboard
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 text-primary border border-primary rounded-lg hover:bg-primary/5 transition-colors text-sm"
+            >
+              Log out
+            </button>
+          </>
+        ) : (
+          <>    
                 <Link
                     href="/login"
                     className="px-4 py-2 text-black font-bold rounded-lg hover:text-primary transition-colors"
@@ -40,6 +68,8 @@ export default function NavBar() {
                 >
                     Sign Up
                 </Link>
+            </>
+                )}
             </div>
         </nav>
     );

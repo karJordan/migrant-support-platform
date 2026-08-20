@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useAuth } from "../../context/AuthContext";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
@@ -10,6 +11,7 @@ export default function LoginPage() {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+    const { login } = useAuth();
 
 
 async function handleSubmit(e: React.FormEvent) {
@@ -29,6 +31,8 @@ async function handleSubmit(e: React.FormEvent) {
         if (!response.ok) {
             throw new Error("Failed to log in");
         }
+        const data = await response.json();
+        login(data.token, data.user);
 
         // Redirect to the home page after successful login
         router.push("/");
