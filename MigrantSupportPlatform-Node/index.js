@@ -4,6 +4,7 @@ const cors = require('cors');
 const pool = require("./db");
 const authRoutes = require('./routes/auth');
 const servicesRoutes = require('./routes/services');
+const authenticateToken = require('./middleware/authMiddleware');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -16,6 +17,13 @@ app.use('/api/auth', authRoutes);
 app.get('/api/test', (req, res) => {
     res.json({ message: 'Node API is working!' });
     });
+//temporary route to test authentication middleware
+app.get('/api/protected', authenticateToken, (req, res) => {
+    res.json({
+        message: 'You are authenticated!',
+        user: req.user
+    });
+});
 
 pool.query("SELECT NOW()")
     .then((result) => {
