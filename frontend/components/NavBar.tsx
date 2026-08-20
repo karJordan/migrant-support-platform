@@ -43,7 +43,7 @@ export default function NavBar() {
             <div className="flex items-center gap-3">
                 {user ? (
                     <>
-                    <Link href="/dashboard" className="text-sm font-medium text-black hover:text-primary transition-colors"
+                    <Link href="/admin" className="text-sm font-medium text-black hover:text-primary transition-colors"
                     >
               Dashboard
             </Link>
