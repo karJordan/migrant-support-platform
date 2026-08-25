@@ -3,12 +3,14 @@ const express = require('express');
 const cors = require('cors');
 const pool = require("./db");
 const authRoutes = require('./routes/auth');
+const servicesRoutes = require('./routes/services');
 const authenticateToken = require('./middleware/authMiddleware');
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 
 app.use(cors({origin: 'http://localhost:3000'}));
+app.use('/api/services', servicesRoutes);
 app.use(express.json());
 app.use('/api/auth', authRoutes);
 
