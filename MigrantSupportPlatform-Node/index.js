@@ -31,7 +31,12 @@ pool.query("SELECT NOW()")
     })
     .catch((error) => {
         console.error("PostgreSQL connection failed:", error.message);
-    });    
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+    });
+
+if(require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+        });
+    }
+
+module.exports = app; // Export the app for testing
