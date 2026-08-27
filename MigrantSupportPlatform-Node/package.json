@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "nodemon index.js",
     "migrate": "node-pg-migrate up -m database/migrations",
-    "test": "jest"
+    "test": "jest",
+    "seed": "node database/seeds/seedServices.js"
   },
   "keywords": [],
   "author": "",
