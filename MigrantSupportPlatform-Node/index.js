@@ -4,7 +4,9 @@ const cors = require('cors');
 const pool = require("./db");
 const authRoutes = require('./routes/auth');
 const servicesRoutes = require('./routes/services');
+const jobsRoutes = require('./routes/jobs');
 const authenticateToken = require('./middleware/authMiddleware');
+
 
 const app = express();
 const PORT = process.env.PORT || 4000;
