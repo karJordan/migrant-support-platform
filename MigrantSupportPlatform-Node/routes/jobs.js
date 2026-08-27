@@ -27,7 +27,7 @@ router.post('/', authenticateToken, async (req, res) => {
         const status =req.user.role === 'admin' ? 'approved' : 'pending';
 
         const result = await pool.query(
-            'INSERT INTO jobs (title, company, location, employment_type, description, status, created_by)VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+            'INSERT INTO jobs (title, company, location, employment_type, description, status, created_by) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
             [title, company, location, employment_type, description, status, req.user.id]
         );
 
