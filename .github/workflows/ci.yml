@@ -42,7 +42,7 @@ jobs:
           cache-dependency-path: MigrantSupportPlatform-Node/package-lock.json
 
       - name: Install backend dependencies
-        run: pip install -r requirements.txt
+        run: npm ci
         working-directory: ./MigrantSupportPlatform-Node
 
       - name: Run backend linter
