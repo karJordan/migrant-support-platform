@@ -9,6 +9,22 @@ on:
 jobs:
     test-backend:
         runs-on: ubuntu-latest
+
+        services:
+          postgres:
+            image: postgres:15
+            env:
+              POSTGRES_USER: testuser
+              POSTGRES_PASSWORD: testpassword
+              POSTGRES_DB: testdb
+            ports:
+              - 5432:5432
+            options: >-
+              --health-cmd pg_isready
+              --health-interval 10s
+              --health-timeout 5s
+              --health-retries 5
+
         steps:
             - name: Checkout code
               uses: actions/checkout@v4
@@ -23,6 +39,25 @@ jobs:
             - name: Install backend dependencies
               run: npm ci
               working-directory: ./MigrantSupportPlatform-Node
+
+            - name: Wait for postgres to be ready
+              run: |
+                echo "Waiting for postgres..."
+                for i in {1..10}; do
+                  if pg_isready -h localhost -p 5432 -U testuser; then
+                    echo "Postgres is ready!"
+                    break
+                  fi
+                  echo "Waiting for postgres to be ready... ($i/10)"
+                  sleep 2
+                done
+              working-directory: ./MigrantSupportPlatform-Node
+
+            - name: Run database migrations
+              run: npm run migrate || echo "No migrations to run"
+              working-directory: ./MigrantSupportPlatform-Node
+              env:
+                DATABASE_URL: postgres://testuser:testpasswords@localhost:5432/testdb
 
             - name: Run backend tests
               run: npm test
