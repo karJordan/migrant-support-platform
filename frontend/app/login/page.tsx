@@ -36,7 +36,7 @@ async function handleSubmit(e: React.FormEvent) {
 
         // Redirect to the home page after successful login
         router.push("/");
-    } catch (err) {
+    } catch {
         setError("Invalid username or password");
     } finally {
         setLoading(false);
@@ -75,7 +75,7 @@ return (
             </button>
         </form>
         <p className="mt-4 text-sm text-neutral">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link href="/signup" className="text-primary font-semibold">
                 Sign Up
             </Link>

@@ -15,7 +15,6 @@ export default function JobsPage() {
     const [jobs, setJobs] = useState<Job[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [search, setSearch] = useState("");
 
     useEffect(() => {
         async function fetchJobs() {
@@ -24,7 +23,7 @@ export default function JobsPage() {
             if (!res.ok) throw new Error("Failed to fetch jobs");
             const data = await res.json();
             setJobs(data);
-          } catch (err) {
+          } catch {
             setError("Could not load jobs");
           } finally {
             setLoading(false);
