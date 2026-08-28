@@ -62,4 +62,13 @@ jobs:
             - name: Run backend tests
               run: npm test
               working-directory: ./MigrantSupportPlatform-Node
+              env:
+                DATABASE_URL: postgres://testuser:testpassword@localhost:5432/testdb
+                NODE_ENV: test
+                JWT_SECRET: testsecret
+                PGHOST: localhost
+                PGUSER: testuser
+                PGPASSWORD: testpassword
+                PGDATABASE: testdb
+                PGPORT: 5432
 
