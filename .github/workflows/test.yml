@@ -54,11 +54,22 @@ jobs:
               working-directory: ./MigrantSupportPlatform-Node
 
             - name: Run database migrations
-              run: npm run migrate || echo "No migrations to run"
+              run: npm run migrate
               working-directory: ./MigrantSupportPlatform-Node
               env:
                 DATABASE_URL: postgres://testuser:testpasswords@localhost:5432/testdb
 
+            - name: Debug - check tables after migration
+              run: |
+                PGPASSWORD=testpassword psql -h localhost -U testuser -d testdb -c "\dt"
+              working-directory: ./MigrantSupportPlatform-Node
+              env:
+                PGPASSWORD: testpassword
+                PGHOST: localhost
+                PGUSER: testuser
+                PGDATABASE: testdb
+                PGPORT: 5432
+            
             - name: Run backend tests
               run: npm test
               working-directory: ./MigrantSupportPlatform-Node
