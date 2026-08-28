@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
+import { Handshake } from "lucide-react";
 
 const navLinks = [
     { label : "Home", href: "/" },
@@ -24,8 +25,11 @@ export default function NavBar() {
 
     return (
         <nav className="hidden md:flex w-full items-center justify-between px-8 py-4 border-b border-neutral/20 bg-white">
-            <Link href="/" className="text-lg font-semibold text-primary">
-                MigrantHub
+            <Link href="/" className="flex items-center gap-2">
+                <div className="w-8 h-8 flex items-center justify-center bg-primary rounded-lg flex-shrink-0">
+                    <Handshake size={18} className="text-white" />
+                </div>
+                <span className="text-xl font-semibold text-primary">MigrantHub</span>
             </Link>
 
             <div className="flex items-center gap-6">
