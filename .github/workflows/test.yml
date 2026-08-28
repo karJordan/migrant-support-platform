@@ -1,85 +1,99 @@
 name: Test
 
-on: 
+on:
   push:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
 
 jobs:
-    test-backend:
-        runs-on: ubuntu-latest
+  test-backend:
+    runs-on: ubuntu-latest
 
-        services:
-          postgres:
-            image: postgres:15
-            env:
-              POSTGRES_USER: testuser
-              POSTGRES_PASSWORD: testpassword
-              POSTGRES_DB: testdb
-            ports:
-              - 5432:5432
-            options: >-
-              --health-cmd pg_isready
-              --health-interval 10s
-              --health-timeout 5s
-              --health-retries 5
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-            - name: Set up Node.js
-              uses: actions/setup-node@v4
-              with:
-                node-version: '22'
-                cache: 'npm'
-                cache-dependency-path: MigrantSupportPlatform-Node/package-lock.json
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: MigrantSupportPlatform-Node/package-lock.json
 
-            - name: Install backend dependencies
-              run: npm ci
-              working-directory: ./MigrantSupportPlatform-Node
+      - name: Install backend dependencies
+        run: npm ci
+        working-directory: ./MigrantSupportPlatform-Node
 
-            - name: Wait for postgres to be ready
-              run: |
-                echo "Waiting for postgres..."
-                for i in {1..10}; do
-                  if pg_isready -h localhost -p 5432 -U testuser; then
-                    echo "Postgres is ready!"
-                    break
-                  fi
-                  echo "Waiting for postgres to be ready... ($i/10)"
-                  sleep 2
-                done
-              working-directory: ./MigrantSupportPlatform-Node
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          echo "Waiting for PostgreSQL to be ready..."
+          for i in {1..10}; do
+            if pg_isready -h localhost -p 5432 -U testuser; then
+              echo "PostgreSQL is ready!"
+              break
+            fi
+            echo "Waiting... (attempt $i)"
+            sleep 2
+          done
 
-            - name: Run database migrations
-              run: npm run migrate
-              working-directory: ./MigrantSupportPlatform-Node
-              env:
-                DATABASE_URL: postgres://testuser:testpasswords@localhost:5432/testdb
+      - name: Test PostgreSQL connection
+        run: |
+          PGPASSWORD=testpassword psql -h localhost -U testuser -d testdb -c "SELECT 1"
+        working-directory: ./MigrantSupportPlatform-Node
+        env:
+          PGPASSWORD: testpassword
+          PGHOST: localhost
+          PGUSER: testuser
+          PGDATABASE: testdb
+          PGPORT: 5432
 
-            - name: Debug - check tables after migration
-              run: |
-                PGPASSWORD=testpassword psql -h localhost -U testuser -d testdb -c "\dt"
-              working-directory: ./MigrantSupportPlatform-Node
-              env:
-                PGPASSWORD: testpassword
-                PGHOST: localhost
-                PGUSER: testuser
-                PGDATABASE: testdb
-                PGPORT: 5432
-            
-            - name: Run backend tests
-              run: npm test
-              working-directory: ./MigrantSupportPlatform-Node
-              env:
-                DATABASE_URL: postgres://testuser:testpassword@localhost:5432/testdb
-                NODE_ENV: test
-                JWT_SECRET: testsecret
-                PGHOST: localhost
-                PGUSER: testuser
-                PGPASSWORD: testpassword
-                PGDATABASE: testdb
-                PGPORT: 5432
+      - name: Run database migrations
+        run: npm run migrate
+        working-directory: ./MigrantSupportPlatform-Node
+        env:
+          DATABASE_URL: postgres://testuser:testpassword@localhost:5432/testdb
+          PGHOST: localhost
+          PGUSER: testuser
+          PGPASSWORD: testpassword
+          PGDATABASE: testdb
+          PGPORT: 5432
 
+      - name: Debug - Check tables
+        run: |
+          PGPASSWORD=testpassword psql -h localhost -U testuser -d testdb -c "\dt"
+        working-directory: ./MigrantSupportPlatform-Node
+        env:
+          PGPASSWORD: testpassword
+          PGHOST: localhost
+          PGUSER: testuser
+          PGDATABASE: testdb
+          PGPORT: 5432
+
+      - name: Run tests
+        run: npm test
+        working-directory: ./MigrantSupportPlatform-Node
+        env:
+          DATABASE_URL: postgres://testuser:testpassword@localhost:5432/testdb
+          NODE_ENV: test
+          JWT_SECRET: test-secret-key
+          PGHOST: localhost
+          PGUSER: testuser
+          PGPASSWORD: testpassword
+          PGDATABASE: testdb
+          PGPORT: 5432
