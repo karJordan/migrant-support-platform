@@ -5,6 +5,7 @@ const pool = require("./db");
 const authRoutes = require('./routes/auth');
 const servicesRoutes = require('./routes/services');
 const jobsRoutes = require('./routes/jobs');
+const communityRoutes = require('./routes/community');
 const authenticateToken = require('./middleware/authMiddleware');
 
 
@@ -17,6 +18,7 @@ app.use(express.json());
 app.use('/api/services', servicesRoutes);
 app.use('/api/auth', authRoutes);
 app.use("/api/jobs", jobsRoutes);
+app.use("/api/community", communityRoutes);
 
 app.get('/api/test', (req, res) => {
     res.json({ message: 'Node API is working!' });
