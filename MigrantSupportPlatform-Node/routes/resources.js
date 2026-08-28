@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
+const authenticateToken = require('../middleware/authMiddleware');
 
 // GET /api/resources - Get all resources
 router.get('/', async (req, res) => {
@@ -13,8 +14,8 @@ router.get('/', async (req, res) => {
     }
 });
 
-// POST /api/resources - Create a new resource
-router.post('/', async (req, res) => {
+// POST /api/resources - Create a new resource (requires login)
+router.post('/', authenticateToken, async (req, res) => {
     const { title, description, link } = req.body;
 
     if (!title || !link) {
@@ -22,9 +23,12 @@ router.post('/', async (req, res) => {
     }
 
     try {
+        //Admins automatically get approved, users go to pending
+        const status = req.user.role === 'admin' ? 'approved' : 'pending';
+
         const result = await pool.query(
-            'INSERT INTO resources (title, description, link, category, created_by) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-            [title, description, link, category, req.user.id]
+            'INSERT INTO resources (title, description, link, category, status, created_by) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+            [title, description, link, category, status, req.user.id]
         );
 
         res.status(201).json(result.rows[0]);
