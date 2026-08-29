@@ -5,10 +5,9 @@ const pool = require("./db");
 const authRoutes = require('./routes/auth');
 const servicesRoutes = require('./routes/services');
 const jobsRoutes = require('./routes/jobs');
+const communityRoutes = require('./routes/community');
 const resourcesRoutes = require('./routes/resources');
 const authenticateToken = require('./middleware/authMiddleware');
-
-
 const app = express();
 const PORT = process.env.PORT || 4000;
 
@@ -18,6 +17,7 @@ app.use(express.json());
 app.use('/api/services', servicesRoutes);
 app.use('/api/auth', authRoutes);
 app.use("/api/jobs", jobsRoutes);
+app.use("/api/community", communityRoutes);
 app.use("/api/resources", resourcesRoutes);
 
 app.get('/api/test', (req, res) => {
