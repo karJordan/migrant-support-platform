@@ -18,8 +18,8 @@ router.get('/', async (req, res) => {
 router.post('/', authenticateToken, async (req, res) => {
     const { title, description, link, category } = req.body;
 
-    if (!title || !link) {
-        return res.status(400).json({ message: 'Title and Link are required' });
+    if (!title || !link || !category) {
+        return res.status(400).json({ message: 'Title, Link, and Category are required' });
     }
 
     try {
