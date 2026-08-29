@@ -23,12 +23,11 @@ type CommunityGroup = {
 export default function CommunityPage() {
     const [event, setEvent] = useState<CommunityEvent[]>([]);
     const [group, setGroup] = useState<CommunityGroup[]>([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        async function fetchEvents(e: React.FormEvent) {
-            e.preventDefault();
+        async function fetchEvents() {
             setError("");
             try {
                 const res = await fetch("http://localhost:4000/api/community/events", {
@@ -49,8 +48,7 @@ export default function CommunityPage() {
             }
         }
 
-        async function fetchGroups(e: React.FormEvent) {
-            e.preventDefault();
+        async function fetchGroups() {
             setError("");
             try {
                 const res = await fetch("http://localhost:4000/api/community/groups", {
@@ -70,6 +68,8 @@ export default function CommunityPage() {
                 setLoading(false);
             }
         }
+        fetchEvents();
+        fetchGroups();
     }, []);
 
     return (
@@ -82,6 +82,7 @@ export default function CommunityPage() {
             <div>
                 <h2 className="text-3xl font-semibold">Upcoming Events</h2>
                 {loading && (
+                    
                     <p className="mt-8 text-neutral">Loading communities...</p>
                 )}
 
