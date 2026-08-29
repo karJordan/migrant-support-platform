@@ -1,8 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
 
 export const dynamic = 'force-dynamic';
 interface User {
@@ -11,14 +9,10 @@ interface User {
     email: string;
 }
 
-
-
 export default function Admin() {
     const [error, setError] = useState<string | null>(null);
     const [users, setUsers] = useState<User[]>([]);
-    const [loading, setLoading] = useState(false);
-
-    const router = useRouter();
+    const [, setLoading] = useState(false);
 
     async function getUsers(e: React.FormEvent) {
         e.preventDefault();
@@ -37,7 +31,7 @@ export default function Admin() {
             }
 
             setUsers(await response.json());
-        } catch (err) {
+        } catch {
             setError("Error fetching users");
         } finally {
             setLoading(false);

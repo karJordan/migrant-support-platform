@@ -8,8 +8,8 @@ export default function SignUpPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [, setError] = useState<string | null>(null);
+  const [, setLoading] = useState(false);
   const router = useRouter();
 
   async function handleSubmit (e: React.FormEvent) {
@@ -32,7 +32,7 @@ export default function SignUpPage() {
 
     // Redirect to the login page or home page after successful signup
     router.push("/login");
-  } catch (err) {
+  } catch {
     setError("Could not connect to server");
   } finally {
     setLoading(false);

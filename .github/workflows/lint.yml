@@ -1,0 +1,53 @@
+name: Lint
+
+on: 
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  lint-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: ./frontend
+
+      - name: Run frontend linter
+        run: npm run lint
+        working-directory: ./frontend
+    
+  lint-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: MigrantSupportPlatform-Node/package-lock.json
+
+      - name: Install backend dependencies
+        run: npm ci
+        working-directory: ./MigrantSupportPlatform-Node
+
+      - name: Run backend linter
+        run: npm run lint
+        working-directory: ./MigrantSupportPlatform-Node
+
+
+    
