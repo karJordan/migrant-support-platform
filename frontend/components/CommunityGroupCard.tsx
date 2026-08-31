@@ -1,5 +1,3 @@
-import { MapPin } from "lucide-react";
-
 type CommunityEventProps = {
     name: string;
     category: string;
