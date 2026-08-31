@@ -129,6 +129,11 @@ export default function JobsForm() {
             >
                 Submit Job
             </button>
+                        <p className="text-neutral mt-1">
+                {user?.role === "admin"
+                    ? "This service will be published immediately."
+                    : "This service will be submitted for admin approval."}
+            </p>
 
             {message && (
                 <p className="text-sm text-neutral">
