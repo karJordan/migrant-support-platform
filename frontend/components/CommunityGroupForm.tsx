@@ -106,8 +106,8 @@ export default function CommunityGroupForm() {
             </button>
             <p className="text-neutral mt-1">
                 {user?.role === "admin"
-                    ? "This service will be published immediately."
-                    : "This service will be submitted for admin approval."}
+                    ? "This group will be published immediately."
+                    : "This group will be submitted for admin approval."}
             </p>
             {message && (
                 <p className="text-sm text-neutral">
