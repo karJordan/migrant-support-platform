@@ -35,6 +35,40 @@ async function seedServices() {
                 WHERE name = 'Community Housing Support'
             );
         `);
+        await pool.query(`
+    INSERT INTO services
+    (name, description, category, location, phone, website, status, created_by)
+    SELECT
+        'New Zealand Police',
+        'Information about reporting crime, community safety, and contacting New Zealand Police.',
+        'Emergency & Safety',
+        'Nationwide',
+        '105',
+        'https://www.police.govt.nz',
+        'approved',
+        NULL
+    WHERE NOT EXISTS (
+        SELECT 1 FROM services
+        WHERE name = 'New Zealand Police'
+    );
+`);
+        await pool.query(`
+    INSERT INTO services
+    (name, description, category, location, phone, website, status, created_by)
+    SELECT
+        'New Zealand Driver Licensing',
+        'Information about driver licences, converting overseas licences, tests, and driving requirements in New Zealand.',
+        'Transport',
+        'Nationwide',
+        NULL,
+        'https://www.nzta.govt.nz/driver-licences/',
+        'approved',
+        NULL
+    WHERE NOT EXISTS (
+        SELECT 1 FROM services
+        WHERE name = 'New Zealand Driver Licensing'
+    );
+`);
 
         console.log('Service seed complete.');
     } catch (error) {
