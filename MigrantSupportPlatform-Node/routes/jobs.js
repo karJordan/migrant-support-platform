@@ -3,10 +3,13 @@ const router = express.Router();
 const pool = require('../db');
 const authenticateToken = require('../middleware/authMiddleware');
 
-// GET /api/jobs - Get all jobs
+// GET /api/jobs - Get approved jobs
 router.get('/', async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM jobs ORDER BY id ASC');
+        const result = await pool.query(
+            "SELECT * FROM jobs WHERE status = 'approved' ORDER BY id ASC"
+        );
+
         res.status(200).json(result.rows);
     } catch (error) {
         console.error('Database query error:', error.message);
@@ -24,7 +27,7 @@ router.post('/', authenticateToken, async (req, res) => {
 
     try {
         //Admins get automatically approved, users go to pending
-        const status =req.user.role === 'admin' ? 'approved' : 'pending';
+        const status = req.user.role === 'admin' ? 'approved' : 'pending';
 
         const result = await pool.query(
             'INSERT INTO jobs (title, company, location, employment_type, description, status, created_by) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',

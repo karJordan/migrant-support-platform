@@ -1,6 +1,11 @@
 "use client";
 
+import CommunityGroupCard from "@/components/CommunityGroupCard";
+import CommunityEventCard from "@/components/CommunityEventCard";
 import { useState, useEffect } from "react";
+import Modal from "@/components/Modal";
+import CommunityGroupForm from "@/components/CommunityGroupForm";
+import CommunityEventForm from "@/components/CommunityEventForm";
 
 type CommunityEvent = {
     id: number;
@@ -21,14 +26,21 @@ type CommunityGroup = {
 }
 
 export default function CommunityPage() {
+
     const [event, setEvent] = useState<CommunityEvent[]>([]);
     const [group, setGroup] = useState<CommunityGroup[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [eventsLoading, setEventsLoading] = useState(true);
+    const [groupsLoading, setGroupsLoading] = useState(true);
+
+    const [eventsError, setEventsError] = useState<string | null>(null);
+    const [groupsError, setGroupsError] = useState<string | null>(null);
+
+    const [showGroupForm, setShowGroupForm] = useState(false);
+    const [showEventForm, setShowEventForm] = useState(false);
 
     useEffect(() => {
         async function fetchEvents() {
-            setError("");
+            setEventsError("");
             try {
                 const res = await fetch("http://localhost:4000/api/community/events", {
                     method: "GET",
@@ -42,14 +54,14 @@ export default function CommunityPage() {
                 const data = await res.json();
                 setEvent(data);
             } catch {
-                setError("Could not load events");
+                setEventsError("Could not load events");
             } finally {
-                setLoading(false);
+                setEventsLoading(false);
             }
         }
 
         async function fetchGroups() {
-            setError("");
+            setGroupsError("");
             try {
                 const res = await fetch("http://localhost:4000/api/community/groups", {
                     method: "GET",
@@ -63,9 +75,9 @@ export default function CommunityPage() {
                 const data = await res.json();
                 setGroup(data);
             } catch {
-                setError("Could not load groups");
+                setGroupsError("Could not load groups");
             } finally {
-                setLoading(false);
+                setGroupsLoading(false);
             }
         }
         fetchEvents();
@@ -81,62 +93,92 @@ export default function CommunityPage() {
             </p>
             <div>
                 <h2 className="text-3xl font-semibold">Upcoming Events</h2>
-                {loading && (
-                    
+                <div className="flex gap-3 mt-6">
+                    <button
+                        onClick={() => setShowEventForm(true)}
+                        className="bg-primary text-white px-4 py-2 rounded-lg"
+                    >
+                        Add Community Event
+                    </button>
+                </div>
+
+                {eventsLoading && (
+
                     <p className="mt-8 text-neutral">Loading communities...</p>
                 )}
 
-                {error && (
-                    <p className="mt-8">{error}</p>
+                {eventsError && (
+                    <p className="mt-8">{eventsError}</p>
                 )}
 
-                {!loading && !error && (
+                {!eventsLoading && !eventsError && (
                     <>
-                    {event.length === 0 ? (
-                        <p className="mt-8 text-neutral">No events found.</p>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-                            {event.map((e) => (
-                                <div key={e.id} className="border border-neutral/20 rounded-xl p-4 bg-white">
-                                    <h2 className="font-semibold">{e.title}</h2>
-                                    <p className="text-sm text-neutral">{e.location}</p>
-                                    <p className="text-sm text-neutral mt-1">{e.event_date} at {e.event_time}</p>
-                                    <p className="text-sm text-neutral mt-2">{e.description}</p>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                        {event.length === 0 ? (
+                            <p className="mt-8 text-neutral">No events found.</p>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                                {event.map((e) => (
+                                    <CommunityEventCard
+                                        key={e.id}
+                                        title={e.title}
+                                        location={e.location}
+                                        eventDate={e.event_date}
+                                        eventTime={e.event_time}
+                                        description={e.description}
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </>
-                ) }
+                )}
             </div>
-            <div>
+            <div className="mt-12">
                 <h2 className="text-3xl font-semibold">Community Groups</h2>
-                {loading && (
+                <div className="flex gap-3 mt-6">
+                    <button
+                        onClick={() => setShowGroupForm(true)}
+                        className="bg-primary text-white px-4 py-2 rounded-lg"
+                    >
+                        Add Community Group
+                    </button>
+                </div>
+                {groupsLoading && (
                     <p className="mt-8 text-neutral">Loading communities...</p>
                 )}
 
-                {error && (
-                    <p className="mt-8">{error}</p>
+                {groupsError && (
+                    <p className="mt-8">{groupsError}</p>
                 )}
 
-                {!loading && !error && (
+                {!groupsLoading && !groupsError && (
                     <>
-                    {group.length === 0 ? (
-                        <p className="mt-8 text-neutral">No groups found.</p>
-                    ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-                            {group.map((g) => (
-                                <div key={g.id} className="border border-neutral/20 rounded-xl p-4 bg-white">
-                                    <h2 className="font-semibold">{g.name}</h2>
-                                    <p className="text-sm text-neutral">{g.category}</p>
-                                    <p className="text-sm text-neutral mt-1">{g.description}</p>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                        {group.length === 0 ? (
+                            <p className="mt-8 text-neutral">No groups found.</p>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                                {group.map((g) => (
+                                    <CommunityGroupCard
+                                        key={g.id}
+                                        name={g.name}
+                                        category={g.category}
+                                        description={g.description}
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </>
-                ) }
+                )}
             </div>
+            {showGroupForm && (
+                <Modal onClose={() => setShowGroupForm(false)}>
+                    <CommunityGroupForm />
+                </Modal>
+            )}
+            {showEventForm && (
+                <Modal onClose={() => setShowEventForm(false)}>
+                    <CommunityEventForm />
+                </Modal>
+            )}
         </div>
     );
 }

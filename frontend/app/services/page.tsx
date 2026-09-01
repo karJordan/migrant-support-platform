@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import ServiceCard from "@/components/ServicesCard";
+import Modal from "@/components/Modal";
+import ServiceForm from "@/components/ServiceForm";
 
 type Service = {
     id: number;
@@ -16,6 +18,7 @@ export default function ServicesPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("All");
+    const [showServiceForm, setShowServiceForm] = useState(false);
 
     useEffect(() => {
         async function fetchServices() {
@@ -53,6 +56,12 @@ export default function ServicesPage() {
                 Find services and support available in your community.
             </p>
             <div className="flex flex-wrap gap-3 mt-6">
+                            <button
+                onClick={() => setShowServiceForm(true)}
+                className="bg-primary text-white px-4 py-2 rounded-lg"
+            >
+                Add New Service
+            </button>
                 {categories.map((category) => (
                     <button
                         key={category}
@@ -98,6 +107,11 @@ export default function ServicesPage() {
                         </div>
                     )}
                 </>
+            )}
+            {showServiceForm && (
+                <Modal onClose={() => setShowServiceForm(false)}>
+                    <ServiceForm />
+                </Modal>
             )}
         </div>
     );

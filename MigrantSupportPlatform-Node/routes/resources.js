@@ -3,10 +3,13 @@ const router = express.Router();
 const pool = require('../db');
 const authenticateToken = require('../middleware/authMiddleware');
 
-// GET /api/resources - Get all resources
+// GET /api/resources - Get approved resources
 router.get('/', async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM resources ORDER BY id ASC');
+        const result = await pool.query(
+            "SELECT * FROM resources WHERE status = 'approved' ORDER BY id ASC"
+        );
+
         res.status(200).json(result.rows);
     } catch (error) {
         console.error('Database query error:', error.message);
