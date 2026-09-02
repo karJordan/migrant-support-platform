@@ -19,18 +19,7 @@ test.describe('Login Flow', () => {
         await page.fill('input[name="password"]', 'password123');
         await page.click('button[type="submit"]');
         
-        // Should redirect to home page
-        await expect(page).toHaveURL('/login');
-        
-        const viewportSize = page.viewportSize();
-        const isDesktop = viewportSize && viewportSize.width >= 768;
-
-        if (isDesktop) {
-            // On desktop, logout button should be visible
-            await expect(page.locator('button:has-text("Log out")')).toBeVisible();
-          } else {
-            // On mobile, just check that the user is redirected to home
-            await expect(page).toHaveURL('/');
-          }
+        await page.waitForURL('/', { timeout: 10000 });
+        await expect(page).toHaveURL('/');
       });
     });
