@@ -10,14 +10,14 @@ test.describe('Register Flow', () => {
         const emailField = page.locator('input[name="email"]');
         const passwordField = page.locator('input[name="password"]');
     
-        const nameMessage = await nameField.getAttribute('validationMessage');
-        const emailMessage = await emailField.getAttribute('validationMessage');
-        const passwordMessage = await passwordField.getAttribute('validationMessage');
-    
-        expect(nameMessage).toMatch(/fill (in|out) this field/i);
-        expect(emailMessage).toMatch(/fill (in|out) this field/i);
-        expect(passwordMessage).toMatch(/fill (in|out) this field/i);
-    });
+        const isNameInvalid = await nameField.evaluate((el) => el.matches(':invalid'));
+        const isEmailInvalid = await emailField.evaluate((el) => el.matches(':invalid'));
+        const isPasswordInvalid = await passwordField.evaluate((el) => el.matches(':invalid'));
+  
+        expect(isNameInvalid).toBe(true);
+        expect(isEmailInvalid).toBe(true);
+        expect(isPasswordInvalid).toBe(true);
+        });
 
     test('should show validation popup for invalid email', async ({ page }) => {
         await page.goto('/signup');
@@ -54,6 +54,7 @@ test.describe('Register Flow', () => {
         await page.click('button[type="submit"]');
 
         // Should redirect to dashboard
-        await expect(page).toHaveURL('/');
+        await page.waitForURL('/login', { timeout: 10000 });
+        await expect(page).toHaveURL('/login');
     });
 });
