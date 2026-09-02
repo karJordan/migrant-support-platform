@@ -16,13 +16,21 @@ async function seedUsers() {
         ];
 
         for (const user of users) {
-            await pool.query(`
-                INSERT INTO users (name, email, password, role)
-                SELECT $1, $2, $3, $4
-                WHERE NOT EXISTS (
-                    SELECT 1 FROM users WHERE email = $2
-                );
-            `, [user.name, user.email, user.password, user.role]);
+        
+            const existing = await pool.query(
+                'SELECT id FROM users WHERE email = $1',
+                [user.email]
+            );
+            
+            if (existing.rows.length === 0) {
+                await pool.query(`
+                    INSERT INTO users (name, email, password, role)
+                    VALUES ($1, $2, $3, $4)
+                `, [user.name, user.email, user.password, user.role]);
+                console.log(`✅ Created user: ${user.email}`);
+            } else {
+                console.log(`⏭️ User already exists: ${user.email}`);
+            }
         }
 
         console.log('Users seeded successfully.');

@@ -10,11 +10,14 @@ test.describe('Register Flow', () => {
         const emailField = page.locator('input[name="email"]');
         const passwordField = page.locator('input[name="password"]');
     
-        // Browser validation makes fields invalid
-        await expect(nameField).toHaveJSProperty('validationMessage', 'Please fill out this field.');
-        await expect(emailField).toHaveJSProperty('validationMessage', 'Please fill out this field.');
-        await expect(passwordField).toHaveJSProperty('validationMessage', 'Please fill out this field.');
-  });
+        const nameMessage = await nameField.getAttribute('validationMessage');
+        const emailMessage = await emailField.getAttribute('validationMessage');
+        const passwordMessage = await passwordField.getAttribute('validationMessage');
+    
+        expect(nameMessage).toMatch(/fill (in|out) this field/i);
+        expect(emailMessage).toMatch(/fill (in|out) this field/i);
+        expect(passwordMessage).toMatch(/fill (in|out) this field/i);
+    });
 
     test('should show validation popup for invalid email', async ({ page }) => {
         await page.goto('/signup');

@@ -144,7 +144,9 @@ jobs:
         PGPORT: 5432
 
     - name: Run backend seeds
-      run: npm run seed
+      run: |
+        npm run seed
+        npm run seed:users
       working-directory: ./MigrantSupportPlatform-Node
       env:
         DATABASE_URL: postgres://testuser:testpassword@localhost:5432/testdb
