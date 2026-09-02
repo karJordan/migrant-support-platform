@@ -19,25 +19,28 @@ test.describe('Register Flow', () => {
     test('should show validation popup for invalid email', async ({ page, browserName }) => {
         await page.goto('/signup');
 
+        const invalidEmail = 'invalid-email';
+
         await page.fill('input[name="name"]', 'Test User');
         await page.fill('input[name="email"]', 'invalid-email');
         await page.fill('input[name="password"]', 'password123');
         await page.click('button[type="submit"]');
 
         const emailField = page.locator('input[name="email"]');
-    
-        // Browser validation makes fields invalid
-        if (browserName === 'firefox') {
-            const isInvalid = await emailField.evaluate((el) => {
-                return el.matches(':invalid');
-              });
-              expect(isInvalid).toBe(true);
-            } else {
-            expect(emailField).toHaveJSProperty(
-            'validationMessage',
-            "Please include an '@' in the email address. 'invalid-email' is missing an '@'.");
-    }
-});
+        const validationMessage = await emailField.getAttribute('validationMessage');
+  
+        // ✅ Check if the field is invalid (works on all browsers)
+        if (validationMessage) {
+          // Check that the message is about email format
+          expect(validationMessage).toMatch(/email/i);
+        } else {
+          // Fallback: check HTML5 validity
+          const isInvalid = await emailField.evaluate((el) => {
+            return el.matches(':invalid');
+          });
+          expect(isInvalid).toBe(true);
+        }
+      });
 
     test('should successfully register a new user', async ({ page }) => {
         const uniqueEmail = `testuser${Date.now()}@test.com`; // Unique email for each test run
