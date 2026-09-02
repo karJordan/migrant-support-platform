@@ -51,6 +51,6 @@ test.describe('Register Flow', () => {
         await page.click('button[type="submit"]');
 
         // Should redirect to dashboard
-        await expect(page).toHaveURL('/login');
+        await expect(page).toHaveURL('/');
     });
 });
