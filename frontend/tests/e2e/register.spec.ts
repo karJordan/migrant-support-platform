@@ -16,10 +16,8 @@ test.describe('Register Flow', () => {
         await expect(passwordField).toHaveJSProperty('validationMessage', 'Please fill out this field.');
   });
 
-    test('should show validation popup for invalid email', async ({ page, browserName }) => {
+    test('should show validation popup for invalid email', async ({ page }) => {
         await page.goto('/signup');
-
-        const invalidEmail = 'invalid-email';
 
         await page.fill('input[name="name"]', 'Test User');
         await page.fill('input[name="email"]', 'invalid-email');
