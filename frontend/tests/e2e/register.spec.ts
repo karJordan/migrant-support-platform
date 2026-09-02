@@ -25,7 +25,6 @@ test.describe('Register Flow', () => {
         await page.click('button[type="submit"]');
 
         const emailField = page.locator('input[name="email"]');
-        const validationMessage = await emailField.getAttribute('validationMessage');
     
         // Browser validation makes fields invalid
         if (browserName === 'firefox') {
