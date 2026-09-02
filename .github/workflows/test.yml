@@ -171,6 +171,10 @@ jobs:
       run: npm ci
       working-directory: ./frontend
 
+    - name: Install playwright browsers
+      run: npx playwright install --with-deps
+      working-directory: ./frontend
+      
     - name: Build frontend
       run: npm run build
       working-directory: ./frontend
