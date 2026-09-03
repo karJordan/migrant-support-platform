@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "../../context/AuthContext";
 
 export const dynamic = 'force-dynamic';
 interface User {
@@ -13,6 +16,21 @@ export default function Admin() {
     const [error, setError] = useState<string | null>(null);
     const [users, setUsers] = useState<User[]>([]);
     const [, setLoading] = useState(false);
+
+    const {user, isLoading} = useAuth();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!isLoading && !user) {
+            router.push("/login");
+        }
+
+        if (!isLoading && user && user.role !== "admin") {
+            router.push("/userDashboard");
+        }
+    }, [isLoading, user, router]);
+
+    if (isLoading || !user) return null;
 
     async function getUsers(e: React.FormEvent) {
         e.preventDefault();
