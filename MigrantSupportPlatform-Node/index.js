@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require('express');
 const cors = require('cors');
 const pool = require("./db");
+const adminRoutes = require('./routes/admin');
 const authRoutes = require('./routes/auth');
 const servicesRoutes = require('./routes/services');
 const jobsRoutes = require('./routes/jobs');
@@ -13,7 +14,7 @@ const PORT = process.env.PORT || 4000;
 
 app.use(cors({origin: 'http://localhost:3000'}));
 app.use(express.json());
-
+app.use('/api/admin', adminRoutes);
 app.use('/api/services', servicesRoutes);
 app.use('/api/auth', authRoutes);
 app.use("/api/jobs", jobsRoutes);
