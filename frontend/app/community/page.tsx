@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import Modal from "@/components/Modal";
 import CommunityGroupForm from "@/components/CommunityGroupForm";
 import CommunityEventForm from "@/components/CommunityEventForm";
+import { useAuth } from "@/context/AuthContext";
 
 type CommunityEvent = {
     id: number;
@@ -38,6 +39,8 @@ export default function CommunityPage() {
     const [showGroupForm, setShowGroupForm] = useState(false);
     const [showEventForm, setShowEventForm] = useState(false);
 
+    const { user } = useAuth();
+    
     useEffect(() => {
         async function fetchEvents() {
             setEventsError("");
@@ -94,12 +97,14 @@ export default function CommunityPage() {
             <div>
                 <h2 className="text-3xl font-semibold">Upcoming Events</h2>
                 <div className="flex gap-3 mt-6">
-                    <button
-                        onClick={() => setShowEventForm(true)}
-                        className="bg-primary text-white px-4 py-2 rounded-lg"
-                    >
-                        Add Community Event
-                    </button>
+                    {user && (
+                        <button
+                            onClick={() => setShowEventForm(true)}
+                            className="bg-primary text-white px-4 py-2 rounded-lg"
+                        >
+                            Add Community Event
+                        </button>
+                    )}
                 </div>
 
                 {eventsLoading && (
@@ -135,12 +140,14 @@ export default function CommunityPage() {
             <div className="mt-12">
                 <h2 className="text-3xl font-semibold">Community Groups</h2>
                 <div className="flex gap-3 mt-6">
-                    <button
-                        onClick={() => setShowGroupForm(true)}
-                        className="bg-primary text-white px-4 py-2 rounded-lg"
-                    >
-                        Add Community Group
-                    </button>
+                    {user && (
+                        <button
+                            onClick={() => setShowGroupForm(true)}
+                            className="bg-primary text-white px-4 py-2 rounded-lg"
+                        >
+                            Add Community Group
+                        </button>
+                    )}
                 </div>
                 {groupsLoading && (
                     <p className="mt-8 text-neutral">Loading communities...</p>

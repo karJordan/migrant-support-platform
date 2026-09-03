@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Modal from "@/components/Modal";
 import JobsForm from "@/components/JobsForm";
 import JobsCard from "@/components/JobsCard";
+import { useAuth } from "@/context/AuthContext";
 
 type Job = {
     id: number;
@@ -20,6 +21,7 @@ export default function JobsPage() {
     const [error, setError] = useState<string | null>(null);
     const [selectedEmploymentType, setSelectedEmploymentType] = useState("All");
     const [showJobForm, setShowJobForm] = useState(false);
+    const { user } = useAuth();
 
     useEffect(() => {
         async function fetchJobs() {
@@ -62,12 +64,14 @@ export default function JobsPage() {
                 Browse job opportunities for migrants in New Zealand.
             </p>
             <div className="flex flex-wrap gap-3 mt-6">
-                <button
-                    onClick={() => setShowJobForm(true)}
-                    className="bg-primary text-white px-4 py-2 rounded-lg"
-                >
-                    Add Job
-                </button>
+                {user && (
+                    <button
+                        onClick={() => setShowJobForm(true)}
+                        className="bg-primary text-white px-4 py-2 rounded-lg"
+                    >
+                        Add Job
+                    </button>
+                )}
 
                 {employmentTypes.map((type) => (
                     <button

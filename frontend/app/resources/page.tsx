@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import ResourcesCard from "@/components/ResourcesCard";
 import Modal from "@/components/Modal";
 import ResourcesForm from "@/components/ResourcesForm";
+import { useAuth } from "@/context/AuthContext";
 
 type Resource = {
     id: number;
@@ -20,6 +21,8 @@ export default function ResourcePage() {
     const [error, setError] = useState<string | null>(null);
     const [selectedCategory, setSelectedCategory] = useState("All");
     const [showResourcesForm, setShowResourcesForm] = useState(false);
+
+    const { user } = useAuth();
 
     useEffect(() => {
         async function fetchResources() {
@@ -63,12 +66,15 @@ export default function ResourcePage() {
             </p>
 
             <div className="flex flex-wrap gap-3 mt-6">
-                <button
-                    onClick={() => setShowResourcesForm(true)}
-                    className="bg-primary text-white px-4 py-2 rounded-lg"
-                >
-                    Add Resource
-                </button>{categories.map((category) => (
+                {user && (
+                    <button
+                        onClick={() => setShowResourcesForm(true)}
+                        className="bg-primary text-white px-4 py-2 rounded-lg"
+                    >
+                        Add Resource
+                    </button>
+                )}
+                {categories.map((category) => (
                     <button
                         key={category}
                         onClick={() => setSelectedCategory(category)}
