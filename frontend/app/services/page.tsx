@@ -20,6 +20,8 @@ export default function ServicesPage() {
     const [selectedCategory, setSelectedCategory] = useState("All");
     const [showServiceForm, setShowServiceForm] = useState(false);
 
+    const [selectedService, setSelectedService] = useState<Service | null>(null);
+
     useEffect(() => {
         async function fetchServices() {
             try {
@@ -56,12 +58,12 @@ export default function ServicesPage() {
                 Find services and support available in your community.
             </p>
             <div className="flex flex-wrap gap-3 mt-6">
-                            <button
-                onClick={() => setShowServiceForm(true)}
-                className="bg-primary text-white px-4 py-2 rounded-lg"
-            >
-                Add New Service
-            </button>
+                <button
+                    onClick={() => setShowServiceForm(true)}
+                    className="bg-primary text-white px-4 py-2 rounded-lg"
+                >
+                    Add New Service
+                </button>
                 {categories.map((category) => (
                     <button
                         key={category}
@@ -96,13 +98,18 @@ export default function ServicesPage() {
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                             {filteredServices.map((service) => (
-                                <ServiceCard
+                                <div
                                     key={service.id}
-                                    name={service.name}
-                                    category={service.category}
-                                    description={service.description}
-                                    location={service.location}
-                                />
+                                    onClick={() => setSelectedService(service)}
+                                    className="cursor-pointer"
+                                >
+                                    <ServiceCard
+                                        name={service.name}
+                                        category={service.category}
+                                        description={service.description}
+                                        location={service.location}
+                                    />
+                                </div>
                             ))}
                         </div>
                     )}
@@ -111,6 +118,25 @@ export default function ServicesPage() {
             {showServiceForm && (
                 <Modal onClose={() => setShowServiceForm(false)}>
                     <ServiceForm />
+                </Modal>
+            )}
+            {selectedService && (
+                <Modal onClose={() => setSelectedService(null)}>
+                    <h2 className="text-2xl font-semibold">
+                        {selectedService.name}
+                    </h2>
+
+                    <p className="text-primary mt-2">
+                        {selectedService.category}
+                    </p>
+
+                    <p className="mt-4">
+                        {selectedService.description}
+                    </p>
+
+                    <p className="mt-4">
+                        {selectedService.location}
+                    </p>
                 </Modal>
             )}
         </div>
