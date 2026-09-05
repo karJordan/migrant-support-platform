@@ -21,6 +21,7 @@ export default function JobsPage() {
     const [error, setError] = useState<string | null>(null);
     const [selectedEmploymentType, setSelectedEmploymentType] = useState("All");
     const [showJobForm, setShowJobForm] = useState(false);
+    const [selectedJob, setSelectedJob] = useState<Job | null>(null);
     const { user } = useAuth();
 
     useEffect(() => {
@@ -107,14 +108,19 @@ export default function JobsPage() {
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                             {filteredJobs.map((job) => (
-                                <JobsCard
+                                <div
                                     key={job.id}
-                                    title={job.title}
-                                    company={job.company}
-                                    location={job.location}
-                                    description={job.description}
-                                    employmentType={job.employment_type}
-                                />
+                                    onClick={() => setSelectedJob(job)}
+                                    className="cursor-pointer"
+                                >
+                                    <JobsCard
+                                        title={job.title}
+                                        company={job.company}
+                                        location={job.location}
+                                        employmentType={job.employment_type}
+                                        description={job.description}
+                                    />
+                                </div>
                             ))}
                         </div>
                     )}
@@ -123,6 +129,19 @@ export default function JobsPage() {
             {showJobForm && (
                 <Modal onClose={() => setShowJobForm(false)}>
                     <JobsForm />
+                </Modal>
+            )}
+            {selectedJob && (
+                <Modal onClose={() => setSelectedJob(null)}>
+                    <h2 className="text-2xl font-semibold">{selectedJob.title}</h2>
+                    <p className="font-medium mt-1">{selectedJob.company}</p>
+                    <p className="text-neutral mt-2">{selectedJob.description}</p>
+                    <div className="flex items-center gap-2 mt-4 text-neutral">
+                        <span>Location: {selectedJob.location}</span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-2 text-neutral">
+                        <span>Employment Type: {selectedJob.employment_type}</span>
+                    </div>
                 </Modal>
             )}
         </div>

@@ -38,9 +38,11 @@ export default function CommunityPage() {
 
     const [showGroupForm, setShowGroupForm] = useState(false);
     const [showEventForm, setShowEventForm] = useState(false);
+    const [selectedEvent, setSelectedEvent] = useState<CommunityEvent | null>(null);
+    const [selectedGroup, setSelectedGroup] = useState<CommunityGroup | null>(null);
 
     const { user } = useAuth();
-    
+
     useEffect(() => {
         async function fetchEvents() {
             setEventsError("");
@@ -123,14 +125,19 @@ export default function CommunityPage() {
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                                 {event.map((e) => (
-                                    <CommunityEventCard
+                                    <div
                                         key={e.id}
-                                        title={e.title}
-                                        location={e.location}
-                                        eventDate={e.event_date}
-                                        eventTime={e.event_time}
-                                        description={e.description}
-                                    />
+                                        onClick={() => setSelectedEvent(e)}
+                                        className="cursor-pointer"
+                                    >
+                                        <CommunityEventCard
+                                            title={e.title}
+                                            location={e.location}
+                                            eventDate={e.event_date}
+                                            eventTime={e.event_time}
+                                            description={e.description}
+                                        />
+                                    </div>
                                 ))}
                             </div>
                         )}
@@ -164,12 +171,17 @@ export default function CommunityPage() {
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                                 {group.map((g) => (
-                                    <CommunityGroupCard
+                                    <div
                                         key={g.id}
-                                        name={g.name}
-                                        category={g.category}
-                                        description={g.description}
-                                    />
+                                        onClick={() => setSelectedGroup(g)}
+                                        className="cursor-pointer"
+                                    >
+                                        <CommunityGroupCard
+                                            name={g.name}
+                                            category={g.category}
+                                            description={g.description}
+                                        />
+                                    </div>
                                 ))}
                             </div>
                         )}
@@ -184,6 +196,29 @@ export default function CommunityPage() {
             {showEventForm && (
                 <Modal onClose={() => setShowEventForm(false)}>
                     <CommunityEventForm />
+                </Modal>
+            )}
+            {selectedEvent && (
+                <Modal onClose={() => setSelectedEvent(null)}>
+                    <h2 className="text-2xl font-semibold">{selectedEvent.title}</h2>
+                    <p className="text-primary mt-2">{selectedEvent.location}</p>
+
+                    <p className="mt-2">
+                        {new Date(selectedEvent.event_date).toLocaleDateString("en-GB", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                        })} at {selectedEvent.event_time}
+                    </p>
+
+                    <p className="mt-4">{selectedEvent.description}</p>
+                </Modal>
+            )}
+            {selectedGroup && (
+                <Modal onClose={() => setSelectedGroup(null)}>
+                    <h2 className="text-2xl font-semibold">{selectedGroup.name}</h2>
+                    <p className="text-primary mt-2">{selectedGroup.category}</p>
+                    <p className="mt-4">{selectedGroup.description}</p>
                 </Modal>
             )}
         </div>
