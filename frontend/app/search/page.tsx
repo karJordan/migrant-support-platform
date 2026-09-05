@@ -1,16 +1,16 @@
 "use client";
 
-import {useState, useEffect, Suspense} from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useSearchParams} from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Briefcase, MapPin, Users, Calendar, ArrowLeft, BookOpen } from "lucide-react";
+import Modal from "@/components/Modal";
 
 interface SearchResult {
     id: number;
     title: string;
     description: string;
     type: "service" | "job" | "community_event" | "community_group" | "resource";
-    href: string;
     category?: string;
     location?: string;
     company?: string;
@@ -31,6 +31,8 @@ function SearchContent() {
     const [results, setResults] = useState<SearchResult[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const [selectedResult, setSelectedResult] = useState<SearchResult | null>(null);
 
     useEffect(() => {
         if (query && query.length >= 2) {
@@ -57,22 +59,6 @@ function SearchContent() {
             setLoading(false);
         }
     }
-
-    const getHref = (result: SearchResult) => {
-        switch (result.type) {
-            case 'service':
-                return '/services';
-            case 'job':
-                return '/jobs';
-            case 'resource':
-                return '/resources';
-            case 'community_event':
-            case 'community_group':
-                return '/community';
-            default:
-                return '#';
-        }
-    };
 
     return (
         <div className="w-full max-w-4xl mx-auto px-6 py-10">
@@ -137,10 +123,19 @@ function SearchContent() {
                         const Icon = iconMap[result.type] || MapPin;
 
                         return (
-                            <Link
+                            <div
                                 key={`${result.type}-${result.id}`}
-                                href={getHref(result)}
-                                className="block bg-white border border-gray-200 rounded-xl p-5 hover:border-primary transition-colors hover:shadow-sm"
+                                role="button"
+                                tabIndex={0}
+                                aria-label={`View details for ${result.title}`}
+                                onClick={() => setSelectedResult(result)}
+                                onKeyDown={(keyEvent) => {
+                                    if (keyEvent.key === "Enter" || keyEvent.key === " ") {
+                                        keyEvent.preventDefault();
+                                        setSelectedResult(result);
+                                    }
+                                }}
+                                className="block bg-white border border-gray-200 rounded-xl p-5 hover:border-primary transition-colors hover:shadow-sm cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
                             >
                                 <div className="flex items-start gap-4">
                                     {/* Icon */}
@@ -156,11 +151,11 @@ function SearchContent() {
                                             </h3>
                                             <span className="text-xs bg-gray-100 text-neutral-600 px-2 py-1 rounded-full capitalize">
                                                 {result.type === "community_event" ? "Event" :
-                                                 result.type === "community_group" ? "Group" :
-                                                 result.type === "service" ? "Service" :
-                                                 result.type === "job" ? "Job" :
-                                                 result.type === "resource" ? "Resource" :
-                                                 result.type}
+                                                    result.type === "community_group" ? "Group" :
+                                                        result.type === "service" ? "Service" :
+                                                            result.type === "job" ? "Job" :
+                                                                result.type === "resource" ? "Resource" :
+                                                                    result.type}
                                             </span>
                                         </div>
 
@@ -182,10 +177,64 @@ function SearchContent() {
                                         </div>
                                     </div>
                                 </div>
-                            </Link>
+                            </div>
                         );
                     })}
                 </div>
+            )}
+            {selectedResult && (
+                <Modal onClose={() => setSelectedResult(null)}>
+                    <h2 className="text-2xl font-semibold">
+                        {selectedResult.title}
+                    </h2>
+
+                    <Link
+                        href={
+                            selectedResult.type === "service"
+                                ? "/services"
+                                : selectedResult.type === "job"
+                                    ? "/jobs"
+                                    : selectedResult.type === "resource"
+                                        ? "/resources"
+                                        : "/community"
+                        }
+                        className="text-primary mt-2 capitalize inline-block hover:underline"
+                    >
+                        {selectedResult.type === "community_event"
+                            ? "Event"
+                            : selectedResult.type === "community_group"
+                                ? "Group"
+                                : selectedResult.type}
+                    </Link>
+
+                    {selectedResult.company && (
+                        <p className="font-medium mt-2">
+                            {selectedResult.company}
+                        </p>
+                    )}
+
+                    {selectedResult.category && (
+                        <p className="mt-2">
+                            Category: {selectedResult.category}
+                        </p>
+                    )}
+
+                    {selectedResult.location && (
+                        <p className="mt-2">
+                            Location: {selectedResult.location}
+                        </p>
+                    )}
+
+                    {selectedResult.employment_type && (
+                        <p className="mt-2">
+                            Employment Type: {selectedResult.employment_type}
+                        </p>
+                    )}
+
+                    <p className="mt-4">
+                        {selectedResult.description}
+                    </p>
+                </Modal>
             )}
         </div>
     );

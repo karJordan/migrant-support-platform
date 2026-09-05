@@ -21,6 +21,7 @@ export default function ResourcePage() {
     const [error, setError] = useState<string | null>(null);
     const [selectedCategory, setSelectedCategory] = useState("All");
     const [showResourcesForm, setShowResourcesForm] = useState(false);
+    const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
 
     const { user } = useAuth();
 
@@ -109,13 +110,27 @@ export default function ResourcePage() {
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                             {filteredResources.map((resource) => (
-                                <ResourcesCard
+                                <div
                                     key={resource.id}
-                                    title={resource.title}
-                                    category={resource.category}
-                                    description={resource.description}
-                                    link={resource.link}
-                                />
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={() => setSelectedResource(resource)}
+                                    aria-label={`View details for ${resource.title}`}
+                                    onKeyDown={(keyEvent) => {
+                                        if (keyEvent.key === "Enter" || keyEvent.key === " ") {
+                                            keyEvent.preventDefault();
+                                            setSelectedResource(resource);
+                                        }
+                                    }}
+                                    className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
+                                >
+                                    <ResourcesCard
+                                        title={resource.title}
+                                        description={resource.description}
+                                        link={resource.link}
+                                        category={resource.category}
+                                    />
+                                </div>
                             ))}
                         </div>
                     )}
@@ -127,6 +142,30 @@ export default function ResourcePage() {
                     <ResourcesForm />
                 </Modal>
             )}
+ {selectedResource && (
+    <Modal onClose={() => setSelectedResource(null)}>
+        <h2 className="text-2xl font-semibold">
+            {selectedResource.title}
+        </h2>
+
+        <p className="text-primary mt-2">
+            {selectedResource.category}
+        </p>
+
+        <p className="mt-4">
+            {selectedResource.description}
+        </p>
+
+        <a
+            href={selectedResource.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline mt-4 inline-block"
+        >
+            Visit Resource
+        </a>
+    </Modal>
+)}
         </div>
     );
 }
