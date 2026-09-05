@@ -1,6 +1,8 @@
 import { MapPin, BriefcaseBusiness } from "lucide-react";
+import SaveButton from "@/components/SaveButton";
 
 type JobsCardProps = {
+  id: string | number;
   title: string;
   company: string;
   location: string;
@@ -9,6 +11,7 @@ type JobsCardProps = {
 };
 
 export default function JobsCard({
+  id,
   title,    
   company,
   location,
@@ -17,9 +20,12 @@ export default function JobsCard({
 }: JobsCardProps) {
   return (
     <div className="border border-neutral/20 rounded-xl p-5 bg-white">
-      <h2 className="text-xl font-semibold mt-2">
-        {title}
-      </h2>
+      <div className="flex items-start justify-between">
+            <span className="text-sm text-primary font-medium">
+                {title}
+            </span>
+            <SaveButton itemType="job" itemId={id} />
+            </div>
 
       <p className="font-medium mt-1">
         {company}

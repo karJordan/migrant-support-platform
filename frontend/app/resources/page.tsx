@@ -111,6 +111,7 @@ export default function ResourcePage() {
                             {filteredResources.map((resource) => (
                                 <ResourcesCard
                                     key={resource.id}
+                                    id={resource.id}
                                     title={resource.title}
                                     category={resource.category}
                                     description={resource.description}

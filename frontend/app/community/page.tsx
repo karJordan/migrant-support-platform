@@ -125,6 +125,7 @@ export default function CommunityPage() {
                                 {event.map((e) => (
                                     <CommunityEventCard
                                         key={e.id}
+                                        id={e.id}
                                         title={e.title}
                                         location={e.location}
                                         eventDate={e.event_date}
@@ -166,6 +167,7 @@ export default function CommunityPage() {
                                 {group.map((g) => (
                                     <CommunityGroupCard
                                         key={g.id}
+                                        id={g.id}
                                         name={g.name}
                                         category={g.category}
                                         description={g.description}

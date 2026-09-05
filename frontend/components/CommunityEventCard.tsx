@@ -1,6 +1,8 @@
-import { MapPin } from "lucide-react";
+import { IdCard, MapPin } from "lucide-react";
+import SaveButton from "@/components/SaveButton";
 
 type CommunityEventProps = {
+    id: string | number;
     title: string;
     eventDate: string;
     eventTime: string;
@@ -9,6 +11,7 @@ type CommunityEventProps = {
 };
 
 export default function CommunityEventCard({
+    id,
     title,
     description,
     eventDate,
@@ -22,9 +25,12 @@ export default function CommunityEventCard({
     });
     return (
         <div className="border border-neutral/20 rounded-xl p-5 bg-white">
+            <div className="flex items-start justify-between">
             <span className="text-sm text-primary font-medium">
                 {title}
             </span>
+            <SaveButton itemType="community_event" itemId={id} />
+            </div>
             <h2 className="text-xl font-semibold mt-2">
                 {formattedDate} at {eventTime}
             </h2>
