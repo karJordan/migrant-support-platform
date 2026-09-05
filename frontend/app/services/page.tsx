@@ -106,8 +106,10 @@ export default function ServicesPage() {
                                     role="button"
                                     tabIndex={0}
                                     onClick={() => setSelectedService(service)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter" || e.key === " ") {
+                                    aria-label={`View details for ${service.name}`}
+                                    onKeyDown={(keyEvent) => {
+                                        if (keyEvent.key === "Enter" || keyEvent.key === " ") {
+                                            keyEvent.preventDefault();
                                             setSelectedService(service);
                                         }
                                     }}

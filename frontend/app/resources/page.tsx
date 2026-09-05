@@ -115,8 +115,10 @@ export default function ResourcePage() {
                                     role="button"
                                     tabIndex={0}
                                     onClick={() => setSelectedResource(resource)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter" || e.key === " ") {
+                                    aria-label={`View details for ${resource.title}`}
+                                    onKeyDown={(keyEvent) => {
+                                        if (keyEvent.key === "Enter" || keyEvent.key === " ") {
+                                            keyEvent.preventDefault();
                                             setSelectedResource(resource);
                                         }
                                     }}

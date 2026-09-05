@@ -113,8 +113,10 @@ export default function JobsPage() {
                                     role="button"
                                     tabIndex={0}
                                     onClick={() => setSelectedJob(job)}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter" || e.key === " ") {
+                                    aria-label={`View details for ${job.title}`}
+                                    onKeyDown={(keyEvent) => {
+                                        if (keyEvent.key === "Enter" || keyEvent.key === " ") {
+                                            keyEvent.preventDefault();
                                             setSelectedJob(job);
                                         }
                                     }}
