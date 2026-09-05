@@ -368,3 +368,5 @@ MigrantSupportPlatform-Node/.env
 
 # macOS Finder metadata
 .DS_Store
+**/.DS_Store
+frontend/playwright-report/
