@@ -3,7 +3,7 @@ const router = express.Router();
 const pool = require('../db');
 const authenticateToken = require('../middleware/authMiddleware');
 
-router.get('/users', async (req, res) => {
+router.get('/users', authenticateToken, async (req, res) => {
     try {
         // Execute SQL query to fetch all data
         const result = await pool.query('SELECT * FROM users');
@@ -19,7 +19,7 @@ router.get('/users', async (req, res) => {
 });
 
 // GET /api/admin/services - Get pending services
-router.get('/services', async (req, res) => {
+router.get('/services', authenticateToken, async (req, res) => {
     try {
         const result = await pool.query(
             "SELECT * FROM services WHERE status = 'pending' ORDER BY id ASC"
@@ -33,7 +33,7 @@ router.get('/services', async (req, res) => {
 });
 
 // GET /api/admin/resources - Get pending resources
-router.get('/resources', async (req, res) => {
+router.get('/resources', authenticateToken, async (req, res) => {
     try {
         const result = await pool.query(
             "SELECT * FROM resources WHERE status = 'pending' ORDER BY id ASC"
@@ -47,7 +47,7 @@ router.get('/resources', async (req, res) => {
 });
 
 // GET /api/admin/jobs - Get pending jobs
-router.get('/jobs', async (req, res) => {
+router.get('/jobs', authenticateToken, async (req, res) => {
     try {
         const result = await pool.query(
             "SELECT * FROM jobs WHERE status = 'pending' ORDER BY id ASC"
@@ -61,7 +61,7 @@ router.get('/jobs', async (req, res) => {
 });
 
 // GET /api/admin/groups - Get pending groups
-router.get('/groups', async (req, res) => {
+router.get('/groups', authenticateToken, async (req, res) => {
     try {
         const result = await pool.query(
             "SELECT * FROM community_groups WHERE status = 'pending' ORDER BY id ASC"
@@ -75,7 +75,7 @@ router.get('/groups', async (req, res) => {
 });
 
 // GET /api/admin/events - Get pending events
-router.get('/events', async (req, res) => {
+router.get('/events', authenticateToken, async (req, res) => {
     try {
         const result = await pool.query(
             "SELECT * FROM community_events WHERE status = 'pending' ORDER BY event_date ASC"

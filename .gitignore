@@ -368,3 +368,7 @@ MigrantSupportPlatform-Node/.env
 
 # macOS Finder metadata
 .DS_Store
+
+# next.js
+/.next/
+/out/
