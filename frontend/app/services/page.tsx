@@ -103,8 +103,15 @@ export default function ServicesPage() {
                             {filteredServices.map((service) => (
                                 <div
                                     key={service.id}
+                                    role="button"
+                                    tabIndex={0}
                                     onClick={() => setSelectedService(service)}
-                                    className="cursor-pointer"
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter" || e.key === " ") {
+                                            setSelectedService(service);
+                                        }
+                                    }}
+                                    className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
                                 >
                                     <ServiceCard
                                         name={service.name}

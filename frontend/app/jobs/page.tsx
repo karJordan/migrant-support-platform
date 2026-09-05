@@ -110,8 +110,15 @@ export default function JobsPage() {
                             {filteredJobs.map((job) => (
                                 <div
                                     key={job.id}
+                                    role="button"
+                                    tabIndex={0}
                                     onClick={() => setSelectedJob(job)}
-                                    className="cursor-pointer"
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter" || e.key === " ") {
+                                            setSelectedJob(job);
+                                        }
+                                    }}
+                                    className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
                                 >
                                     <JobsCard
                                         title={job.title}

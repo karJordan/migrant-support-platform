@@ -112,8 +112,15 @@ export default function ResourcePage() {
                             {filteredResources.map((resource) => (
                                 <div
                                     key={resource.id}
+                                    role="button"
+                                    tabIndex={0}
                                     onClick={() => setSelectedResource(resource)}
-                                    className="cursor-pointer"
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter" || e.key === " ") {
+                                            setSelectedResource(resource);
+                                        }
+                                    }}
+                                    className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
                                 >
                                     <ResourcesCard
                                         title={resource.title}

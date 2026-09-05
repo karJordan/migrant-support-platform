@@ -127,8 +127,17 @@ export default function CommunityPage() {
                                 {event.map((e) => (
                                     <div
                                         key={e.id}
+                                        role="button"
+                                        tabIndex={0}
+                                        aria-label={`View details for ${e.title}`}
                                         onClick={() => setSelectedEvent(e)}
-                                        className="cursor-pointer"
+                                        onKeyDown={(keyEvent) => {
+                                            if (keyEvent.key === "Enter" || keyEvent.key === " ") {
+                                                keyEvent.preventDefault();
+                                                setSelectedEvent(e);
+                                            }
+                                        }}
+                                        className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
                                     >
                                         <CommunityEventCard
                                             title={e.title}
@@ -173,8 +182,17 @@ export default function CommunityPage() {
                                 {group.map((g) => (
                                     <div
                                         key={g.id}
+                                        role="button"
+                                        tabIndex={0}
+                                        aria-label={`View details for ${g.name}`}
                                         onClick={() => setSelectedGroup(g)}
-                                        className="cursor-pointer"
+                                        onKeyDown={(keyEvent) => {
+                                            if (keyEvent.key === "Enter" || keyEvent.key === " ") {
+                                                keyEvent.preventDefault();
+                                                setSelectedGroup(g);
+                                            }
+                                        }}
+                                        className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
                                     >
                                         <CommunityGroupCard
                                             name={g.name}
