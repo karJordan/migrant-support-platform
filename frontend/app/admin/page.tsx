@@ -1,6 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "../../context/AuthContext";
 import JobsCard from "@/components/JobsCard";
 import CommunityGroupCard from "@/components/CommunityGroupCard";
 import CommunityEventCard from "@/components/CommunityEventCard";
@@ -72,6 +75,21 @@ export default function Admin() {
     const [services, setServices] = useState<Service[]>([]);
     const [selectedPostType, setSelectedPostType] = useState(true);
     const [loading, setLoading] = useState(false);
+
+    const { user, isLoading } = useAuth();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!isLoading && !user) {
+            router.push("/login");
+        }
+
+        if (!isLoading && user && user.role !== "admin") {
+            router.push("/userDashboard");
+        }
+    }, [isLoading, user, router]);
+
+    if (isLoading || !user) return null;
 
     async function fetchUsers() {
 
