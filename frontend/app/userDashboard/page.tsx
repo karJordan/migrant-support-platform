@@ -13,13 +13,24 @@ interface SavedItem {
     name?: string;
 }
 
+interface SavedItemDetail {
+  id: number;
+  title?: string;
+  name?: string;
+  company?: string;
+  category?: string;
+  location?: string;
+  employment_type?: string;
+  description?: string;
+}
+
 export default function UserDashboardPage() {
     const { user, isLoading } = useAuth();
     const router = useRouter();
     const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
     const [savedCount, setSavedCount] = useState(0);
     const [loadingSaved, setLoadingSaved] = useState(true);
-    const [itemDetails, setItemDetails] = useState<Record<string, any>>({});
+    const [itemDetails, setItemDetails] = useState<Record<string, SavedItemDetail>>({});
     const [selectedItem, setSelectedItem] = useState<SavedItem | null>(null);
 
     useEffect(() => {
@@ -50,32 +61,32 @@ export default function UserDashboardPage() {
     }
 
     async function fetchItemDetails(items: SavedItem[]) {
-        const details: Record<string, any> = {};
+        const details: Record<string, SavedItemDetail> = {};
         for (const item of items) {
             try {
                 if (item.listing_type === 'community_event') {
                     const response = await fetch(`http://localhost:4000/api/community/events`);
                     if (response.ok) {
                         const allItems = await response.json();
-                        const found = allItems.find((i: any) => i.id === item.listing_id);
+                        const found = allItems.find((i: SavedItemDetail) => i.id === item.listing_id);
                         if (found) details[`${item.listing_type}-${item.listing_id}`] = found;
                     }
                 } else if (item.listing_type === 'community_group') {
                     const response = await fetch(`http://localhost:4000/api/community/groups`);
                     if (response.ok) {
                         const allItems = await response.json();
-                        const found = allItems.find((i: any) => i.id === item.listing_id);
+                        const found = allItems.find((i: SavedItemDetail) => i.id === item.listing_id);
                         if (found) details[`${item.listing_type}-${item.listing_id}`] = found;
                     }
                 } else {
                     const response = await fetch(`http://localhost:4000/api/${item.listing_type}s`);
                     if (response.ok) {
                         const allItems = await response.json();
-                        const found = allItems.find((i: any) => i.id === item.listing_id);
+                        const found = allItems.find((i: SavedItemDetail) => i.id === item.listing_id);
                         if (found) details[`${item.listing_type}-${item.listing_id}`] = found;
                     }
                 }
-            } catch (error) {
+            } catch {
                 console.error(`Failed to fetch ${item.listing_type} #${item.listing_id}`);
             }
         }
@@ -140,10 +151,10 @@ export default function UserDashboardPage() {
                 </div>
 
                 {loadingSaved ? (
-    <p className="text-neutral">Loading saved items...</p>
-) : savedItems.length === 0 ? (
-    <p className="text-neutral">You have no saved items.</p>
-) : (
+                  <p className="text-neutral">Loading saved items...</p>
+                  ) : savedItems.length === 0 ? (
+                  <p className="text-neutral">You have no saved items.</p>
+                  ) : (
     <ul className="space-y-2">
         {savedItems.map((item) => {
             return (
@@ -166,7 +177,7 @@ export default function UserDashboardPage() {
             );
         })}
     </ul>
-)}
+                )}
             </div>
 
             {selectedItem && (

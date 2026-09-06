@@ -12,6 +12,17 @@ interface SavedItem {
     name?: string;
 }
 
+interface SavedItemDetail {
+    id: number;
+    title?: string;
+    name?: string;
+    company?: string;
+    category?: string;
+    location?: string;
+    employment_type?: string;
+    description?: string;
+}
+
 const filterOptions = [
     { id: "all", label: "All" },
     { id: "service", label: "Services" },
@@ -21,20 +32,12 @@ const filterOptions = [
     { id: "resource", label: "Resources" },
 ];
 
-const typeLabels: Record<string, string> = {
-    service: "Service",
-    job: "Job",
-    community_event: "Event",
-    community_group: "Group",
-    resource: "Resource",
-};
-
 export default function SavedPage() {
     const { user } = useAuth();
     const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeFilter, setActiveFilter] = useState("all");
-    const [itemDetails, setItemDetails] = useState<Record<string, any>>({});
+    const [itemDetails, setItemDetails] = useState<Record<string, SavedItemDetail>>({});
     const [selectedItem, setSelectedItem] = useState<SavedItem | null>(null);
 
     useEffect(() => {
@@ -57,32 +60,32 @@ export default function SavedPage() {
     }
 
     async function fetchItemDetails(items: SavedItem[]) {
-        const details: Record<string, any> = {};
+        const details: Record<string, SavedItemDetail> = {};
         for (const item of items) {
             try {
                 if (item.listing_type === 'community_event') {
                     const response = await fetch(`http://localhost:4000/api/community/events`);
                     if (response.ok) {
                         const allItems = await response.json();
-                        const found = allItems.find((i: any) => i.id === item.listing_id);
+                        const found = allItems.find((i: SavedItemDetail) => i.id === item.listing_id);
                         if (found) details[`${item.listing_type}-${item.listing_id}`] = found;
                     }
                 } else if (item.listing_type === 'community_group') {
                     const response = await fetch(`http://localhost:4000/api/community/groups`);
                     if (response.ok) {
                         const allItems = await response.json();
-                        const found = allItems.find((i: any) => i.id === item.listing_id);
+                        const found = allItems.find((i: SavedItemDetail) => i.id === item.listing_id);
                         if (found) details[`${item.listing_type}-${item.listing_id}`] = found;
                     }
                 } else {
                     const response = await fetch(`http://localhost:4000/api/${item.listing_type}s`);
                     if (response.ok) {
                         const allItems = await response.json();
-                        const found = allItems.find((i: any) => i.id === item.listing_id);
+                        const found = allItems.find((i: SavedItemDetail) => i.id === item.listing_id);
                         if (found) details[`${item.listing_type}-${item.listing_id}`] = found;
                     }
                 }
-            } catch (error) {
+            } catch {
                 console.error(`Failed to fetch ${item.listing_type} #${item.listing_id}`);
             }
         }

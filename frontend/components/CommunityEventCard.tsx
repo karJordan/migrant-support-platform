@@ -1,4 +1,4 @@
-import { IdCard, MapPin } from "lucide-react";
+import { MapPin } from "lucide-react";
 import SaveButton from "@/components/SaveButton";
 
 type CommunityEventProps = {
