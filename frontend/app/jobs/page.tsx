@@ -16,7 +16,9 @@ export default function JobsPage() {
     const [selectedEmploymentType, setSelectedEmploymentType] = useState("All");
     const [showJobForm, setShowJobForm] = useState(false);
     const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+    const [isEditing, setIsEditing] = useState(false);
     const { user } = useAuth();
+
 
     useEffect(() => {
         async function fetchJobs() {
@@ -73,8 +75,8 @@ export default function JobsPage() {
                         key={type}
                         onClick={() => setSelectedEmploymentType(type)}
                         className={`px-4 py-2 rounded-lg border transition-colors ${selectedEmploymentType === type
-                                ? "bg-primary text-white border-primary"
-                                : "bg-white border-neutral/20"
+                            ? "bg-primary text-white border-primary"
+                            : "bg-white border-neutral/20"
                             }`}
                     >
                         {type}
@@ -106,12 +108,16 @@ export default function JobsPage() {
                                     key={job.id}
                                     role="button"
                                     tabIndex={0}
-                                    onClick={() => setSelectedJob(job)}
+                                    onClick={() => {
+                                        setSelectedJob(job);
+                                        setIsEditing(false);
+                                    }}
                                     aria-label={`View details for ${job.title}`}
                                     onKeyDown={(keyEvent) => {
                                         if (keyEvent.key === "Enter" || keyEvent.key === " ") {
                                             keyEvent.preventDefault();
                                             setSelectedJob(job);
+                                            setIsEditing(false);
                                         }
                                     }}
                                     className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
@@ -135,16 +141,65 @@ export default function JobsPage() {
                 </Modal>
             )}
             {selectedJob && (
-                <Modal onClose={() => setSelectedJob(null)}>
-                    <h2 className="text-2xl font-semibold">{selectedJob.title}</h2>
-                    <p className="font-medium mt-1">{selectedJob.company}</p>
-                    <p className="text-neutral mt-2">{selectedJob.description}</p>
-                    <div className="flex items-center gap-2 mt-4 text-neutral">
-                        <span>Location: {selectedJob.location}</span>
-                    </div>
-                    <div className="flex items-center gap-2 mt-2 text-neutral">
-                        <span>Employment Type: {selectedJob.employment_type}</span>
-                    </div>
+                <Modal
+                    onClose={() => {
+                        setSelectedJob(null);
+                        setIsEditing(false);
+                    }}
+                >
+                    {isEditing ? (
+                        <JobsForm
+                            job={selectedJob}
+                            onCancel={() => setIsEditing(false)}
+                            onSaved={(updatedJob) => {
+                                setJobs((currentJobs) =>
+                                    currentJobs.map((job) =>
+                                        job.id === updatedJob.id
+                                            ? updatedJob
+                                            : job
+                                    )
+                                );
+
+                                setSelectedJob(updatedJob);
+                                setIsEditing(false);
+                            }}
+                        />
+                    ) : (
+                        <>
+                            <h2 className="text-2xl font-semibold">
+                                {selectedJob.title}
+                            </h2>
+
+                            <p className="font-medium mt-1">
+                                {selectedJob.company}
+                            </p>
+
+                            <p className="text-neutral mt-2">
+                                {selectedJob.description}
+                            </p>
+
+                            <div className="flex items-center gap-2 mt-4 text-neutral">
+                                <span>
+                                    Location: {selectedJob.location}
+                                </span>
+                            </div>
+
+                            <div className="flex items-center gap-2 mt-2 text-neutral">
+                                <span>
+                                    Employment Type: {selectedJob.employment_type}
+                                </span>
+                            </div>
+
+                            {user?.role === "admin" && (
+                                <button
+                                    onClick={() => setIsEditing(true)}
+                                    className="bg-primary text-white px-6 py-3 rounded-lg mt-6"
+                                >
+                                    Edit
+                                </button>
+                            )}
+                        </>
+                    )}
                 </Modal>
             )}
         </div>

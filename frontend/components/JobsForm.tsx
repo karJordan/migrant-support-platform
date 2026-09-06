@@ -2,15 +2,28 @@
 
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { Job } from "@/types/job";
 
-export default function JobsForm() {
+type JobsFormProps = {
+    job?: Job;
+    onCancel?: () => void;
+    onSaved?: (updatedJob: Job) => void;
+};
+
+export default function JobsForm({
+    job,
+    onCancel,
+    onSaved,
+}: JobsFormProps) {
     const { user, token } = useAuth();
 
-    const [title, setTitle] = useState("");
-    const [company, setCompany] = useState("");
-    const [location, setLocation] = useState("");
-    const [employmentType, setEmploymentType] = useState("");
-    const [description, setDescription] = useState("");
+    const [title, setTitle] = useState(job?.title ?? "");
+    const [company, setCompany] = useState(job?.company ?? "");
+    const [location, setLocation] = useState(job?.location ?? "");
+    const [employmentType, setEmploymentType] = useState(
+        job?.employment_type ?? ""
+    );
+    const [description, setDescription] = useState(job?.description ?? "");
 
     const [message, setMessage] = useState("");
 
@@ -25,39 +38,63 @@ export default function JobsForm() {
         }
 
         try {
-            const response = await fetch("http://localhost:4000/api/jobs", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    title,
-                    company,
-                    location,
-                    employment_type: employmentType,
-                    description,
-                }),
-            });
-
-            if (!response.ok) {
-                throw new Error("Failed to submit job");
-            }
-
-            setMessage(
-                user.role === "admin"
-                    ? "Job added successfully."
-                    : "Job submitted for admin approval."
+            const response = await fetch(
+                job
+                    ? `http://localhost:4000/api/jobs/${job.id}`
+                    : "http://localhost:4000/api/jobs",
+                {
+                    method: job ? "PATCH" : "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        title,
+                        company,
+                        location,
+                        employment_type: employmentType,
+                        description,
+                    }),
+                }
             );
 
-            setTitle("");
-            setCompany("");
-            setLocation("");
-            setEmploymentType("");
-            setDescription("");
+            if (!response.ok) {
+                throw new Error(
+                    job
+                        ? "Failed to update job"
+                        : "Failed to submit job"
+                );
+            }
+
+            const updatedJob = await response.json();
+
+            setMessage(
+                job
+                    ? "Job updated successfully."
+                    : user.role === "admin"
+                        ? "Job added successfully."
+                        : "Job submitted for admin approval."
+            );
+
+            if (job) {
+                onSaved?.(updatedJob);
+            }
+
+            if (!job) {
+                setTitle("");
+                setCompany("");
+                setLocation("");
+                setEmploymentType("");
+                setDescription("");
+            }
         } catch (error) {
             console.error(error);
-            setMessage("Unable to submit job.");
+
+            setMessage(
+                job
+                    ? "Unable to update job."
+                    : "Unable to submit job."
+            );
         }
     }
 
@@ -65,13 +102,13 @@ export default function JobsForm() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
                 <h2 className="text-2xl font-semibold">
-                    Add a Job
+                    {job ? "Edit Job" : "Add a Job"}
                 </h2>
 
                 <p className="text-neutral mt-1">
-                    {user?.role === "admin"
-                        ? "This job will be published immediately."
-                        : "This job will be submitted for admin approval."}
+                    {job
+                        ? "Update this job."
+                        : "Submit a job opportunity."}
                 </p>
             </div>
 
@@ -127,13 +164,26 @@ export default function JobsForm() {
                 type="submit"
                 className="bg-primary text-white px-4 py-3 rounded-lg"
             >
-                Submit Job
+                {job ? "Save Changes" : "Submit Job"}
             </button>
-                        <p className="text-neutral mt-1">
-                {user?.role === "admin"
-                    ? "This job will be published immediately."
-                    : "This job will be submitted for admin approval."}
-            </p>
+
+            {job && onCancel && (
+                <button
+                    type="button"
+                    onClick={onCancel}
+                    className="border px-4 py-3 rounded-lg"
+                >
+                    Cancel
+                </button>
+            )}
+
+            {!job && (
+                <p className="text-neutral mt-1">
+                    {user?.role === "admin"
+                        ? "This job will be published immediately."
+                        : "This job will be submitted for admin approval."}
+                </p>
+            )}
 
             {message && (
                 <p className="text-sm text-neutral">

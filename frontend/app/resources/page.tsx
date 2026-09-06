@@ -16,6 +16,7 @@ export default function ResourcePage() {
     const [selectedCategory, setSelectedCategory] = useState("All");
     const [showResourcesForm, setShowResourcesForm] = useState(false);
     const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
+    const [isEditing, setIsEditing] = useState(false);
 
     const { user } = useAuth();
 
@@ -108,12 +109,16 @@ export default function ResourcePage() {
                                     key={resource.id}
                                     role="button"
                                     tabIndex={0}
-                                    onClick={() => setSelectedResource(resource)}
+                                    onClick={() => {
+                                        setSelectedResource(resource);
+                                        setIsEditing(false);
+                                    }}
                                     aria-label={`View details for ${resource.title}`}
                                     onKeyDown={(keyEvent) => {
                                         if (keyEvent.key === "Enter" || keyEvent.key === " ") {
                                             keyEvent.preventDefault();
                                             setSelectedResource(resource);
+                                            setIsEditing(false);
                                         }
                                     }}
                                     className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
@@ -136,30 +141,65 @@ export default function ResourcePage() {
                     <ResourcesForm />
                 </Modal>
             )}
- {selectedResource && (
-    <Modal onClose={() => setSelectedResource(null)}>
-        <h2 className="text-2xl font-semibold">
-            {selectedResource.title}
-        </h2>
+            {selectedResource && (
+                <Modal
+                    onClose={() => {
+                        setSelectedResource(null);
+                        setIsEditing(false);
+                    }}
+                >
+                    {isEditing ? (
+                        <ResourcesForm
+                            resource={selectedResource}
+                            onCancel={() => setIsEditing(false)}
+                            onSaved={(updatedResource) => {
+                                setResources((currentResources) =>
+                                    currentResources.map((resource) =>
+                                        resource.id === updatedResource.id
+                                            ? updatedResource
+                                            : resource
+                                    )
+                                );
 
-        <p className="text-primary mt-2">
-            {selectedResource.category}
-        </p>
+                                setSelectedResource(updatedResource);
+                                setIsEditing(false);
+                            }}
+                        />
+                    ) : (
+                        <>
+                            <h2 className="text-2xl font-semibold">
+                                {selectedResource.title}
+                            </h2>
 
-        <p className="mt-4">
-            {selectedResource.description}
-        </p>
+                            <p className="text-primary mt-2">
+                                {selectedResource.category}
+                            </p>
 
-        <a
-            href={selectedResource.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:underline mt-4 inline-block"
-        >
-            Visit Resource
-        </a>
-    </Modal>
-)}
+                            <p className="mt-4">
+                                {selectedResource.description}
+                            </p>
+
+                            <a
+                                href={selectedResource.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary hover:underline mt-4 inline-block"
+                            >
+                                Visit Resource
+                            </a>
+
+                            {user?.role === "admin" && (
+                                <button
+                                    onClick={() => setIsEditing(true)}
+                                    className="bg-primary text-white px-6 py-3 rounded-lg mt-6 block"
+                                >
+                                    Edit
+                                </button>
+                            )}
+                        </>
+                    )}
+                </Modal>
+            )}
         </div>
     );
 }

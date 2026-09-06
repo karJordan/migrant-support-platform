@@ -2,14 +2,27 @@
 
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { Resource } from "@/types/resource";
 
-export default function ResourcesForm() {
+type ResourcesFormProps = {
+    resource?: Resource;
+    onCancel?: () => void;
+    onSaved?: (updatedResource: Resource) => void;
+};
+
+export default function ResourcesForm({
+    resource,
+    onCancel,
+    onSaved,
+}: ResourcesFormProps) {
     const { user, token } = useAuth();
 
-    const [title, setTitle] = useState("");
-    const [category, setCategory] = useState("");
-    const [description, setDescription] = useState("");
-    const [link, setLink] = useState("");
+    const [title, setTitle] = useState(resource?.title ?? "");
+    const [category, setCategory] = useState(resource?.category ?? "");
+    const [description, setDescription] = useState(
+        resource?.description ?? ""
+    );
+    const [link, setLink] = useState(resource?.link ?? "");
 
     const [message, setMessage] = useState("");
 
@@ -24,37 +37,61 @@ export default function ResourcesForm() {
         }
 
         try {
-            const response = await fetch("http://localhost:4000/api/resources", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    title,
-                    category,
-                    description,
-                    link,
-                }),
-            });
-
-            if (!response.ok) {
-                throw new Error("Failed to submit resource");
-            }
-
-            setMessage(
-                user.role === "admin"
-                    ? "Resource added successfully."
-                    : "Resource submitted for admin approval."
+            const response = await fetch(
+                resource
+                    ? `http://localhost:4000/api/resources/${resource.id}`
+                    : "http://localhost:4000/api/resources",
+                {
+                    method: resource ? "PATCH" : "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        title,
+                        category,
+                        description,
+                        link,
+                    }),
+                }
             );
 
-            setTitle("");
-            setCategory("");
-            setDescription("");
-            setLink("");
+            if (!response.ok) {
+                throw new Error(
+                    resource
+                        ? "Failed to update resource"
+                        : "Failed to submit resource"
+                );
+            }
+
+            const updatedResource = await response.json();
+
+            setMessage(
+                resource
+                    ? "Resource updated successfully."
+                    : user.role === "admin"
+                        ? "Resource added successfully."
+                        : "Resource submitted for admin approval."
+            );
+
+            if (resource) {
+                onSaved?.(updatedResource);
+            }
+
+            if (!resource) {
+                setTitle("");
+                setCategory("");
+                setDescription("");
+                setLink("");
+            }
         } catch (error) {
             console.error(error);
-            setMessage("Unable to submit resource.");
+
+            setMessage(
+                resource
+                    ? "Unable to update resource."
+                    : "Unable to submit resource."
+            );
         }
     }
 
@@ -62,13 +99,13 @@ export default function ResourcesForm() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
                 <h2 className="text-2xl font-semibold">
-                    Add a Resource
+                    {resource ? "Edit Resource" : "Add a Resource"}
                 </h2>
 
                 <p className="text-neutral mt-1">
-                    {user?.role === "admin"
-                        ? "This resource will be published immediately."
-                        : "This resource will be submitted for admin approval."}
+                    {resource
+                        ? "Update this resource."
+                        : "Submit a resource for the community."}
                 </p>
             </div>
 
@@ -111,13 +148,27 @@ export default function ResourcesForm() {
                 type="submit"
                 className="bg-primary text-white px-4 py-3 rounded-lg"
             >
-                Submit Resource
+                {resource ? "Save Changes" : "Submit Resource"}
             </button>
-            <p className="text-neutral mt-1">
-                {user?.role === "admin"
-                    ? "This resource will be published immediately."
-                    : "This resource will be submitted for admin approval."}
-            </p>
+
+            {resource && onCancel && (
+                <button
+                    type="button"
+                    onClick={onCancel}
+                    className="border px-4 py-3 rounded-lg"
+                >
+                    Cancel
+                </button>
+            )}
+
+            {!resource && (
+                <p className="text-neutral mt-1">
+                    {user?.role === "admin"
+                        ? "This resource will be published immediately."
+                        : "This resource will be submitted for admin approval."}
+                </p>
+            )}
+
             {message && (
                 <p className="text-sm text-neutral">
                     {message}
