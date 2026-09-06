@@ -110,54 +110,108 @@ export default function ServiceForm({
                 </p>
             </div>
 
-            <input
-                type="text"
-                placeholder="Service name"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                required
-                className="border border-neutral/20 rounded-lg px-4 py-3"
-            />
+            <div>
+                <label
+                    htmlFor="service-name"
+                    className="block text-sm font-medium mb-1"
+                >
+                    Service Name
+                </label>
+                <input
+                    id="service-name"
+                    type="text"
+                    placeholder="Service name"
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                    required
+                    className="w-full border border-neutral/20 rounded-lg px-4 py-3"
+                />
+            </div>
 
-            <input
-                type="text"
-                placeholder="Category"
-                value={category}
-                onChange={(event) => setCategory(event.target.value)}
-                required
-                className="border border-neutral/20 rounded-lg px-4 py-3"
-            />
+            <div>
+                <label
+                    htmlFor="service-category"
+                    className="block text-sm font-medium mb-1"
+                >
+                    Category
+                </label>
+                <input
+                    id="service-category"
+                    type="text"
+                    placeholder="Category"
+                    value={category}
+                    onChange={(event) => setCategory(event.target.value)}
+                    required
+                    className="w-full border border-neutral/20 rounded-lg px-4 py-3"
+                />
+            </div>
 
-            <textarea
-                placeholder="Description"
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-                className="border border-neutral/20 rounded-lg px-4 py-3 min-h-28"
-            />
+            <div>
+                <label
+                    htmlFor="service-description"
+                    className="block text-sm font-medium mb-1"
+                >
+                    Description
+                </label>
+                <textarea
+                    id="service-description"
+                    placeholder="Description"
+                    value={description}
+                    onChange={(event) => setDescription(event.target.value)}
+                    className="w-full border border-neutral/20 rounded-lg px-4 py-3 min-h-28"
+                />
+            </div>
 
-            <input
-                type="text"
-                placeholder="Location"
-                value={location}
-                onChange={(event) => setLocation(event.target.value)}
-                className="border border-neutral/20 rounded-lg px-4 py-3"
-            />
+            <div>
+                <label
+                    htmlFor="service-location"
+                    className="block text-sm font-medium mb-1"
+                >
+                    Location
+                </label>
+                <input
+                    id="service-location"
+                    type="text"
+                    placeholder="Location"
+                    value={location}
+                    onChange={(event) => setLocation(event.target.value)}
+                    className="w-full border border-neutral/20 rounded-lg px-4 py-3"
+                />
+            </div>
 
-            <input
-                type="text"
-                placeholder="Phone"
-                value={phone}
-                onChange={(event) => setPhone(event.target.value)}
-                className="border border-neutral/20 rounded-lg px-4 py-3"
-            />
+            <div>
+                <label
+                    htmlFor="service-phone"
+                    className="block text-sm font-medium mb-1"
+                >
+                    Phone
+                </label>
+                <input
+                    id="service-phone"
+                    type="text"
+                    placeholder="Phone"
+                    value={phone}
+                    onChange={(event) => setPhone(event.target.value)}
+                    className="w-full border border-neutral/20 rounded-lg px-4 py-3"
+                />
+            </div>
 
-            <input
-                type="url"
-                placeholder="Website"
-                value={website}
-                onChange={(event) => setWebsite(event.target.value)}
-                className="border border-neutral/20 rounded-lg px-4 py-3"
-            />
+            <div>
+                <label
+                    htmlFor="service-website"
+                    className="block text-sm font-medium mb-1"
+                >
+                    Website
+                </label>
+                <input
+                    id="service-website"
+                    type="url"
+                    placeholder="Website"
+                    value={website}
+                    onChange={(event) => setWebsite(event.target.value)}
+                    className="w-full border border-neutral/20 rounded-lg px-4 py-3"
+                />
+            </div>
 
             <button
                 type="submit"

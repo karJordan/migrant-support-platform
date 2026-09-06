@@ -108,41 +108,76 @@ export default function ResourcesForm({
                         : "Submit a resource for the community."}
                 </p>
             </div>
+            <div>
+                <label
+                    htmlFor="resource-title"
+                    className="block text-sm font-medium mb-1"
+                >
+                    Resource Title
+                </label>
+                <input
+                    id="resource-title"
+                    type="text"
+                    placeholder="Resource title"
+                    value={title}
+                    onChange={(event) => setTitle(event.target.value)}
+                    required
+                    className="w-full border border-neutral/20 rounded-lg px-4 py-3"
+                />
+            </div>
 
-            <input
-                type="text"
-                placeholder="Resource title"
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                required
-                className="border border-neutral/20 rounded-lg px-4 py-3"
-            />
+            <div>
+                <label
+                    htmlFor="resource-category"
+                    className="block text-sm font-medium mb-1"
+                >
+                    Category
+                </label>
+                <input
+                    id="resource-category"
+                    type="text"
+                    placeholder="Category"
+                    value={category}
+                    onChange={(event) => setCategory(event.target.value)}
+                    required
+                    className="w-full border border-neutral/20 rounded-lg px-4 py-3"
+                />
+            </div>
 
-            <input
-                type="text"
-                placeholder="Category"
-                value={category}
-                onChange={(event) => setCategory(event.target.value)}
-                required
-                className="border border-neutral/20 rounded-lg px-4 py-3"
-            />
+            <div>
+                <label
+                    htmlFor="resource-description"
+                    className="block text-sm font-medium mb-1"
+                >
+                    Description
+                </label>
+                <textarea
+                    id="resource-description"
+                    placeholder="Description"
+                    value={description}
+                    onChange={(event) => setDescription(event.target.value)}
+                    required
+                    className="w-full border border-neutral/20 rounded-lg px-4 py-3 min-h-28"
+                />
+            </div>
 
-            <textarea
-                placeholder="Description"
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-                required
-                className="border border-neutral/20 rounded-lg px-4 py-3 min-h-28"
-            />
-
-            <input
-                type="url"
-                placeholder="Resource link"
-                value={link}
-                onChange={(event) => setLink(event.target.value)}
-                required
-                className="border border-neutral/20 rounded-lg px-4 py-3"
-            />
+            <div>
+                <label
+                    htmlFor="resource-link"
+                    className="block text-sm font-medium mb-1"
+                >
+                    Resource Link
+                </label>
+                <input
+                    id="resource-link"
+                    type="url"
+                    placeholder="Resource link"
+                    value={link}
+                    onChange={(event) => setLink(event.target.value)}
+                    required
+                    className="w-full border border-neutral/20 rounded-lg px-4 py-3"
+                />
+            </div>
 
             <button
                 type="submit"

@@ -111,54 +111,98 @@ export default function JobsForm({
                         : "Submit a job opportunity."}
                 </p>
             </div>
+            <div>
+                <label
+                    htmlFor="job-title"
+                    className="block text-sm font-medium mb-1"
+                >
+                    Job Title
+                </label>
+                <input
+                    id="job-title"
+                    type="text"
+                    placeholder="Job title"
+                    value={title}
+                    onChange={(event) => setTitle(event.target.value)}
+                    required
+                    className="w-full border border-neutral/20 rounded-lg px-4 py-3"
+                />
+            </div>
 
-            <input
-                type="text"
-                placeholder="Job title"
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                required
-                className="border border-neutral/20 rounded-lg px-4 py-3"
-            />
+            <div>
+                <label
+                    htmlFor="job-company"
+                    className="block text-sm font-medium mb-1"
+                >
+                    Company
+                </label>
+                <input
+                    id="job-company"
+                    type="text"
+                    placeholder="Company"
+                    value={company}
+                    onChange={(event) => setCompany(event.target.value)}
+                    required
+                    className="w-full border border-neutral/20 rounded-lg px-4 py-3"
+                />
+            </div>
 
-            <input
-                type="text"
-                placeholder="Company"
-                value={company}
-                onChange={(event) => setCompany(event.target.value)}
-                required
-                className="border border-neutral/20 rounded-lg px-4 py-3"
-            />
+            <div>
+                <label
+                    htmlFor="job-location"
+                    className="block text-sm font-medium mb-1"
+                >
+                    Location
+                </label>
+                <input
+                    id="job-location"
+                    type="text"
+                    placeholder="Location"
+                    value={location}
+                    onChange={(event) => setLocation(event.target.value)}
+                    required
+                    className="w-full border border-neutral/20 rounded-lg px-4 py-3"
+                />
+            </div>
 
-            <input
-                type="text"
-                placeholder="Location"
-                value={location}
-                onChange={(event) => setLocation(event.target.value)}
-                required
-                className="border border-neutral/20 rounded-lg px-4 py-3"
-            />
+            <div>
+                <label
+                    htmlFor="job-employment-type"
+                    className="block text-sm font-medium mb-1"
+                >
+                    Employment Type
+                </label>
+                <select
+                    id="job-employment-type"
+                    value={employmentType}
+                    onChange={(event) => setEmploymentType(event.target.value)}
+                    required
+                    className="w-full border border-neutral/20 rounded-lg px-4 py-3 bg-white"
+                >
+                    <option value="">Select employment type</option>
+                    <option value="Full Time">Full Time</option>
+                    <option value="Part Time">Part Time</option>
+                    <option value="Contract">Contract</option>
+                    <option value="Casual">Casual</option>
+                </select>
+            </div>
 
-            <select
-                value={employmentType}
-                onChange={(event) => setEmploymentType(event.target.value)}
-                required
-                className="border border-neutral/20 rounded-lg px-4 py-3 bg-white"
-            >
-                <option value="">Select employment type</option>
-                <option value="Full Time">Full Time</option>
-                <option value="Part Time">Part Time</option>
-                <option value="Contract">Contract</option>
-                <option value="Casual">Casual</option>
-            </select>
-
-            <textarea
-                placeholder="Job description"
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-                required
-                className="border border-neutral/20 rounded-lg px-4 py-3 min-h-28"
-            />
+            <div>
+                <label
+                    htmlFor="job-description"
+                    className="block text-sm font-medium mb-1"
+                >
+                    Description
+                </label>
+                <textarea
+                    id="job-description"
+                    placeholder="Job description"
+                    value={description}
+                    onChange={(event) => setDescription(event.target.value)}
+                    required
+                    className="w-full border border-neutral/20 rounded-lg px-4 py-3 min-h-28"
+                />
+            </div>
 
             <button
                 type="submit"
