@@ -1,5 +1,8 @@
+"use client";
 
 import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Search, Users, Briefcase, GraduationCap, MapPinSearch } from "lucide-react";
 
 const categories = [
@@ -32,6 +35,20 @@ const categories = [
 ];
 
 export default function Home() {
+
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  function handleSearch(e: React.FormEvent){
+    e.preventDefault();
+
+    if (!searchQuery.trim() || searchQuery.length < 2) {
+      return
+  }
+
+    router.push(`/search?query=${encodeURIComponent(searchQuery)}`);
+  }
+
   return (
     <div className="w-full max-w-5xl mx-auto px-6 py-10">
       {/* Hero section */}
@@ -44,19 +61,26 @@ export default function Home() {
             Everything you need to settle, connect and succeed in New Zealand.
           </p>
 
-          <div className="flex items-center gap-2 mt-2 max-w-lg">
+          {/* Search Form */}
+          <form onSubmit={handleSearch} className="flex items-center gap-2 mt-2 max-w-lg">
             <div className="flex-1 flex items-center gap-2 border border-neutral/30 rounded-lg px-4 py-3 bg-white">
             <Search size={20} className="text-neutral" />
               <input
                 type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search services, jobs, resources..."
                 className="flex-1 outline-none text-sm"
+                minLength={2}
+                required
               />
             </div>
-            <button className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap text-sm">
+            <button 
+              type="submit"
+              className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap text-sm">
               Search
             </button>
-          </div>
+          </form>
         </div>
 
         <div className="flex-1 w-full h-72 bg-primary/10 rounded-xl flex items-center justify-center text-primary text-sm -ml-16 md:-ml-24">

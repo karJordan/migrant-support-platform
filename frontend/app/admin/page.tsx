@@ -75,7 +75,6 @@ export default function Admin() {
     const [services, setServices] = useState<Service[]>([]);
     const [selectedPostType, setSelectedPostType] = useState(true);
     const [loading, setLoading] = useState(false);
-
     const { user, isLoading } = useAuth();
     const router = useRouter();
 

@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import Modal from "@/components/Modal";
 import CommunityGroupForm from "@/components/CommunityGroupForm";
 import CommunityEventForm from "@/components/CommunityEventForm";
+import { useAuth } from "@/context/AuthContext";
 
 type CommunityEvent = {
     id: number;
@@ -37,6 +38,10 @@ export default function CommunityPage() {
 
     const [showGroupForm, setShowGroupForm] = useState(false);
     const [showEventForm, setShowEventForm] = useState(false);
+    const [selectedEvent, setSelectedEvent] = useState<CommunityEvent | null>(null);
+    const [selectedGroup, setSelectedGroup] = useState<CommunityGroup | null>(null);
+
+    const { user } = useAuth();
 
     useEffect(() => {
         async function fetchEvents() {
@@ -94,12 +99,14 @@ export default function CommunityPage() {
             <div>
                 <h2 className="text-3xl font-semibold">Upcoming Events</h2>
                 <div className="flex gap-3 mt-6">
-                    <button
-                        onClick={() => setShowEventForm(true)}
-                        className="bg-primary text-white px-4 py-2 rounded-lg"
-                    >
-                        Add Community Event
-                    </button>
+                    {user && (
+                        <button
+                            onClick={() => setShowEventForm(true)}
+                            className="bg-primary text-white px-4 py-2 rounded-lg"
+                        >
+                            Add Community Event
+                        </button>
+                    )}
                 </div>
 
                 {eventsLoading && (
@@ -118,14 +125,28 @@ export default function CommunityPage() {
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                                 {event.map((e) => (
-                                    <CommunityEventCard
+                                    <div
                                         key={e.id}
-                                        title={e.title}
-                                        location={e.location}
-                                        eventDate={e.event_date}
-                                        eventTime={e.event_time}
-                                        description={e.description}
-                                    />
+                                        role="button"
+                                        tabIndex={0}
+                                        aria-label={`View details for ${e.title}`}
+                                        onClick={() => setSelectedEvent(e)}
+                                        onKeyDown={(keyEvent) => {
+                                            if (keyEvent.key === "Enter" || keyEvent.key === " ") {
+                                                keyEvent.preventDefault();
+                                                setSelectedEvent(e);
+                                            }
+                                        }}
+                                        className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
+                                    >
+                                        <CommunityEventCard
+                                            title={e.title}
+                                            location={e.location}
+                                            eventDate={e.event_date}
+                                            eventTime={e.event_time}
+                                            description={e.description}
+                                        />
+                                    </div>
                                 ))}
                             </div>
                         )}
@@ -135,12 +156,14 @@ export default function CommunityPage() {
             <div className="mt-12">
                 <h2 className="text-3xl font-semibold">Community Groups</h2>
                 <div className="flex gap-3 mt-6">
-                    <button
-                        onClick={() => setShowGroupForm(true)}
-                        className="bg-primary text-white px-4 py-2 rounded-lg"
-                    >
-                        Add Community Group
-                    </button>
+                    {user && (
+                        <button
+                            onClick={() => setShowGroupForm(true)}
+                            className="bg-primary text-white px-4 py-2 rounded-lg"
+                        >
+                            Add Community Group
+                        </button>
+                    )}
                 </div>
                 {groupsLoading && (
                     <p className="mt-8 text-neutral">Loading communities...</p>
@@ -157,12 +180,26 @@ export default function CommunityPage() {
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                                 {group.map((g) => (
-                                    <CommunityGroupCard
+                                    <div
                                         key={g.id}
-                                        name={g.name}
-                                        category={g.category}
-                                        description={g.description}
-                                    />
+                                        role="button"
+                                        tabIndex={0}
+                                        aria-label={`View details for ${g.name}`}
+                                        onClick={() => setSelectedGroup(g)}
+                                        onKeyDown={(keyEvent) => {
+                                            if (keyEvent.key === "Enter" || keyEvent.key === " ") {
+                                                keyEvent.preventDefault();
+                                                setSelectedGroup(g);
+                                            }
+                                        }}
+                                        className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
+                                    >
+                                        <CommunityGroupCard
+                                            name={g.name}
+                                            category={g.category}
+                                            description={g.description}
+                                        />
+                                    </div>
                                 ))}
                             </div>
                         )}
@@ -177,6 +214,29 @@ export default function CommunityPage() {
             {showEventForm && (
                 <Modal onClose={() => setShowEventForm(false)}>
                     <CommunityEventForm />
+                </Modal>
+            )}
+            {selectedEvent && (
+                <Modal onClose={() => setSelectedEvent(null)}>
+                    <h2 className="text-2xl font-semibold">{selectedEvent.title}</h2>
+                    <p className="text-primary mt-2">{selectedEvent.location}</p>
+
+                    <p className="mt-2">
+                        {new Date(selectedEvent.event_date).toLocaleDateString("en-GB", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                        })} at {selectedEvent.event_time}
+                    </p>
+
+                    <p className="mt-4">{selectedEvent.description}</p>
+                </Modal>
+            )}
+            {selectedGroup && (
+                <Modal onClose={() => setSelectedGroup(null)}>
+                    <h2 className="text-2xl font-semibold">{selectedGroup.name}</h2>
+                    <p className="text-primary mt-2">{selectedGroup.category}</p>
+                    <p className="mt-4">{selectedGroup.description}</p>
                 </Modal>
             )}
         </div>
