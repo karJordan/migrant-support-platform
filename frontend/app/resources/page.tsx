@@ -5,15 +5,9 @@ import ResourcesCard from "@/components/ResourcesCard";
 import Modal from "@/components/Modal";
 import ResourcesForm from "@/components/ResourcesForm";
 import { useAuth } from "@/context/AuthContext";
+import { Resource } from "@/types/resource";
 
-type Resource = {
-    id: number;
-    title: string;
-    description: string;
-    link: string;
-    category: string;
-    status: string;
-};
+
 
 export default function ResourcePage() {
     const [resources, setResources] = useState<Resource[]>([]);

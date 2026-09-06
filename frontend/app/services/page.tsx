@@ -5,14 +5,7 @@ import ServiceCard from "@/components/ServicesCard";
 import Modal from "@/components/Modal";
 import ServiceForm from "@/components/ServiceForm";
 import { useAuth } from "@/context/AuthContext";
-
-type Service = {
-    id: number;
-    name: string;
-    category: string;
-    description: string;
-    location: string;
-};
+import { Service } from "@/types/service";
 
 export default function ServicesPage() {
     const [services, setServices] = useState<Service[]>([]);
@@ -22,6 +15,8 @@ export default function ServicesPage() {
     const [showServiceForm, setShowServiceForm] = useState(false);
     const [selectedService, setSelectedService] = useState<Service | null>(null);
     const { user } = useAuth();
+
+    const [isEditing, setIsEditing] = useState(false);
 
     useEffect(() => {
         async function fetchServices() {
@@ -149,6 +144,48 @@ export default function ServicesPage() {
                     <p className="mt-4">
                         {selectedService.location}
                     </p>
+                </Modal>
+            )}
+            {selectedService && (
+                <Modal
+                    onClose={() => {
+                        setSelectedService(null);
+                        setIsEditing(false);
+                    }}
+                >
+                    {isEditing ? (
+                        <ServiceForm
+                            service={selectedService}
+                            onCancel={() => setIsEditing(false)}
+                        />
+                    ) : (
+                        <>
+                            <h2 className="text-2xl font-semibold">
+                                {selectedService.name}
+                            </h2>
+
+                            <p className="text-primary mt-2">
+                                {selectedService.category}
+                            </p>
+
+                            <p className="mt-4">
+                                {selectedService.description}
+                            </p>
+
+                            <p className="mt-4">
+                                {selectedService.location}
+                            </p>
+
+                            {user?.role === "admin" && (
+                                <button
+                                    onClick={() => setIsEditing(true)}
+                                    className="bg-primary text-white px-6 py-3 rounded-lg mt-6"
+                                >
+                                    Edit
+                                </button>
+                            )}
+                        </>
+                    )}
                 </Modal>
             )}
         </div>

@@ -5,15 +5,9 @@ import Modal from "@/components/Modal";
 import JobsForm from "@/components/JobsForm";
 import JobsCard from "@/components/JobsCard";
 import { useAuth } from "@/context/AuthContext";
+import { Job } from "@/types/job";
 
-type Job = {
-    id: number;
-    title: string;
-    company: string;
-    location: string;
-    employment_type: string;
-    description: string;
-};
+
 
 export default function JobsPage() {
     const [jobs, setJobs] = useState<Job[]>([]);

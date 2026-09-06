@@ -2,16 +2,31 @@
 
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { Service } from "@/types/service";
 
-export default function ServiceForm() {
+
+
+
+type ServiceFormProps = {
+    service?: Service;
+    onCancel?: () => void;
+    onSaved?: () => void;
+};
+
+
+export default function ServiceForm({
+    service,
+    onCancel,
+    onSaved,
+}: ServiceFormProps) {
     const { user, token } = useAuth();
 
-    const [name, setName] = useState("");
-    const [category, setCategory] = useState("");
-    const [description, setDescription] = useState("");
-    const [location, setLocation] = useState("");
-    const [phone, setPhone] = useState("");
-    const [website, setWebsite] = useState("");
+    const [name, setName] = useState(service?.name ?? "");
+    const [category, setCategory] = useState(service?.category ?? "");
+    const [description, setDescription] = useState(service?.description ?? "");
+    const [location, setLocation] = useState(service?.location ?? "");
+    const [phone, setPhone] = useState(service?.phone ?? "");
+    const [website, setWebsite] = useState(service?.website ?? "");
 
     const [message, setMessage] = useState("");
 
@@ -63,11 +78,13 @@ export default function ServiceForm() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
                 <h2 className="text-2xl font-semibold">
-                    Add a Service
+                    {service ? "Edit Service" : "Add a Service"}
                 </h2>
 
                 <p className="text-neutral mt-1">
-                    Submit a service for the community.
+                    {service
+                        ? "Update this service."
+                        : "Submit a service for the community."}
                 </p>
             </div>
 
@@ -124,13 +141,22 @@ export default function ServiceForm() {
                 type="submit"
                 className="bg-primary text-white px-4 py-3 rounded-lg"
             >
-                Submit Service
+                {service ? "Save Changes" : "Submit Service"}
             </button>
             <p className="text-neutral mt-1">
                 {user?.role === "admin"
                     ? "This service will be published immediately."
                     : "This service will be submitted for admin approval."}
             </p>
+            {service && onCancel && (
+                <button
+                    type="button"
+                    onClick={onCancel}
+                    className="border px-4 py-3 rounded-lg"
+                >
+                    Cancel
+                </button>
+            )}
 
             {message && (
                 <p className="text-sm text-neutral">
