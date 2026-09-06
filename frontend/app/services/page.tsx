@@ -49,8 +49,8 @@ export default function ServicesPage() {
         selectedCategory === "All"
             ? services
             : services.filter(
-                  (service) => service.category === selectedCategory
-              );
+                (service) => service.category === selectedCategory
+            );
 
     return (
         <div className="w-full max-w-5xl mx-auto px-6 py-10">
@@ -76,11 +76,10 @@ export default function ServicesPage() {
                     <button
                         key={category}
                         onClick={() => setSelectedCategory(category)}
-                        className={`px-4 py-2 rounded-lg border transition-colors ${
-                            selectedCategory === category
-                                ? "bg-primary text-white border-primary"
-                                : "bg-white border-neutral/20"
-                        }`}
+                        className={`px-4 py-2 rounded-lg border transition-colors ${selectedCategory === category
+                            ? "bg-primary text-white border-primary"
+                            : "bg-white border-neutral/20"
+                            }`}
                     >
                         {category}
                     </button>
@@ -161,6 +160,18 @@ export default function ServicesPage() {
                         <ServiceForm
                             service={selectedService}
                             onCancel={() => setIsEditing(false)}
+                            onSaved={(updatedService) => {
+                                setServices((currentServices) =>
+                                    currentServices.map((service) =>
+                                        service.id === updatedService.id
+                                            ? updatedService
+                                            : service
+                                    )
+                                );
+
+                                setSelectedService(updatedService);
+                                setIsEditing(false);
+                            }}
                         />
                     ) : (
                         <>

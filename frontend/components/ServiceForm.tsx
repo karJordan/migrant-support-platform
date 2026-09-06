@@ -7,7 +7,7 @@ import { Service } from "@/types/service";
 type ServiceFormProps = {
     service?: Service;
     onCancel?: () => void;
-    onSaved?: () => void;
+    onSaved?: (updatedService: Service) => void;
 };
 
 export default function ServiceForm({
@@ -65,6 +65,7 @@ export default function ServiceForm({
                         : "Failed to submit service"
                 );
             }
+            const updatedService = await response.json();
 
             setMessage(
                 service
@@ -72,7 +73,9 @@ export default function ServiceForm({
                     : "Service submitted successfully."
             );
 
-            onSaved?.();
+            if (service) {
+                onSaved?.(updatedService);
+            }
 
             if (!service) {
                 setName("");
