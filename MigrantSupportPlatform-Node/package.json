@@ -12,6 +12,7 @@
     "seed:groups": "node database/seeds/seedCommunityGroups.js",
     "seed:events": "node database/seeds/seedCommunityEvents.js",
     "seed:resources": "node database/seeds/seedResources.js",
+    "seed:users": "node database/seeds/seedUsers.js",
     "lint": "eslint ."
   },
   "keywords": [],
