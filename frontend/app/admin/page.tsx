@@ -69,18 +69,22 @@ type Service = {
 export default function Admin() {
     const [error, setError] = useState<string | null>(null);
     const [users, setUsers] = useState<User[]>([]);
-    const [jobs, setJobs] = useState<Job[]>([]);
-    const [events, setEvents] = useState<CommunityEvent[]>([]);
-    const [groups, setGroups] = useState<CommunityGroup[]>([]);
-    const [resources, setResources] = useState<Resource[]>([]);
     const [services, setServices] = useState<Service[]>([]);
+    const [jobs, setJobs] = useState<Job[]>([]);
+    const [groups, setGroups] = useState<CommunityGroup[]>([]);
+    const [events, setEvents] = useState<CommunityEvent[]>([]);
+    const [resources, setResources] = useState<Resource[]>([]);
     const [selectedPostType, setSelectedPostType] = useState(true);
     const [loading, setLoading] = useState(false);
 
     const { user, isLoading, token } = useAuth();
     const router = useRouter();
 
+    const [selectedService, setSelectedService] = useState<Service | null>(null);
     const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+    const [selectedGroup, setSelectedGroup] = useState<CommunityGroup | null>(null);
+    const [selectedEvent, setSelectedEvent] = useState<CommunityEvent | null>(null);
+    const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
 
     useEffect(() => {
         if (!isLoading && !user) {
@@ -227,6 +231,45 @@ export default function Admin() {
         }
     };
 
+    async function handleApprovePost(postType: string, postId: number) {
+        try {
+            const response = await fetch(`http://localhost:4000/api/admin/approve/${postType}/${postId}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to approve ${postType}`);
+            }
+
+            // Refresh the relevant list after approval
+            switch (postType) {
+                case 'service':
+                    fetchServices();
+                    break;
+                case 'resource':
+                    fetchResources();
+                    break;
+                case 'job':
+                    fetchJobs();
+                    break;
+                case 'group':
+                    fetchGroups();
+                    break;
+                case 'event':
+                    fetchEvents();
+                    break;
+                default:
+                    throw new Error('Invalid post type');
+            }
+        } catch {
+            setError(`Error approving ${postType}`);
+        }
+    };
+
     return (
         <div className="w-full max-w-5xl mx-auto px-6 py-10">
 
@@ -265,6 +308,7 @@ export default function Admin() {
                 </p>
 
                 {selectedPostType ? (
+
                     <ul className="mt-4 space-y-2">
                         {users.map((user) => (
                             <li key={user.id} className="bg-gray-100 p-4 rounded-lg">
@@ -282,13 +326,27 @@ export default function Admin() {
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                                 {services.map((service) => (
-                                    <ServiceCard
+                                    <div
                                         key={service.id}
-                                        name={service.name}
-                                        category={service.category}
-                                        description={service.description}
-                                        location={service.location}
-                                    />
+                                        role="button"
+                                        onClick={() => setSelectedService(service)}
+                                        aria-label={`View details for ${service.name}`}
+                                        onKeyDown={(keyEvent) => {
+                                            if (keyEvent.key === "Enter" || keyEvent.key === " ") {
+                                                keyEvent.preventDefault();
+                                                setSelectedService(service);
+                                            }
+                                        }}
+                                        className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
+                                    >
+                                        <ServiceCard
+                                            key={service.id}
+                                            name={service.name}
+                                            category={service.category}
+                                            description={service.description}
+                                            location={service.location}
+                                        />
+                                    </div>
                                 ))}
                             </div>
                         )}
@@ -331,12 +389,26 @@ export default function Admin() {
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                                 {groups.map((group) => (
-                                    <CommunityGroupCard
+                                    <div
                                         key={group.id}
-                                        name={group.name}
-                                        category={group.category}
-                                        description={group.description}
-                                    />
+                                        role="button"
+                                        onClick={() => setSelectedGroup(group)}
+                                        aria-label={`View details for ${group.name}`}
+                                        onKeyDown={(keyEvent) => {
+                                            if (keyEvent.key === "Enter" || keyEvent.key === " ") {
+                                                keyEvent.preventDefault();
+                                                setSelectedGroup(group);
+                                            }
+                                        }}
+                                        className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
+                                    >
+                                        <CommunityGroupCard
+                                            key={group.id}
+                                            name={group.name}
+                                            category={group.category}
+                                            description={group.description}
+                                        />
+                                    </div>
                                 ))}
                             </div>
                         )}
@@ -347,14 +419,28 @@ export default function Admin() {
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                                 {events.map((event) => (
-                                    <CommunityEventCard
+                                    <div
                                         key={event.id}
-                                        title={event.title}
-                                        location={event.location}
-                                        eventDate={event.event_date}
-                                        eventTime={event.event_time}
-                                        description={event.description}
-                                    />
+                                        role="button"
+                                        onClick={() => setSelectedEvent(event)}
+                                        aria-label={`View details for ${event.title}`}
+                                        onKeyDown={(keyEvent) => {
+                                            if (keyEvent.key === "Enter" || keyEvent.key === " ") {
+                                                keyEvent.preventDefault();
+                                                setSelectedEvent(event);
+                                            }
+                                        }}
+                                        className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
+                                    >
+                                        <CommunityEventCard
+                                            key={event.id}
+                                            title={event.title}
+                                            location={event.location}
+                                            eventDate={event.event_date}
+                                            eventTime={event.event_time}
+                                            description={event.description}
+                                        />
+                                    </div>
                                 ))}
                             </div>
                         )}
@@ -365,19 +451,70 @@ export default function Admin() {
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                                 {resources.map((resource) => (
-                                    <ResourcesCard
+                                    <div
                                         key={resource.id}
-                                        title={resource.title}
-                                        category={resource.category}
-                                        description={resource.description}
-                                        link={resource.link}
-                                    />
+                                        role="button"
+                                        onClick={() => setSelectedResource(resource)}
+                                        aria-label={`View details for ${resource.title}`}
+                                        onKeyDown={(keyEvent) => {
+                                            if (keyEvent.key === "Enter" || keyEvent.key === " ") {
+                                                keyEvent.preventDefault();
+                                                setSelectedResource(resource);
+                                            }
+                                        }}
+                                        className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
+                                    >
+                                        <ResourcesCard
+                                            key={resource.id}
+                                            title={resource.title}
+                                            category={resource.category}
+                                            description={resource.description}
+                                            link={resource.link}
+                                        />
+                                    </div>
                                 ))}
                             </div>
                         )}
 
                     </ul>
                 )}
+
+                {selectedService && (
+                    <Modal onClose={() => setSelectedService(null)}>
+                        <h2 className="text-2xl font-semibold">
+                            {selectedService.name}
+                        </h2>
+
+                        <p className="text-primary mt-2">
+                            {selectedService.category}
+                        </p>
+
+                        <p className="mt-4">
+                            {selectedService.description}
+                        </p>
+
+                        <p className="mt-4">
+                            {selectedService.location}
+                        </p>
+                        <div className="flex flex-wrap gap-3 mt-6">
+                            <button
+                                onClick={() => {
+                                    handleApprovePost('service', selectedService.id);
+                                    setSelectedService(null);
+                                }}
+                                className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap text-sm"
+                            >Approve</button>
+
+                            <button
+                                onClick={() => {
+                                    setSelectedService(null);
+                                }}
+                                className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap text-sm"
+                            >Decline</button>
+                        </div>
+                    </Modal>
+                )}
+
                 {selectedJob && (
                     <Modal onClose={() => setSelectedJob(null)}>
                         <h2 className="text-2xl font-semibold">{selectedJob.title}</h2>
@@ -389,6 +526,114 @@ export default function Admin() {
                         <div className="flex items-center gap-2 mt-2 text-neutral">
                             <span>Employment Type: {selectedJob.employment_type}</span>
                         </div>
+                        <div className="flex flex-wrap gap-3 mt-6">
+                            <button
+                                onClick={() => {
+                                    handleApprovePost('job', selectedJob.id);
+                                    setSelectedJob(null);
+                                }}
+                                className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap text-sm"
+                            >Approve</button>
+
+                            <button
+                                onClick={() => {
+                                    setSelectedJob(null);
+                                }}
+                                className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap text-sm"
+                            >Decline</button>
+                        </div>
+                    </Modal>
+                )}
+
+                {selectedGroup && (
+                    <Modal onClose={() => setSelectedGroup(null)}>
+                        <h2 className="text-2xl font-semibold">{selectedGroup.name}</h2>
+                        <p className="text-primary mt-2">{selectedGroup.category}</p>
+                        <p className="mt-4">{selectedGroup.description}</p>
+                        <button
+                            onClick={() => {
+                                handleApprovePost('group', selectedGroup.id);
+                                setSelectedGroup(null);
+                            }}
+                            className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap text-sm"
+                        >Approve</button>
+
+                        <button
+                            onClick={() => {
+                                setSelectedGroup(null);
+                            }}
+                            className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap text-sm"
+                        >Decline</button>
+                    </Modal>
+                )}
+
+                {selectedEvent && (
+                    <Modal onClose={() => setSelectedEvent(null)}>
+                        <h2 className="text-2xl font-semibold">{selectedEvent.title}</h2>
+                        <p className="text-primary mt-2">{selectedEvent.location}</p>
+
+                        <p className="mt-2">
+                            {new Date(selectedEvent.event_date).toLocaleDateString("en-GB", {
+                                day: "numeric",
+                                month: "long",
+                                year: "numeric",
+                            })} at {selectedEvent.event_time}
+                        </p>
+
+                        <p className="mt-4">{selectedEvent.description}</p>
+                        <button
+                            onClick={() => {
+                                handleApprovePost('event', selectedEvent.id);
+                                setSelectedEvent(null);
+                            }}
+                            className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap text-sm"
+                        >Approve</button>
+
+                        <button
+                            onClick={() => {
+                                setSelectedEvent(null);
+                            }}
+                            className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap text-sm"
+                        >Decline</button>
+                    </Modal>
+                )}
+
+                {selectedResource && (
+                    <Modal onClose={() => setSelectedResource(null)}>
+                        <h2 className="text-2xl font-semibold">
+                            {selectedResource.title}
+                        </h2>
+
+                        <p className="text-primary mt-2">
+                            {selectedResource.category}
+                        </p>
+
+                        <p className="mt-4">
+                            {selectedResource.description}
+                        </p>
+
+                        <a
+                            href={selectedResource.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline mt-4 inline-block"
+                        >
+                            Visit Resource
+                        </a>
+                        <button
+                            onClick={() => {
+                                handleApprovePost('resource', selectedResource.id);
+                                setSelectedResource(null);
+                            }}
+                            className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap text-sm"
+                        >Approve</button>
+
+                        <button
+                            onClick={() => {
+                                setSelectedResource(null);
+                            }}
+                            className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap text-sm"
+                        >Decline</button>
                     </Modal>
                 )}
 
