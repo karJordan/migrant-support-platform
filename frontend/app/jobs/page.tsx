@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Modal from "@/components/Modal";
 import JobsForm from "@/components/JobsForm";
 import JobsCard from "@/components/JobsCard";
+import { useAuth } from "@/context/AuthContext";
 
 type Job = {
     id: number;
@@ -20,6 +21,8 @@ export default function JobsPage() {
     const [error, setError] = useState<string | null>(null);
     const [selectedEmploymentType, setSelectedEmploymentType] = useState("All");
     const [showJobForm, setShowJobForm] = useState(false);
+    const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+    const { user } = useAuth();
 
     useEffect(() => {
         async function fetchJobs() {
@@ -62,12 +65,14 @@ export default function JobsPage() {
                 Browse job opportunities for migrants in New Zealand.
             </p>
             <div className="flex flex-wrap gap-3 mt-6">
-                <button
-                    onClick={() => setShowJobForm(true)}
-                    className="bg-primary text-white px-4 py-2 rounded-lg"
-                >
-                    Add Job
-                </button>
+                {user && (
+                    <button
+                        onClick={() => setShowJobForm(true)}
+                        className="bg-primary text-white px-4 py-2 rounded-lg"
+                    >
+                        Add Job
+                    </button>
+                )}
 
                 {employmentTypes.map((type) => (
                     <button
@@ -103,14 +108,28 @@ export default function JobsPage() {
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                             {filteredJobs.map((job) => (
-                                <JobsCard
+                                <div
                                     key={job.id}
-                                    title={job.title}
-                                    company={job.company}
-                                    location={job.location}
-                                    description={job.description}
-                                    employmentType={job.employment_type}
-                                />
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={() => setSelectedJob(job)}
+                                    aria-label={`View details for ${job.title}`}
+                                    onKeyDown={(keyEvent) => {
+                                        if (keyEvent.key === "Enter" || keyEvent.key === " ") {
+                                            keyEvent.preventDefault();
+                                            setSelectedJob(job);
+                                        }
+                                    }}
+                                    className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
+                                >
+                                    <JobsCard
+                                        title={job.title}
+                                        company={job.company}
+                                        location={job.location}
+                                        employmentType={job.employment_type}
+                                        description={job.description}
+                                    />
+                                </div>
                             ))}
                         </div>
                     )}
@@ -119,6 +138,19 @@ export default function JobsPage() {
             {showJobForm && (
                 <Modal onClose={() => setShowJobForm(false)}>
                     <JobsForm />
+                </Modal>
+            )}
+            {selectedJob && (
+                <Modal onClose={() => setSelectedJob(null)}>
+                    <h2 className="text-2xl font-semibold">{selectedJob.title}</h2>
+                    <p className="font-medium mt-1">{selectedJob.company}</p>
+                    <p className="text-neutral mt-2">{selectedJob.description}</p>
+                    <div className="flex items-center gap-2 mt-4 text-neutral">
+                        <span>Location: {selectedJob.location}</span>
+                    </div>
+                    <div className="flex items-center gap-2 mt-2 text-neutral">
+                        <span>Employment Type: {selectedJob.employment_type}</span>
+                    </div>
                 </Modal>
             )}
         </div>
