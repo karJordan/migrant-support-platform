@@ -9,6 +9,7 @@ import CommunityGroupCard from "@/components/CommunityGroupCard";
 import CommunityEventCard from "@/components/CommunityEventCard";
 import ResourcesCard from "@/components/ResourcesCard";
 import ServiceCard from "@/components/ServicesCard";
+import Modal from "../../components/Modal";
 
 export const dynamic = 'force-dynamic';
 
@@ -76,8 +77,10 @@ export default function Admin() {
     const [selectedPostType, setSelectedPostType] = useState(true);
     const [loading, setLoading] = useState(false);
 
-    const { user, isLoading } = useAuth();
+    const { user, isLoading, token } = useAuth();
     const router = useRouter();
+
+    const [selectedJob, setSelectedJob] = useState<Job | null>(null);
 
     useEffect(() => {
         if (!isLoading && !user) {
@@ -97,7 +100,8 @@ export default function Admin() {
             const response = await fetch("http://localhost:4000/api/admin/users", {
                 method: "GET",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
                 }
             });
 
@@ -118,7 +122,8 @@ export default function Admin() {
             const response = await fetch("http://localhost:4000/api/admin/events", {
                 method: "GET",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
                 }
             });
 
@@ -139,7 +144,8 @@ export default function Admin() {
             const response = await fetch("http://localhost:4000/api/admin/jobs", {
                 method: "GET",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
                 }
             });
 
@@ -160,7 +166,8 @@ export default function Admin() {
             const response = await fetch("http://localhost:4000/api/admin/groups", {
                 method: "GET",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
                 }
             });
 
@@ -181,7 +188,8 @@ export default function Admin() {
             const response = await fetch("http://localhost:4000/api/admin/resources", {
                 method: "GET",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
                 }
             });
 
@@ -202,7 +210,8 @@ export default function Admin() {
             const response = await fetch("http://localhost:4000/api/admin/services", {
                 method: "GET",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
                 }
             });
 
@@ -290,14 +299,28 @@ export default function Admin() {
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                                 {jobs.map((job) => (
-                                    <JobsCard
+                                    <div
                                         key={job.id}
-                                        title={job.title}
-                                        company={job.company}
-                                        location={job.location}
-                                        description={job.description}
-                                        employmentType={job.employment_type}
-                                    />
+                                        role="button"
+                                        onClick={() => setSelectedJob(job)}
+                                        aria-label={`View details for ${job.title}`}
+                                        onKeyDown={(keyEvent) => {
+                                            if (keyEvent.key === "Enter" || keyEvent.key === " ") {
+                                                keyEvent.preventDefault();
+                                                setSelectedJob(job);
+                                            }
+                                        }}
+                                        className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
+                                    >
+                                        <JobsCard
+                                            key={job.id}
+                                            title={job.title}
+                                            company={job.company}
+                                            location={job.location}
+                                            description={job.description}
+                                            employmentType={job.employment_type}
+                                        />
+                                    </div>
                                 ))}
                             </div>
                         )}
@@ -307,14 +330,14 @@ export default function Admin() {
                             <p className="text-sm text-gray-600">No groups pending approval.</p>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-                                    {groups.map((group) => (
-                                        <CommunityGroupCard
-                                            key={group.id}
-                                            name={group.name}
-                                            category={group.category}
-                                            description={group.description}
-                                        />
-                                    ))}
+                                {groups.map((group) => (
+                                    <CommunityGroupCard
+                                        key={group.id}
+                                        name={group.name}
+                                        category={group.category}
+                                        description={group.description}
+                                    />
+                                ))}
                             </div>
                         )}
 
@@ -354,6 +377,19 @@ export default function Admin() {
                         )}
 
                     </ul>
+                )}
+                {selectedJob && (
+                    <Modal onClose={() => setSelectedJob(null)}>
+                        <h2 className="text-2xl font-semibold">{selectedJob.title}</h2>
+                        <p className="font-medium mt-1">{selectedJob.company}</p>
+                        <p className="text-neutral mt-2">{selectedJob.description}</p>
+                        <div className="flex items-center gap-2 mt-4 text-neutral">
+                            <span>Location: {selectedJob.location}</span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-2 text-neutral">
+                            <span>Employment Type: {selectedJob.employment_type}</span>
+                        </div>
+                    </Modal>
                 )}
 
             </div>
