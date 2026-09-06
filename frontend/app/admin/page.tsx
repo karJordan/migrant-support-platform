@@ -75,7 +75,7 @@ export default function Admin() {
     const [events, setEvents] = useState<CommunityEvent[]>([]);
     const [resources, setResources] = useState<Resource[]>([]);
     const [selectedPostType, setSelectedPostType] = useState(true);
-    const [loading, setLoading] = useState(false);
+    const [, setLoading] = useState(false);
 
     const { user, isLoading, token } = useAuth();
     const router = useRouter();
