@@ -108,31 +108,58 @@ export default function CommunityGroupForm({
                 </p>
             </div>
 
-            <input
-                type="text"
-                placeholder="Group name"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                required
-                className="border border-neutral/20 rounded-lg px-4 py-3"
-            />
+            <div>
+                <label
+                    htmlFor="group-name"
+                    className="block text-sm font-medium mb-1"
+                >
+                    Group Name
+                </label>
+                <input
+                    id="group-name"
+                    type="text"
+                    placeholder="Group name"
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                    required
+                    className="w-full border border-neutral/20 rounded-lg px-4 py-3"
+                />
+            </div>
 
-            <input
-                type="text"
-                placeholder="Category"
-                value={category}
-                onChange={(event) => setCategory(event.target.value)}
-                required
-                className="border border-neutral/20 rounded-lg px-4 py-3"
-            />
+            <div>
+                <label
+                    htmlFor="group-category"
+                    className="block text-sm font-medium mb-1"
+                >
+                    Category
+                </label>
+                <input
+                    id="group-category"
+                    type="text"
+                    placeholder="Category"
+                    value={category}
+                    onChange={(event) => setCategory(event.target.value)}
+                    required
+                    className="w-full border border-neutral/20 rounded-lg px-4 py-3"
+                />
+            </div>
 
-            <textarea
-                placeholder="Group description"
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-                required
-                className="border border-neutral/20 rounded-lg px-4 py-3 min-h-28"
-            />
+            <div>
+                <label
+                    htmlFor="group-description"
+                    className="block text-sm font-medium mb-1"
+                >
+                    Description
+                </label>
+                <textarea
+                    id="group-description"
+                    placeholder="Group description"
+                    value={description}
+                    onChange={(event) => setDescription(event.target.value)}
+                    required
+                    className="w-full border border-neutral/20 rounded-lg px-4 py-3 min-h-28"
+                />
+            </div>
 
             <button
                 type="submit"

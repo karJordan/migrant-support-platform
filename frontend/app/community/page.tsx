@@ -179,7 +179,8 @@ export default function CommunityPage() {
                                         onClick={() => {
                                             setSelectedGroup(g);
                                             setIsEditingGroup(false);
-                                        }} onKeyDown={(keyEvent) => {
+                                        }} 
+                                        onKeyDown={(keyEvent) => {
                                             if (keyEvent.key === "Enter" || keyEvent.key === " ") {
                                                 keyEvent.preventDefault();
                                                 setSelectedGroup(g);

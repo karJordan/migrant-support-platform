@@ -120,47 +120,92 @@ export default function CommunityEventForm({
                 </p>
             </div>
 
-            <input
-                type="text"
-                placeholder="Event title"
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                required
-                className="border border-neutral/20 rounded-lg px-4 py-3"
-            />
+            <div>
+                <label
+                    htmlFor="event-title"
+                    className="block text-sm font-medium mb-1"
+                >
+                    Event Title
+                </label>
+                <input
+                    id="event-title"
+                    type="text"
+                    placeholder="Event title"
+                    value={title}
+                    onChange={(event) => setTitle(event.target.value)}
+                    required
+                    className="w-full border border-neutral/20 rounded-lg px-4 py-3"
+                />
+            </div>
 
-            <input
-                type="text"
-                placeholder="Location"
-                value={location}
-                onChange={(event) => setLocation(event.target.value)}
-                required
-                className="border border-neutral/20 rounded-lg px-4 py-3"
-            />
+            <div>
+                <label
+                    htmlFor="event-location"
+                    className="block text-sm font-medium mb-1"
+                >
+                    Location
+                </label>
+                <input
+                    id="event-location"
+                    type="text"
+                    placeholder="Location"
+                    value={location}
+                    onChange={(event) => setLocation(event.target.value)}
+                    required
+                    className="w-full border border-neutral/20 rounded-lg px-4 py-3"
+                />
+            </div>
 
-            <input
-                type="date"
-                value={eventDate}
-                onChange={(event) => setEventDate(event.target.value)}
-                required
-                className="border border-neutral/20 rounded-lg px-4 py-3"
-            />
+            <div>
+                <label
+                    htmlFor="event-date"
+                    className="block text-sm font-medium mb-1"
+                >
+                    Event Date
+                </label>
+                <input
+                    id="event-date"
+                    type="date"
+                    value={eventDate}
+                    onChange={(event) => setEventDate(event.target.value)}
+                    required
+                    className="w-full border border-neutral/20 rounded-lg px-4 py-3"
+                />
+            </div>
 
-            <input
-                type="time"
-                value={eventTime}
-                onChange={(event) => setEventTime(event.target.value)}
-                required
-                className="border border-neutral/20 rounded-lg px-4 py-3"
-            />
+            <div>
+                <label
+                    htmlFor="event-time"
+                    className="block text-sm font-medium mb-1"
+                >
+                    Event Time
+                </label>
+                <input
+                    id="event-time"
+                    type="time"
+                    value={eventTime}
+                    onChange={(event) => setEventTime(event.target.value)}
+                    required
+                    className="w-full border border-neutral/20 rounded-lg px-4 py-3"
+                />
+            </div>
 
-            <textarea
-                placeholder="Event description"
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-                required
-                className="border border-neutral/20 rounded-lg px-4 py-3 min-h-28"
-            />
+            <div>
+                <label
+                    htmlFor="event-description"
+                    className="block text-sm font-medium mb-1"
+                >
+                    Description
+                </label>
+                <textarea
+                    id="event-description"
+                    placeholder="Event description"
+                    value={description}
+                    onChange={(event) => setDescription(event.target.value)}
+                    required
+                    className="w-full border border-neutral/20 rounded-lg px-4 py-3 min-h-28"
+                />
+            </div>
 
             <button
                 type="submit"
