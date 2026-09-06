@@ -1,9 +1,9 @@
-export type Service = {
+export type CommunityEvent = {
     id: number;
-    name: string;
-    category: string;
-    description: string;
+    title: string;
     location: string;
-    phone: string;
-    website: string;
+    event_date: string;
+    event_time: string;
+    description: string;
+    status: string;
 };

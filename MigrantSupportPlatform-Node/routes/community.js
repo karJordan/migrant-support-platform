@@ -33,6 +33,53 @@ router.post('/groups', authenticateToken, async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+// PATCH /api/community/groups/:id - Update an existing community group
+router.patch('/groups/:id', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({
+            message: 'Admin access required'
+        });
+    }
+
+    const { id } = req.params;
+    const { name, category, description } = req.body;
+
+    if (!name) {
+        return res.status(400).json({
+            message: 'Name is required'
+        });
+    }
+
+    try {
+        const result = await pool.query(
+            `UPDATE community_groups
+             SET name = $1,
+                 category = $2,
+                 description = $3
+             WHERE id = $4
+             RETURNING *`,
+            [
+                name,
+                category,
+                description,
+                id
+            ]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                message: 'Community group not found'
+            });
+        }
+
+        res.status(200).json(result.rows[0]);
+    } catch (error) {
+        console.error('Database query error:', error.message);
+        res.status(500).json({
+            error: 'Internal Server Error'
+        });
+    }
+});
 
 // EVENTS
 router.get('/events', async (req, res) => {
@@ -64,5 +111,61 @@ router.post('/events', authenticateToken, async (req, res) => {
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+// PATCH /api/community/events/:id - Update an existing community event
+router.patch('/events/:id', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({
+            message: 'Admin access required'
+        });
+    }
 
+    const { id } = req.params;
+    const {
+        title,
+        location,
+        event_date,
+        event_time,
+        description
+    } = req.body;
+
+    if (!title) {
+        return res.status(400).json({
+            message: 'Title is required'
+        });
+    }
+
+    try {
+        const result = await pool.query(
+            `UPDATE community_events
+             SET title = $1,
+                 location = $2,
+                 event_date = $3,
+                 event_time = $4,
+                 description = $5
+             WHERE id = $6
+             RETURNING *`,
+            [
+                title,
+                location,
+                event_date,
+                event_time,
+                description,
+                id
+            ]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                message: 'Community event not found'
+            });
+        }
+
+        res.status(200).json(result.rows[0]);
+    } catch (error) {
+        console.error('Database query error:', error.message);
+        res.status(500).json({
+            error: 'Internal Server Error'
+        });
+    }
+});
 module.exports = router;

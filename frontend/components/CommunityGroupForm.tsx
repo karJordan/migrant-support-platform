@@ -2,13 +2,26 @@
 
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { CommunityGroup } from "@/types/group";
 
-export default function CommunityGroupForm() {
+type CommunityGroupFormProps = {
+    group?: CommunityGroup;
+    onCancel?: () => void;
+    onSaved?: (updatedGroup: CommunityGroup) => void;
+};
+
+export default function CommunityGroupForm({
+    group,
+    onCancel,
+    onSaved,
+}: CommunityGroupFormProps) {
     const { user, token } = useAuth();
 
-    const [name, setName] = useState("");
-    const [category, setCategory] = useState("");
-    const [description, setDescription] = useState("");
+    const [name, setName] = useState(group?.name ?? "");
+    const [category, setCategory] = useState(group?.category ?? "");
+    const [description, setDescription] = useState(
+        group?.description ?? ""
+    );
 
     const [message, setMessage] = useState("");
 
@@ -24,12 +37,14 @@ export default function CommunityGroupForm() {
 
         try {
             const response = await fetch(
-                "http://localhost:4000/api/community/groups",
+                group
+                    ? `http://localhost:4000/api/community/groups/${group.id}`
+                    : "http://localhost:4000/api/community/groups",
                 {
-                    method: "POST",
+                    method: group ? "PATCH" : "POST",
                     headers: {
                         "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`,
+                        Authorization: `Bearer ${token}`,
                     },
                     body: JSON.stringify({
                         name,
@@ -40,21 +55,40 @@ export default function CommunityGroupForm() {
             );
 
             if (!response.ok) {
-                throw new Error("Failed to submit community group");
+                throw new Error(
+                    group
+                        ? "Failed to update community group"
+                        : "Failed to submit community group"
+                );
             }
 
+            const updatedGroup = await response.json();
+
             setMessage(
-                user.role === "admin"
-                    ? "Community group added successfully."
-                    : "Community group submitted for admin approval."
+                group
+                    ? "Community group updated successfully."
+                    : user.role === "admin"
+                        ? "Community group added successfully."
+                        : "Community group submitted for admin approval."
             );
 
-            setName("");
-            setCategory("");
-            setDescription("");
+            if (group) {
+                onSaved?.(updatedGroup);
+            }
+
+            if (!group) {
+                setName("");
+                setCategory("");
+                setDescription("");
+            }
         } catch (error) {
             console.error(error);
-            setMessage("Unable to submit community group.");
+
+            setMessage(
+                group
+                    ? "Unable to update community group."
+                    : "Unable to submit community group."
+            );
         }
     }
 
@@ -62,13 +96,15 @@ export default function CommunityGroupForm() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
                 <h2 className="text-2xl font-semibold">
-                    Add a Community Group
+                    {group
+                        ? "Edit Community Group"
+                        : "Add a Community Group"}
                 </h2>
 
                 <p className="text-neutral mt-1">
-                    {user?.role === "admin"
-                        ? "This group will be published immediately."
-                        : "This group will be submitted for admin approval."}
+                    {group
+                        ? "Update this community group."
+                        : "Submit a community group."}
                 </p>
             </div>
 
@@ -102,13 +138,27 @@ export default function CommunityGroupForm() {
                 type="submit"
                 className="bg-primary text-white px-4 py-3 rounded-lg"
             >
-                Submit Group
+                {group ? "Save Changes" : "Submit Group"}
             </button>
-            <p className="text-neutral mt-1">
-                {user?.role === "admin"
-                    ? "This group will be published immediately."
-                    : "This group will be submitted for admin approval."}
-            </p>
+
+            {group && onCancel && (
+                <button
+                    type="button"
+                    onClick={onCancel}
+                    className="border px-4 py-3 rounded-lg"
+                >
+                    Cancel
+                </button>
+            )}
+
+            {!group && (
+                <p className="text-neutral mt-1">
+                    {user?.role === "admin"
+                        ? "This group will be published immediately."
+                        : "This group will be submitted for admin approval."}
+                </p>
+            )}
+
             {message && (
                 <p className="text-sm text-neutral">
                     {message}

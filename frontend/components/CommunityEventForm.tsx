@@ -2,15 +2,34 @@
 
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { CommunityEvent } from "@/types/event";
 
-export default function CommunityEventForm() {
+type CommunityEventFormProps = {
+    communityEvent?: CommunityEvent;
+    onCancel?: () => void;
+    onSaved?: (updatedEvent: CommunityEvent) => void;
+};
+
+export default function CommunityEventForm({
+    communityEvent,
+    onCancel,
+    onSaved,
+}: CommunityEventFormProps) {
     const { user, token } = useAuth();
 
-    const [title, setTitle] = useState("");
-    const [location, setLocation] = useState("");
-    const [eventDate, setEventDate] = useState("");
-    const [eventTime, setEventTime] = useState("");
-    const [description, setDescription] = useState("");
+    const [title, setTitle] = useState(communityEvent?.title ?? "");
+    const [location, setLocation] = useState(
+        communityEvent?.location ?? ""
+    );
+    const [eventDate, setEventDate] = useState(
+        communityEvent?.event_date ?? ""
+    );
+    const [eventTime, setEventTime] = useState(
+        communityEvent?.event_time ?? ""
+    );
+    const [description, setDescription] = useState(
+        communityEvent?.description ?? ""
+    );
 
     const [message, setMessage] = useState("");
 
@@ -26,12 +45,14 @@ export default function CommunityEventForm() {
 
         try {
             const response = await fetch(
-                "http://localhost:4000/api/community/events",
+                communityEvent
+                    ? `http://localhost:4000/api/community/events/${communityEvent.id}`
+                    : "http://localhost:4000/api/community/events",
                 {
-                    method: "POST",
+                    method: communityEvent ? "PATCH" : "POST",
                     headers: {
                         "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`,
+                        Authorization: `Bearer ${token}`,
                     },
                     body: JSON.stringify({
                         title,
@@ -44,23 +65,42 @@ export default function CommunityEventForm() {
             );
 
             if (!response.ok) {
-                throw new Error("Failed to submit event");
+                throw new Error(
+                    communityEvent
+                        ? "Failed to update event"
+                        : "Failed to submit event"
+                );
             }
 
+            const updatedEvent = await response.json();
+
             setMessage(
-                user.role === "admin"
-                    ? "Event added successfully."
-                    : "Event submitted for admin approval."
+                communityEvent
+                    ? "Event updated successfully."
+                    : user.role === "admin"
+                        ? "Event added successfully."
+                        : "Event submitted for admin approval."
             );
 
-            setTitle("");
-            setLocation("");
-            setEventDate("");
-            setEventTime("");
-            setDescription("");
+            if (communityEvent) {
+                onSaved?.(updatedEvent);
+            }
+
+            if (!communityEvent) {
+                setTitle("");
+                setLocation("");
+                setEventDate("");
+                setEventTime("");
+                setDescription("");
+            }
         } catch (error) {
             console.error(error);
-            setMessage("Unable to submit event.");
+
+            setMessage(
+                communityEvent
+                    ? "Unable to update event."
+                    : "Unable to submit event."
+            );
         }
     }
 
@@ -68,13 +108,15 @@ export default function CommunityEventForm() {
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
                 <h2 className="text-2xl font-semibold">
-                    Add a Community Event
+                    {communityEvent
+                        ? "Edit Community Event"
+                        : "Add a Community Event"}
                 </h2>
 
                 <p className="text-neutral mt-1">
-                    {user?.role === "admin"
-                        ? "This event will be published immediately."
-                        : "This event will be submitted for admin approval."}
+                    {communityEvent
+                        ? "Update this community event."
+                        : "Submit a community event."}
                 </p>
             </div>
 
@@ -124,13 +166,27 @@ export default function CommunityEventForm() {
                 type="submit"
                 className="bg-primary text-white px-4 py-3 rounded-lg"
             >
-                Submit Event
+                {communityEvent ? "Save Changes" : "Submit Event"}
             </button>
-            <p className="text-neutral mt-1">
-                {user?.role === "admin"
-                    ? "This event will be published immediately."
-                    : "This event will be submitted for admin approval."}
-            </p>
+
+            {communityEvent && onCancel && (
+                <button
+                    type="button"
+                    onClick={onCancel}
+                    className="border px-4 py-3 rounded-lg"
+                >
+                    Cancel
+                </button>
+            )}
+
+            {!communityEvent && (
+                <p className="text-neutral mt-1">
+                    {user?.role === "admin"
+                        ? "This event will be published immediately."
+                        : "This event will be submitted for admin approval."}
+                </p>
+            )}
+
             {message && (
                 <p className="text-sm text-neutral">
                     {message}
