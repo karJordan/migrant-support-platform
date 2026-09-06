@@ -4,15 +4,11 @@ import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Service } from "@/types/service";
 
-
-
-
 type ServiceFormProps = {
     service?: Service;
     onCancel?: () => void;
     onSaved?: () => void;
 };
-
 
 export default function ServiceForm({
     service,
@@ -39,38 +35,61 @@ export default function ServiceForm({
             setMessage("You must be logged in to submit a service.");
             return;
         }
+
         try {
-            const response = await fetch("http://localhost:4000/api/services", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    name,
-                    category,
-                    description,
-                    location,
-                    phone,
-                    website,
-                }),
-            });
+            const response = await fetch(
+                service
+                    ? `http://localhost:4000/api/services/${service.id}`
+                    : "http://localhost:4000/api/services",
+                {
+                    method: service ? "PATCH" : "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        name,
+                        category,
+                        description,
+                        location,
+                        phone,
+                        website,
+                    }),
+                }
+            );
 
             if (!response.ok) {
-                throw new Error("Failed to submit service");
+                throw new Error(
+                    service
+                        ? "Failed to update service"
+                        : "Failed to submit service"
+                );
             }
 
-            setMessage("Service submitted successfully.");
+            setMessage(
+                service
+                    ? "Service updated successfully."
+                    : "Service submitted successfully."
+            );
 
-            setName("");
-            setCategory("");
-            setDescription("");
-            setLocation("");
-            setPhone("");
-            setWebsite("");
+            onSaved?.();
+
+            if (!service) {
+                setName("");
+                setCategory("");
+                setDescription("");
+                setLocation("");
+                setPhone("");
+                setWebsite("");
+            }
         } catch (error) {
             console.error(error);
-            setMessage("Unable to submit service.");
+
+            setMessage(
+                service
+                    ? "Unable to update service."
+                    : "Unable to submit service."
+            );
         }
     }
 
@@ -143,11 +162,7 @@ export default function ServiceForm({
             >
                 {service ? "Save Changes" : "Submit Service"}
             </button>
-            <p className="text-neutral mt-1">
-                {user?.role === "admin"
-                    ? "This service will be published immediately."
-                    : "This service will be submitted for admin approval."}
-            </p>
+
             {service && onCancel && (
                 <button
                     type="button"
@@ -156,6 +171,14 @@ export default function ServiceForm({
                 >
                     Cancel
                 </button>
+            )}
+
+            {!service && (
+                <p className="text-neutral mt-1">
+                    {user?.role === "admin"
+                        ? "This service will be published immediately."
+                        : "This service will be submitted for admin approval."}
+                </p>
             )}
 
             {message && (
