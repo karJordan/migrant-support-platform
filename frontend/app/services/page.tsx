@@ -14,9 +14,9 @@ export default function ServicesPage() {
     const [selectedCategory, setSelectedCategory] = useState("All");
     const [showServiceForm, setShowServiceForm] = useState(false);
     const [selectedService, setSelectedService] = useState<Service | null>(null);
-    const { user } = useAuth();
-
     const [isEditing, setIsEditing] = useState(false);
+
+    const { user } = useAuth();
 
     useEffect(() => {
         async function fetchServices() {
@@ -39,20 +39,29 @@ export default function ServicesPage() {
 
         fetchServices();
     }, []);
-    const categories = ["All", ...new Set(services.map((service) => service.category))];
+
+    const categories = [
+        "All",
+        ...new Set(services.map((service) => service.category)),
+    ];
 
     const filteredServices =
         selectedCategory === "All"
             ? services
-            : services.filter((service) => service.category === selectedCategory);
+            : services.filter(
+                  (service) => service.category === selectedCategory
+              );
 
     return (
         <div className="w-full max-w-5xl mx-auto px-6 py-10">
-            <h1 className="text-4xl font-semibold">Find Local Services</h1>
+            <h1 className="text-4xl font-semibold">
+                Find Local Services
+            </h1>
 
             <p className="text-neutral mt-2">
                 Find services and support available in your community.
             </p>
+
             <div className="flex flex-wrap gap-3 mt-6">
                 {user && (
                     <button
@@ -62,19 +71,22 @@ export default function ServicesPage() {
                         Add New Service
                     </button>
                 )}
+
                 {categories.map((category) => (
                     <button
                         key={category}
                         onClick={() => setSelectedCategory(category)}
-                        className={`px-4 py-2 rounded-lg border transition-colors ${selectedCategory === category
-                            ? "bg-primary text-white border-primary"
-                            : "bg-white border-neutral/20"
-                            }`}
+                        className={`px-4 py-2 rounded-lg border transition-colors ${
+                            selectedCategory === category
+                                ? "bg-primary text-white border-primary"
+                                : "bg-white border-neutral/20"
+                        }`}
                     >
                         {category}
                     </button>
                 ))}
             </div>
+
             {loading && (
                 <p className="mt-8 text-neutral">
                     Loading services...
@@ -100,12 +112,19 @@ export default function ServicesPage() {
                                     key={service.id}
                                     role="button"
                                     tabIndex={0}
-                                    onClick={() => setSelectedService(service)}
                                     aria-label={`View details for ${service.name}`}
+                                    onClick={() => {
+                                        setSelectedService(service);
+                                        setIsEditing(false);
+                                    }}
                                     onKeyDown={(keyEvent) => {
-                                        if (keyEvent.key === "Enter" || keyEvent.key === " ") {
+                                        if (
+                                            keyEvent.key === "Enter" ||
+                                            keyEvent.key === " "
+                                        ) {
                                             keyEvent.preventDefault();
                                             setSelectedService(service);
+                                            setIsEditing(false);
                                         }
                                     }}
                                     className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
@@ -122,30 +141,15 @@ export default function ServicesPage() {
                     )}
                 </>
             )}
+
             {showServiceForm && (
-                <Modal onClose={() => setShowServiceForm(false)}>
+                <Modal
+                    onClose={() => setShowServiceForm(false)}
+                >
                     <ServiceForm />
                 </Modal>
             )}
-            {selectedService && (
-                <Modal onClose={() => setSelectedService(null)}>
-                    <h2 className="text-2xl font-semibold">
-                        {selectedService.name}
-                    </h2>
 
-                    <p className="text-primary mt-2">
-                        {selectedService.category}
-                    </p>
-
-                    <p className="mt-4">
-                        {selectedService.description}
-                    </p>
-
-                    <p className="mt-4">
-                        {selectedService.location}
-                    </p>
-                </Modal>
-            )}
             {selectedService && (
                 <Modal
                     onClose={() => {
@@ -173,8 +177,28 @@ export default function ServicesPage() {
                             </p>
 
                             <p className="mt-4">
-                                {selectedService.location}
+                                Location: {selectedService.location}
                             </p>
+
+                            {selectedService.phone && (
+                                <p className="mt-2">
+                                    Phone: {selectedService.phone}
+                                </p>
+                            )}
+
+                            {selectedService.website && (
+                                <p className="mt-2">
+                                    Website:{" "}
+                                    <a
+                                        href={selectedService.website}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-primary hover:underline"
+                                    >
+                                        {selectedService.website}
+                                    </a>
+                                </p>
+                            )}
 
                             {user?.role === "admin" && (
                                 <button
