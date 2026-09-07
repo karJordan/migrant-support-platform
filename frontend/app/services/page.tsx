@@ -53,7 +53,7 @@ export default function ServicesPage() {
 
     return (
         <div className="w-full max-w-5xl mx-auto px-6 py-10">
-            <h1 className="text-4xl font-semibold">Find Local Services</h1>
+            <h1 className="heading-1 font-semibold">Find Local Services</h1>
 
             <p className="text-neutral mt-2">
                 Find services and support available in your community.
@@ -134,7 +134,7 @@ export default function ServicesPage() {
             )}
             {selectedService && (
                 <Modal onClose={() => setSelectedService(null)}>
-                    <h2 className="text-2xl font-semibold">
+                    <h2 className="heading-3 font-semibold">
                         {selectedService.name}
                     </h2>
 

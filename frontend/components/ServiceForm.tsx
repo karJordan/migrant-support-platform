@@ -62,7 +62,7 @@ export default function ServiceForm() {
     return (
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
-                <h2 className="text-2xl font-semibold">
+                <h2 className="heading-3 font-semibold">
                     Add a Service
                 </h2>
 
@@ -133,7 +133,7 @@ export default function ServiceForm() {
             </p>
 
             {message && (
-                <p className="text-sm text-neutral">
+                <p className="body-small text-neutral">
                     {message}
                 </p>
             )}

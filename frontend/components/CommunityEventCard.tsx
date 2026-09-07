@@ -22,10 +22,10 @@ export default function CommunityEventCard({
     });
     return (
         <div className="border border-neutral/20 rounded-xl p-5 bg-white">
-            <span className="text-sm text-primary font-medium">
+            <span className="body-small text-primary font-medium">
                 {title}
             </span>
-            <h2 className="text-xl font-semibold mt-2">
+            <h2 className="heading-4 font-semibold mt-2">
                 {formattedDate} at {eventTime}
             </h2>
 

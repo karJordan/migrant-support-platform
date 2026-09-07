@@ -41,7 +41,7 @@ export default function SignUpPage() {
 
   return (
     <div className="w-full max-w-md mx-auto px-6 py-10">
-      <h1 className="text-3xl font-semibold text-black mb-6">Sign Up</h1>
+      <h1 className="heading-2 font-semibold text-text-primary mb-6">Sign Up</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <input
           type="text"
@@ -72,12 +72,12 @@ export default function SignUpPage() {
         />
         <button
           type="submit"
-          className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors text-sm font-semibold"
+          className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors body-small font-semibold"
         >
           Create Account
         </button>
       </form>
-      <p className="mt-4 text-sm text-neutral">
+      <p className="mt-4 body-small text-neutral">
         Already have an account?{" "}
         <Link href="/login" className="text-primary font-semibold hover:underline">
           Log in

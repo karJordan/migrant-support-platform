@@ -61,7 +61,7 @@ export default function ResourcesForm() {
     return (
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
-                <h2 className="text-2xl font-semibold">
+                <h2 className="heading-3 font-semibold">
                     Add a Resource
                 </h2>
 
@@ -119,7 +119,7 @@ export default function ResourcesForm() {
                     : "This resource will be submitted for admin approval."}
             </p>
             {message && (
-                <p className="text-sm text-neutral">
+                <p className="body-small text-neutral">
                     {message}
                 </p>
             )}

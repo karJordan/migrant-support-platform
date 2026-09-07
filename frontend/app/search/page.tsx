@@ -68,7 +68,7 @@ function SearchContent() {
                     <ArrowLeft size={16} />
                     Back to Home
                 </Link>
-                <h1 className="text-2xl font-semibold text-black mb-2">Search Results</h1>
+                <h1 className="heading-3 font-semibold text-text-primary mb-2">Search Results</h1>
                 <p className="text-neutral">
                     {!query && "Enter a search term to find services, jobs, and resources."}
                     {query && !loading && `Showing results for "${query}"`}
@@ -93,8 +93,8 @@ function SearchContent() {
             {/* No Results */}
             {!loading && query && results.length === 0 && (
                 <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
-                    <p className="text-lg text-neutral-600">No results found for &quot;{query}&quot;</p>
-                    <p className="text-sm text-neutral-500 mt-2">Try different keywords or browse our categories below.</p>
+                    <p className="body-large text-neutral-600">No results found for &quot;{query}&quot;</p>
+                    <p className="body-small text-neutral-500 mt-2">Try different keywords or browse our categories below.</p>
                     <div className="flex justify-center gap-4 mt-6">
                         <Link href="/services" className="text-primary hover:underline">
                             Browse Services
@@ -115,7 +115,7 @@ function SearchContent() {
             {/* Results */}
             {!loading && results.length > 0 && (
                 <div className="space-y-4">
-                    <div className="text-sm text-neutral-600 mb-4">
+                    <div className="body-small text-neutral-600 mb-4">
                         Found {results.length} result{results.length > 1 ? "s" : ""}
                     </div>
 
@@ -146,7 +146,7 @@ function SearchContent() {
                                     {/* Content */}
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-3 flex-wrap">
-                                            <h3 className="text-lg font-semibold text-black hover:text-primary transition-colors">
+                                            <h3 className="body-large font-semibold text-text-primary hover:text-primary transition-colors">
                                                 {result.title}
                                             </h3>
                                             <span className="text-xs bg-gray-100 text-neutral-600 px-2 py-1 rounded-full capitalize">
@@ -159,11 +159,11 @@ function SearchContent() {
                                             </span>
                                         </div>
 
-                                        <p className="text-neutral text-sm mt-1 line-clamp-2">
+                                        <p className="text-neutral body-small mt-1 line-clamp-2">
                                             {result.description}
                                         </p>
 
-                                        <div className="flex items-center gap-4 mt-2 text-sm text-neutral-500">
+                                        <div className="flex items-center gap-4 mt-2 body-small text-neutral-500">
                                             {result.category && (
                                                 <span className="flex items-center gap-1">
                                                     <span className="text-xs">📂</span> {result.category}
@@ -184,7 +184,7 @@ function SearchContent() {
             )}
             {selectedResult && (
                 <Modal onClose={() => setSelectedResult(null)}>
-                    <h2 className="text-2xl font-semibold">
+                    <h2 className="heading-3 font-semibold">
                         {selectedResult.title}
                     </h2>
 

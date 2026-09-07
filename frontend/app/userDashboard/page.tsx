@@ -18,25 +18,25 @@ export default function UserDashboardPage() {
 
     return (
         <div className="max-w-4xl mx-auto px-6 py-10">
-          <h1 className="text-2xl font-semibold mb-2">Welcome back, {user.name}</h1>
+          <h1 className="heading-3 font-semibold mb-2">Welcome back, {user.name}</h1>
           <p className="text-neutral mb-8">This is your dashboard.</p>
     
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="border border-neutral/20 rounded-xl p-4">
-              <p className="text-2xl font-semibold text-primary">0</p>
-              <p className="text-sm text-neutral">Saved Services</p>
+              <p className="heading-3 font-semibold text-primary">0</p>
+              <p className="body-small text-neutral">Saved Services</p>
             </div>
             <div className="border border-neutral/20 rounded-xl p-4">
-              <p className="text-2xl font-semibold text-primary">0</p>
-              <p className="text-sm text-neutral">Saved Jobs</p>
+              <p className="heading-3 font-semibold text-primary">0</p>
+              <p className="body-small text-neutral">Saved Jobs</p>
             </div>
             <div className="border border-neutral/20 rounded-xl p-4">
-              <p className="text-2xl font-semibold text-primary">0</p>
-              <p className="text-sm text-neutral">My Posts</p>
+              <p className="heading-3 font-semibold text-primary">0</p>
+              <p className="body-small text-neutral">My Posts</p>
             </div>
             <div className="border border-neutral/20 rounded-xl p-4">
-              <p className="text-2xl font-semibold text-primary">0</p>
-              <p className="text-sm text-neutral">Messages</p>
+              <p className="heading-3 font-semibold text-primary">0</p>
+              <p className="body-small text-neutral">Messages</p>
             </div>
           </div>
         </div>

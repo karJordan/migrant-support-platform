@@ -67,7 +67,7 @@ export default function CommunityEventForm() {
     return (
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
-                <h2 className="text-2xl font-semibold">
+                <h2 className="heading-3 font-semibold">
                     Add a Community Event
                 </h2>
 
@@ -132,7 +132,7 @@ export default function CommunityEventForm() {
                     : "This event will be submitted for admin approval."}
             </p>
             {message && (
-                <p className="text-sm text-neutral">
+                <p className="body-small text-neutral">
                     {message}
                 </p>
             )}

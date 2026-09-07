@@ -64,7 +64,7 @@ export default function JobsForm() {
     return (
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
-                <h2 className="text-2xl font-semibold">
+                <h2 className="heading-3 font-semibold">
                     Add a Job
                 </h2>
 
@@ -136,7 +136,7 @@ export default function JobsForm() {
             </p>
 
             {message && (
-                <p className="text-sm text-neutral">
+                <p className="body-small text-neutral">
                     {message}
                 </p>
             )}

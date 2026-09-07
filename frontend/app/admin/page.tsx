@@ -58,20 +58,20 @@ export default function Admin() {
     
     return (
         <div className="w-full max-w-md mx-auto px-6 py-10">
-            <h1 className="text-3xl font-semibold text-black mb-6">Admin</h1>
+            <h1 className="heading-2 font-semibold text-text-primary mb-6">Admin</h1>
             <form onSubmit={getUsers} className="flex flex-col gap-4">
                 <button
                     type="submit"
-                    className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap text-sm"
+                    className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap body-small"
                 >Users</button>
-                {error && <p className="text-red-500 text-sm">{error}</p>}
+                {error && <p className="text-red-500 body-small">{error}</p>}
                 <button
                     type="button"
-                    className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap text-sm"
+                    className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap body-small"
                 >Posts</button>
             </form>
             <div>
-                <p className="mt-4 text-sm text-neutral">
+                <p className="mt-4 body-small text-neutral">
                     Admin Dashboard Area to manage users and posts.
                 </p>
                 {users.length > 0 && (
@@ -79,7 +79,7 @@ export default function Admin() {
                         {users.map((user) => (
                             <li key={user.id} className="bg-gray-100 p-4 rounded-lg">
                                 <p className="font-semibold">{user.name}</p>
-                                <p className="text-sm text-gray-600">{user.email}</p>
+                                <p className="body-small text-text-secondary">{user.email}</p>
                             </li>
                         ))}
                     </ul>

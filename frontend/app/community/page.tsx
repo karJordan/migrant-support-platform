@@ -91,13 +91,13 @@ export default function CommunityPage() {
 
     return (
         <div className="w-full max-w-5xl mx-auto px-6 py-10">
-            <h1 className="text-4xl font-semibold">Find Communities</h1>
+            <h1 className="heading-1 font-semibold">Find Communities</h1>
 
             <p className="text-neutral mt-2">
                 Browse community events and groups for migrants in New Zealand.
             </p>
             <div>
-                <h2 className="text-3xl font-semibold">Upcoming Events</h2>
+                <h2 className="heading-2 font-semibold">Upcoming Events</h2>
                 <div className="flex gap-3 mt-6">
                     {user && (
                         <button
@@ -154,7 +154,7 @@ export default function CommunityPage() {
                 )}
             </div>
             <div className="mt-12">
-                <h2 className="text-3xl font-semibold">Community Groups</h2>
+                <h2 className="heading-2 font-semibold">Community Groups</h2>
                 <div className="flex gap-3 mt-6">
                     {user && (
                         <button
@@ -218,7 +218,7 @@ export default function CommunityPage() {
             )}
             {selectedEvent && (
                 <Modal onClose={() => setSelectedEvent(null)}>
-                    <h2 className="text-2xl font-semibold">{selectedEvent.title}</h2>
+                    <h2 className="heading-3 font-semibold">{selectedEvent.title}</h2>
                     <p className="text-primary mt-2">{selectedEvent.location}</p>
 
                     <p className="mt-2">
@@ -234,7 +234,7 @@ export default function CommunityPage() {
             )}
             {selectedGroup && (
                 <Modal onClose={() => setSelectedGroup(null)}>
-                    <h2 className="text-2xl font-semibold">{selectedGroup.name}</h2>
+                    <h2 className="heading-3 font-semibold">{selectedGroup.name}</h2>
                     <p className="text-primary mt-2">{selectedGroup.category}</p>
                     <p className="mt-4">{selectedGroup.description}</p>
                 </Modal>

@@ -54,10 +54,10 @@ export default function Home() {
       {/* Hero section */}
       <div className="relative flex flex-col md:flex-row items-center">
         <div className="flex-[1.6] flex flex-col gap-4 z-10">
-          <h1 className="text-6xl font-semibold text-black leading-tight">
+          <h1 className="display-48 font-semibold text-text-primary leading-tight">
             Welcome to Your <br /> New Journey
           </h1>
-          <p className="text-neutral text-base max-w-md text-xl">
+          <p className="text-neutral body max-w-md heading-4">
             Everything you need to settle, connect and succeed in New Zealand.
           </p>
 
@@ -70,20 +70,20 @@ export default function Home() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search services, jobs, resources..."
-                className="flex-1 outline-none text-sm"
+                className="flex-1 outline-none body-small"
                 minLength={2}
                 required
               />
             </div>
             <button 
               type="submit"
-              className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap text-sm">
+              className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap body-small">
               Search
             </button>
           </form>
         </div>
 
-        <div className="flex-1 w-full h-72 bg-primary/10 rounded-xl flex items-center justify-center text-primary text-sm -ml-16 md:-ml-24">
+        <div className="flex-1 w-full h-72 bg-primary/10 rounded-xl flex items-center justify-center text-primary body-small -ml-16 md:-ml-24">
           [Image placeholder]
         </div>
       </div>
@@ -98,7 +98,7 @@ export default function Home() {
           >
             <Icon size={30} className="text-primary" />
           <div className="flex flex-col gap-1 mt-2">
-            <span className="padding-5 font-semibold text-lg">{label}</span>
+            <span className="padding-5 font-semibold body-large">{label}</span>
             <span className="text-md text-neutral">{description}</span>
           </div>
           </Link>

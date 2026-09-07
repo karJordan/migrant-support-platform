@@ -46,7 +46,7 @@ async function handleSubmit(e: React.FormEvent) {
 
 return (
     <div className="w-full max-w-md mx-auto px-6 py-10">
-        <h1 className="text-3xl font-semibold text-black mb-6">Login</h1>
+        <h1 className="heading-2 font-semibold text-text-primary mb-6">Login</h1>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <input
                 type="email"
@@ -66,16 +66,16 @@ return (
                 required
                 className="border border-neutral/30 rounded-lg px-4 py-3 bg-white outline-none"
             />
-            {error && <p className="text-red-500 text-sm">{error}</p>}
+            {error && <p className="text-red-500 body-small">{error}</p>}
             <button
                 type="submit"
                 disabled={loading}
-                className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap text-sm"
+                className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap body-small"
             >
                 {loading ? "Logging in..." : "Login"}
             </button>
         </form>
-        <p className="mt-4 text-sm text-neutral">
+        <p className="mt-4 body-small text-neutral">
             Don&apos;t have an account?{" "}
             <Link href="/signup" className="text-primary font-semibold">
                 Sign Up

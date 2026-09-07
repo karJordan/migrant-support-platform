@@ -12,7 +12,7 @@ export default function Modal({
       <div className="relative w-full max-w-lg rounded-xl bg-white p-6 shadow-lg">
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 text-xl"
+          className="absolute right-4 top-4 heading-4"
           aria-label="Close modal"
         >
           ×
