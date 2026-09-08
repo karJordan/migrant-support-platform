@@ -129,6 +129,7 @@ export default function ServicesPage() {
                                     className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
                                 >
                                     <ServiceCard
+                                        id={service.id}
                                         name={service.name}
                                         category={service.category}
                                         description={service.description}

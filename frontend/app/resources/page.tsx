@@ -124,6 +124,7 @@ export default function ResourcePage() {
                                     className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
                                 >
                                     <ResourcesCard
+                                        id={resource.id}
                                         title={resource.title}
                                         description={resource.description}
                                         link={resource.link}
