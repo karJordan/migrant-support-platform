@@ -123,7 +123,7 @@ export default function JobsPage() {
                                     className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
                                 >
                                     <JobsCard
-                                        key={job.id}
+                                        id={job.id}
                                         title={job.title}
                                         company={job.company}
                                         location={job.location}
