@@ -131,6 +131,7 @@ export default function CommunityPage() {
                                         className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
                                     >
                                         <CommunityEventCard
+                                            key={e.id}
                                             title={e.title}
                                             location={e.location}
                                             eventDate={e.event_date}
@@ -190,6 +191,7 @@ export default function CommunityPage() {
                                         className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
                                     >
                                         <CommunityGroupCard
+                                            key={g.id}
                                             name={g.name}
                                             category={g.category}
                                             description={g.description}
