@@ -5,18 +5,29 @@
   --foreground: #171717;
 
   /* Design system colours */
-  --color-primary: #5858d6;
+  --color-primary: #5A52D6;           
+  --color-primary-light: #EEF0FF;    
+  --color-text-primary: #111827;     
+  --color-text-secondary: #6B7280;  
+  --color-border: #E5E7EB;            
+  --color-background: #F9FAFB;        
+  --color-white: #FFFFFF;
+
   --color-secondary: #2563eb;
   --color-accent: #10b981;
   --color-success: #22c55e;
   --color-neutral: #64748b;
-
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--color-background);
+  --color-foreground: var(--color-text-primary);
   --color-primary: var(--color-primary);
+  --color-primary-light: var(--color-primary-light);
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-border: var(--color-border);
+  --color-white: var(--color-white);
   --color-secondary: var(--color-secondary);
   --color-accent: var(--color-accent);
   --color-success: var(--color-success);
@@ -27,6 +38,81 @@
 
 body {
   background: var(--background);
-  color: var(--foreground);
+  color: var(--color-text-primary);
   font-family: var(--font-poppins), Arial, Helvetica, sans-serif;
 }
+
+  /* Typography Classes */
+
+  /* Display */
+  .display-48 {
+    font-size: 48px;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  /* Headings */
+  .heading-1 {
+    font-size: 40px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+
+  .heading-2 {
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+
+  .heading-3 {
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+
+  .heading-4 {
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  /* Body */
+  .body-large {
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 1.6;
+  }
+
+  .body {
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.6;
+  }
+
+  .body-small {
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.5;
+  }
+
+  /* Labels & Buttons */
+  .label {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+
+  .caption {
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.5;
+  }
+
+  .button-text {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.5;
+  }
