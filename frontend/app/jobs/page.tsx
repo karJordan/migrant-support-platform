@@ -108,29 +108,30 @@ export default function JobsPage() {
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                             {filteredJobs.map((job) => (
-                                <div
-                                    key={job.id}
-                                    role="button"
-                                    tabIndex={0}
-                                    onClick={() => setSelectedJob(job)}
-                                    aria-label={`View details for ${job.title}`}
-                                    onKeyDown={(keyEvent) => {
-                                        if (keyEvent.key === "Enter" || keyEvent.key === " ") {
-                                            keyEvent.preventDefault();
-                                            setSelectedJob(job);
-                                        }
-                                    }}
-                                    className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
-                                >
-                                    <JobsCard
-                                        title={job.title}
-                                        company={job.company}
-                                        location={job.location}
-                                        employmentType={job.employment_type}
-                                        description={job.description}
-                                    />
-                                </div>
-                            ))}
+    <div
+        key={job.id}
+        role="button"
+        tabIndex={0}
+        onClick={() => setSelectedJob(job)}
+        aria-label={`View details for ${job.title}`}
+        onKeyDown={(keyEvent) => {
+            if (keyEvent.key === "Enter" || keyEvent.key === " ") {
+                keyEvent.preventDefault();
+                setSelectedJob(job);
+            }
+        }}
+        className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
+    >
+        <JobsCard
+            id={job.id}
+            title={job.title}
+            company={job.company}
+            location={job.location}
+            employmentType={job.employment_type}
+            description={job.description}
+        />
+    </div>
+))}
                         </div>
                     )}
                 </>

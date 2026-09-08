@@ -125,6 +125,7 @@ export default function ResourcePage() {
                                     className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
                                 >
                                     <ResourcesCard
+                                        id={resource.id}
                                         title={resource.title}
                                         description={resource.description}
                                         link={resource.link}
@@ -142,30 +143,30 @@ export default function ResourcePage() {
                     <ResourcesForm />
                 </Modal>
             )}
- {selectedResource && (
-    <Modal onClose={() => setSelectedResource(null)}>
-        <h2 className="text-2xl font-semibold">
-            {selectedResource.title}
-        </h2>
+            {selectedResource && (
+                <Modal onClose={() => setSelectedResource(null)}>
+                    <h2 className="text-2xl font-semibold">
+                        {selectedResource.title}
+                    </h2>
 
-        <p className="text-primary mt-2">
-            {selectedResource.category}
-        </p>
+                    <p className="text-primary mt-2">
+                        {selectedResource.category}
+                    </p>
 
-        <p className="mt-4">
-            {selectedResource.description}
-        </p>
+                    <p className="mt-4">
+                        {selectedResource.description}
+                    </p>
 
-        <a
-            href={selectedResource.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary hover:underline mt-4 inline-block"
-        >
-            Visit Resource
-        </a>
-    </Modal>
-)}
+                    <a
+                        href={selectedResource.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline mt-4 inline-block"
+                    >
+                        Visit Resource
+                    </a>
+                </Modal>
+            )}
         </div>
     );
 }

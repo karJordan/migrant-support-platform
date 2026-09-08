@@ -125,29 +125,30 @@ export default function CommunityPage() {
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                                 {event.map((e) => (
-                                    <div
-                                        key={e.id}
-                                        role="button"
-                                        tabIndex={0}
-                                        aria-label={`View details for ${e.title}`}
-                                        onClick={() => setSelectedEvent(e)}
-                                        onKeyDown={(keyEvent) => {
-                                            if (keyEvent.key === "Enter" || keyEvent.key === " ") {
-                                                keyEvent.preventDefault();
-                                                setSelectedEvent(e);
-                                            }
-                                        }}
-                                        className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
-                                    >
-                                        <CommunityEventCard
-                                            title={e.title}
-                                            location={e.location}
-                                            eventDate={e.event_date}
-                                            eventTime={e.event_time}
-                                            description={e.description}
-                                        />
-                                    </div>
-                                ))}
+    <div
+        key={e.id}
+        role="button"
+        tabIndex={0}
+        aria-label={`View details for ${e.title}`}
+        onClick={() => setSelectedEvent(e)}
+        onKeyDown={(keyEvent) => {
+            if (keyEvent.key === "Enter" || keyEvent.key === " ") {
+                keyEvent.preventDefault();
+                setSelectedEvent(e);
+            }
+        }}
+        className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
+    >
+        <CommunityEventCard
+            id={e.id}
+            title={e.title}
+            location={e.location}
+            eventDate={e.event_date}
+            eventTime={e.event_time}
+            description={e.description}
+        />
+    </div>
+))}
                             </div>
                         )}
                     </>
@@ -180,27 +181,28 @@ export default function CommunityPage() {
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                                 {group.map((g) => (
-                                    <div
-                                        key={g.id}
-                                        role="button"
-                                        tabIndex={0}
-                                        aria-label={`View details for ${g.name}`}
-                                        onClick={() => setSelectedGroup(g)}
-                                        onKeyDown={(keyEvent) => {
-                                            if (keyEvent.key === "Enter" || keyEvent.key === " ") {
-                                                keyEvent.preventDefault();
-                                                setSelectedGroup(g);
-                                            }
-                                        }}
-                                        className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
-                                    >
-                                        <CommunityGroupCard
-                                            name={g.name}
-                                            category={g.category}
-                                            description={g.description}
-                                        />
-                                    </div>
-                                ))}
+    <div
+        key={g.id}
+        role="button"
+        tabIndex={0}
+        aria-label={`View details for ${g.name}`}
+        onClick={() => setSelectedGroup(g)}
+        onKeyDown={(keyEvent) => {
+            if (keyEvent.key === "Enter" || keyEvent.key === " ") {
+                keyEvent.preventDefault();
+                setSelectedGroup(g);
+            }
+        }}
+        className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
+    >
+        <CommunityGroupCard
+            id={g.id}
+            name={g.name}
+            category={g.category}
+            description={g.description}
+        />
+    </div>
+))}
                             </div>
                         )}
                     </>
