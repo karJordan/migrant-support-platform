@@ -340,7 +340,7 @@ export default function Admin() {
                                         className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
                                     >
                                         <ServiceCard
-                                            key={service.id}
+                                            id={service.id}
                                             name={service.name}
                                             category={service.category}
                                             description={service.description}
@@ -371,7 +371,7 @@ export default function Admin() {
                                         className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
                                     >
                                         <JobsCard
-                                            key={job.id}
+                                            id={job.id}
                                             title={job.title}
                                             company={job.company}
                                             location={job.location}
@@ -403,7 +403,7 @@ export default function Admin() {
                                         className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
                                     >
                                         <CommunityGroupCard
-                                            key={group.id}
+                                            id={group.id}
                                             name={group.name}
                                             category={group.category}
                                             description={group.description}
@@ -433,7 +433,7 @@ export default function Admin() {
                                         className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
                                     >
                                         <CommunityEventCard
-                                            key={event.id}
+                                            id={event.id}
                                             title={event.title}
                                             location={event.location}
                                             eventDate={event.event_date}
@@ -465,7 +465,7 @@ export default function Admin() {
                                         className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
                                     >
                                         <ResourcesCard
-                                            key={resource.id}
+                                            id={resource.id}
                                             title={resource.title}
                                             category={resource.category}
                                             description={resource.description}
