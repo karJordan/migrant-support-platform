@@ -7,24 +7,9 @@ import Modal from "@/components/Modal";
 import CommunityGroupForm from "@/components/CommunityGroupForm";
 import CommunityEventForm from "@/components/CommunityEventForm";
 import { useAuth } from "@/context/AuthContext";
+import { CommunityGroup } from "@/types/group";
+import { CommunityEvent } from "@/types/event";
 
-type CommunityEvent = {
-    id: number;
-    title: string;
-    location: string;
-    event_date: string;
-    event_time: string;
-    description: string;
-    status: string;
-}
-
-type CommunityGroup = {
-    id: number;
-    name: string;
-    category: string;
-    description: string;
-    status: string;
-}
 
 export default function CommunityPage() {
 
@@ -40,6 +25,8 @@ export default function CommunityPage() {
     const [showEventForm, setShowEventForm] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState<CommunityEvent | null>(null);
     const [selectedGroup, setSelectedGroup] = useState<CommunityGroup | null>(null);
+    const [isEditingEvent, setIsEditingEvent] = useState(false);
+    const [isEditingGroup, setIsEditingGroup] = useState(false);
 
     const { user } = useAuth();
 
@@ -125,30 +112,34 @@ export default function CommunityPage() {
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                                 {event.map((e) => (
-    <div
-        key={e.id}
-        role="button"
-        tabIndex={0}
-        aria-label={`View details for ${e.title}`}
-        onClick={() => setSelectedEvent(e)}
-        onKeyDown={(keyEvent) => {
-            if (keyEvent.key === "Enter" || keyEvent.key === " ") {
-                keyEvent.preventDefault();
-                setSelectedEvent(e);
-            }
-        }}
-        className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
-    >
-        <CommunityEventCard
-            id={e.id}
-            title={e.title}
-            location={e.location}
-            eventDate={e.event_date}
-            eventTime={e.event_time}
-            description={e.description}
-        />
-    </div>
-))}
+                                    <div
+                                        key={e.id}
+                                        role="button"
+                                        tabIndex={0}
+                                        aria-label={`View details for ${e.title}`}
+                                        onClick={() => {
+                                            setSelectedEvent(e);
+                                            setIsEditingEvent(false);
+                                        }}
+                                        onKeyDown={(keyEvent) => {
+                                            if (keyEvent.key === "Enter" || keyEvent.key === " ") {
+                                                keyEvent.preventDefault();
+                                                setSelectedEvent(e);
+                                                setIsEditingEvent(false);
+                                            }
+                                        }}
+                                        className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
+                                    >
+                                        <CommunityEventCard
+                                            id={e.id}
+                                            title={e.title}
+                                            location={e.location}
+                                            eventDate={e.event_date}
+                                            eventTime={e.event_time}
+                                            description={e.description}
+                                        />
+                                    </div>
+                                ))}
                             </div>
                         )}
                     </>
@@ -181,28 +172,32 @@ export default function CommunityPage() {
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                                 {group.map((g) => (
-    <div
-        key={g.id}
-        role="button"
-        tabIndex={0}
-        aria-label={`View details for ${g.name}`}
-        onClick={() => setSelectedGroup(g)}
-        onKeyDown={(keyEvent) => {
-            if (keyEvent.key === "Enter" || keyEvent.key === " ") {
-                keyEvent.preventDefault();
-                setSelectedGroup(g);
-            }
-        }}
-        className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
-    >
-        <CommunityGroupCard
-            id={g.id}
-            name={g.name}
-            category={g.category}
-            description={g.description}
-        />
-    </div>
-))}
+                                    <div
+                                        key={g.id}
+                                        role="button"
+                                        tabIndex={0}
+                                        aria-label={`View details for ${g.name}`}
+                                        onClick={() => {
+                                            setSelectedGroup(g);
+                                            setIsEditingGroup(false);
+                                        }} 
+                                        onKeyDown={(keyEvent) => {
+                                            if (keyEvent.key === "Enter" || keyEvent.key === " ") {
+                                                keyEvent.preventDefault();
+                                                setSelectedGroup(g);
+                                                setIsEditingGroup(false);
+                                            }
+                                        }}
+                                        className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
+                                    >
+                                        <CommunityGroupCard
+                                            id={g.id}
+                                            name={g.name}
+                                            category={g.category}
+                                            description={g.description}
+                                        />
+                                    </div>
+                                ))}
                             </div>
                         )}
                     </>
@@ -219,26 +214,114 @@ export default function CommunityPage() {
                 </Modal>
             )}
             {selectedEvent && (
-                <Modal onClose={() => setSelectedEvent(null)}>
-                    <h2 className="text-2xl font-semibold">{selectedEvent.title}</h2>
-                    <p className="text-primary mt-2">{selectedEvent.location}</p>
+                <Modal
+                    onClose={() => {
+                        setSelectedEvent(null);
+                        setIsEditingEvent(false);
+                    }}
+                >
+                    {isEditingEvent ? (
+                        <CommunityEventForm
+                            communityEvent={selectedEvent}
+                            onCancel={() => setIsEditingEvent(false)}
+                            onSaved={(updatedEvent) => {
+                                setEvent((currentEvents) =>
+                                    currentEvents.map((event) =>
+                                        event.id === updatedEvent.id
+                                            ? updatedEvent
+                                            : event
+                                    )
+                                );
 
-                    <p className="mt-2">
-                        {new Date(selectedEvent.event_date).toLocaleDateString("en-GB", {
-                            day: "numeric",
-                            month: "long",
-                            year: "numeric",
-                        })} at {selectedEvent.event_time}
-                    </p>
+                                setSelectedEvent(updatedEvent);
+                                setIsEditingEvent(false);
+                            }}
+                        />
+                    ) : (
+                        <>
+                            <h2 className="text-2xl font-semibold">
+                                {selectedEvent.title}
+                            </h2>
 
-                    <p className="mt-4">{selectedEvent.description}</p>
+                            <p className="text-primary mt-2">
+                                {selectedEvent.location}
+                            </p>
+
+                            <p className="mt-2">
+                                {new Date(
+                                    selectedEvent.event_date
+                                ).toLocaleDateString("en-GB", {
+                                    day: "numeric",
+                                    month: "long",
+                                    year: "numeric",
+                                })}{" "}
+                                at {selectedEvent.event_time}
+                            </p>
+
+                            <p className="mt-4">
+                                {selectedEvent.description}
+                            </p>
+
+                            {user?.role === "admin" && (
+                                <button
+                                    onClick={() => setIsEditingEvent(true)}
+                                    className="bg-primary text-white px-6 py-3 rounded-lg mt-6"
+                                >
+                                    Edit
+                                </button>
+                            )}
+                        </>
+                    )}
                 </Modal>
             )}
             {selectedGroup && (
-                <Modal onClose={() => setSelectedGroup(null)}>
-                    <h2 className="text-2xl font-semibold">{selectedGroup.name}</h2>
-                    <p className="text-primary mt-2">{selectedGroup.category}</p>
-                    <p className="mt-4">{selectedGroup.description}</p>
+                <Modal
+                    onClose={() => {
+                        setSelectedGroup(null);
+                        setIsEditingGroup(false);
+                    }}
+                >
+                    {isEditingGroup ? (
+                        <CommunityGroupForm
+                            group={selectedGroup}
+                            onCancel={() => setIsEditingGroup(false)}
+                            onSaved={(updatedGroup) => {
+                                setGroup((currentGroups) =>
+                                    currentGroups.map((group) =>
+                                        group.id === updatedGroup.id
+                                            ? updatedGroup
+                                            : group
+                                    )
+                                );
+
+                                setSelectedGroup(updatedGroup);
+                                setIsEditingGroup(false);
+                            }}
+                        />
+                    ) : (
+                        <>
+                            <h2 className="text-2xl font-semibold">
+                                {selectedGroup.name}
+                            </h2>
+
+                            <p className="text-primary mt-2">
+                                {selectedGroup.category}
+                            </p>
+
+                            <p className="mt-4">
+                                {selectedGroup.description}
+                            </p>
+
+                            {user?.role === "admin" && (
+                                <button
+                                    onClick={() => setIsEditingGroup(true)}
+                                    className="bg-primary text-white px-6 py-3 rounded-lg mt-6"
+                                >
+                                    Edit
+                                </button>
+                            )}
+                        </>
+                    )}
                 </Modal>
             )}
         </div>

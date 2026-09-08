@@ -5,14 +5,7 @@ import ServiceCard from "@/components/ServicesCard";
 import Modal from "@/components/Modal";
 import ServiceForm from "@/components/ServiceForm";
 import { useAuth } from "@/context/AuthContext";
-
-type Service = {
-    id: number;
-    name: string;
-    category: string;
-    description: string;
-    location: string;
-};
+import { Service } from "@/types/service";
 
 export default function ServicesPage() {
     const [services, setServices] = useState<Service[]>([]);
@@ -21,6 +14,8 @@ export default function ServicesPage() {
     const [selectedCategory, setSelectedCategory] = useState("All");
     const [showServiceForm, setShowServiceForm] = useState(false);
     const [selectedService, setSelectedService] = useState<Service | null>(null);
+    const [isEditing, setIsEditing] = useState(false);
+
     const { user } = useAuth();
 
     useEffect(() => {
@@ -44,20 +39,29 @@ export default function ServicesPage() {
 
         fetchServices();
     }, []);
-    const categories = ["All", ...new Set(services.map((service) => service.category))];
+
+    const categories = [
+        "All",
+        ...new Set(services.map((service) => service.category)),
+    ];
 
     const filteredServices =
         selectedCategory === "All"
             ? services
-            : services.filter((service) => service.category === selectedCategory);
+            : services.filter(
+                (service) => service.category === selectedCategory
+            );
 
     return (
         <div className="w-full max-w-5xl mx-auto px-6 py-10">
-            <h1 className="text-4xl font-semibold">Find Local Services</h1>
+            <h1 className="text-4xl font-semibold">
+                Find Local Services
+            </h1>
 
             <p className="text-neutral mt-2">
                 Find services and support available in your community.
             </p>
+
             <div className="flex flex-wrap gap-3 mt-6">
                 {user && (
                     <button
@@ -67,6 +71,7 @@ export default function ServicesPage() {
                         Add New Service
                     </button>
                 )}
+
                 {categories.map((category) => (
                     <button
                         key={category}
@@ -80,6 +85,7 @@ export default function ServicesPage() {
                     </button>
                 ))}
             </div>
+
             {loading && (
                 <p className="mt-8 text-neutral">
                     Loading services...
@@ -105,12 +111,19 @@ export default function ServicesPage() {
                                     key={service.id}
                                     role="button"
                                     tabIndex={0}
-                                    onClick={() => setSelectedService(service)}
                                     aria-label={`View details for ${service.name}`}
+                                    onClick={() => {
+                                        setSelectedService(service);
+                                        setIsEditing(false);
+                                    }}
                                     onKeyDown={(keyEvent) => {
-                                        if (keyEvent.key === "Enter" || keyEvent.key === " ") {
+                                        if (
+                                            keyEvent.key === "Enter" ||
+                                            keyEvent.key === " "
+                                        ) {
                                             keyEvent.preventDefault();
                                             setSelectedService(service);
+                                            setIsEditing(false);
                                         }
                                     }}
                                     className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
@@ -128,28 +141,87 @@ export default function ServicesPage() {
                     )}
                 </>
             )}
+
             {showServiceForm && (
-                <Modal onClose={() => setShowServiceForm(false)}>
+                <Modal
+                    onClose={() => setShowServiceForm(false)}
+                >
                     <ServiceForm />
                 </Modal>
             )}
+
             {selectedService && (
-                <Modal onClose={() => setSelectedService(null)}>
-                    <h2 className="text-2xl font-semibold">
-                        {selectedService.name}
-                    </h2>
+                <Modal
+                    onClose={() => {
+                        setSelectedService(null);
+                        setIsEditing(false);
+                    }}
+                >
+                    {isEditing ? (
+                        <ServiceForm
+                            service={selectedService}
+                            onCancel={() => setIsEditing(false)}
+                            onSaved={(updatedService) => {
+                                setServices((currentServices) =>
+                                    currentServices.map((service) =>
+                                        service.id === updatedService.id
+                                            ? updatedService
+                                            : service
+                                    )
+                                );
 
-                    <p className="text-primary mt-2">
-                        {selectedService.category}
-                    </p>
+                                setSelectedService(updatedService);
+                                setIsEditing(false);
+                            }}
+                        />
+                    ) : (
+                        <>
+                            <h2 className="text-2xl font-semibold">
+                                {selectedService.name}
+                            </h2>
 
-                    <p className="mt-4">
-                        {selectedService.description}
-                    </p>
+                            <p className="text-primary mt-2">
+                                {selectedService.category}
+                            </p>
 
-                    <p className="mt-4">
-                        {selectedService.location}
-                    </p>
+                            <p className="mt-4">
+                                {selectedService.description}
+                            </p>
+
+                            <p className="mt-4">
+                                Location: {selectedService.location}
+                            </p>
+
+                            {selectedService.phone && (
+                                <p className="mt-2">
+                                    Phone: {selectedService.phone}
+                                </p>
+                            )}
+
+                            {selectedService.website && (
+                                <p className="mt-2">
+                                    Website:{" "}
+                                    <a
+                                        href={selectedService.website}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-primary hover:underline"
+                                    >
+                                        {selectedService.website}
+                                    </a>
+                                </p>
+                            )}
+
+                            {user?.role === "admin" && (
+                                <button
+                                    onClick={() => setIsEditing(true)}
+                                    className="bg-primary text-white px-6 py-3 rounded-lg mt-6"
+                                >
+                                    Edit
+                                </button>
+                            )}
+                        </>
+                    )}
                 </Modal>
             )}
         </div>

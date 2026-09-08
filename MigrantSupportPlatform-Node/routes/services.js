@@ -79,4 +79,65 @@ router.post('/', authenticateToken, async (req, res) => {
         });
     }
 });
+// PATCH /api/services/:id - Update an existing service
+router.patch('/:id', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({
+            message: 'Admin access required'
+        });
+    }
+
+    const { id } = req.params;
+
+    const {
+        name,
+        category,
+        description,
+        location,
+        phone,
+        website
+    } = req.body;
+
+    if (!name || !category) {
+        return res.status(400).json({
+            message: 'Name and category are required'
+        });
+    }
+
+    try {
+        const result = await pool.query(
+            `UPDATE services
+             SET name = $1,
+                 category = $2,
+                 description = $3,
+                 location = $4,
+                 phone = $5,
+                 website = $6
+             WHERE id = $7
+             RETURNING *`,
+            [
+                name,
+                category,
+                description,
+                location,
+                phone,
+                website,
+                id
+            ]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                message: 'Service not found'
+            });
+        }
+
+        res.status(200).json(result.rows[0]);
+    } catch (error) {
+        console.error('Database query error:', error.message);
+        res.status(500).json({
+            error: 'Internal Server Error'
+        });
+    }
+});
 module.exports = router;
