@@ -1,3 +1,4 @@
+import Card from "@/components/ui/Card";
 import { ExternalLink } from "lucide-react";
 import SaveButton from "@/components/SaveButton";
 
@@ -17,9 +18,9 @@ export default function ResourcesCard({
   link,
 }: ResourcesCardProps) {
   return (
-    <div className="border border-neutral/20 rounded-xl p-5 bg-white">
+    <Card hoverable>
       <div className="flex items-start justify-between gap-4">
-        <span className="text-sm text-primary font-medium">
+        <span className="text-sm text-primary font-medium min-w-0 break-words">
           {category}
         </span>
         <SaveButton 
@@ -28,11 +29,11 @@ export default function ResourcesCard({
         />
       </div>
 
-      <h2 className="text-xl font-semibold mt-2">
+      <h2 className="heading-4 mt-2 break-words">
         {title}
       </h2>
 
-      <p className="text-neutral mt-2">
+      <p className="text-text-secondary mt-2 break-words">
         {description}
       </p>
 
@@ -45,6 +46,6 @@ export default function ResourcesCard({
         <ExternalLink size={18} />
         <span>Visit resource</span>
       </a>
-    </div>
+    </Card>
   );
 }
