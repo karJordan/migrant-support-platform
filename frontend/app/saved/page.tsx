@@ -152,12 +152,6 @@ export default function SavedPage() {
             {filteredItems.length === 0 ? (
                 <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
                     <p className="text-neutral-600">No saved listings found.</p>
-                    <p className="text-sm text-neutral-500 mt-1">
-                        Start exploring and save services, jobs, and resources you like.
-                    </p>
-                    <Link href="/services" className="inline-block mt-4 text-primary hover:underline">
-                        Browse Services →
-                    </Link>
                 </div>
             ) : (
                 <div className="space-y-3">
