@@ -23,7 +23,7 @@ export default function SaveButton({ itemId, itemType }: SaveButtonProps) {
     }, [shouldShowButton, itemId, itemType]);
 
     async function checkIfSaved() {
-        
+
         if (!user) return;
 
         try {
@@ -42,22 +42,22 @@ export default function SaveButton({ itemId, itemType }: SaveButtonProps) {
 
     async function toggleSave(event: React.MouseEvent) {
         event.stopPropagation();
-    
+
         if (!user) {
             window.location.href = "/login";
             return;
         }
-    
+
         setIsSaving(true);
         try {
             const method = isSaved ? "DELETE" : "POST";
-    
+
             const requestBody = {
                 user_id: user.id,
                 listing_id: Number(itemId),
                 listing_type: itemType,
             };
-    
+
             const response = await fetch(`http://localhost:4000/api/saved/`, {
                 method: method,
                 headers: {
@@ -65,11 +65,11 @@ export default function SaveButton({ itemId, itemType }: SaveButtonProps) {
                 },
                 body: JSON.stringify(requestBody),
             });
-    
+
             if (!response.ok) {
                 throw new Error("HTTP Error: " + response.status);
             }
-    
+
             setIsSaved(!isSaved);
         } catch (error) {
             console.error("Error toggling save status", error);
@@ -85,12 +85,16 @@ export default function SaveButton({ itemId, itemType }: SaveButtonProps) {
     return (
         <button
             onClick={toggleSave}
+            onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                    event.stopPropagation();
+                }
+            }}
             disabled={isSaving}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
-                isSaved 
-                ? 'bg-primary text-white' 
-                : 'bg-white text-primary border-primary'
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${isSaved
+                    ? 'bg-primary text-white'
+                    : 'bg-white text-primary border-primary'
+                }`}
             aria-label={isSaved ? "Unsave" : "Save"}
         >
             <Heart size={20} fill={isSaved ? "currentColor" : "none"} />
