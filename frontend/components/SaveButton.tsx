@@ -40,46 +40,36 @@ export default function SaveButton({ itemId, itemType }: SaveButtonProps) {
         }
     }
 
-    async function toggleSave() {
+    async function toggleSave(event: React.MouseEvent) {
+        event.stopPropagation();
+    
         if (!user) {
             window.location.href = "/login";
             return;
         }
-
+    
         setIsSaving(true);
         try {
             const method = isSaved ? "DELETE" : "POST";
-            
-            // ✅ Build the request body
-        const requestBody = {
-            user_id: user.id,
-            listing_id: Number(itemId),
-            listing_type: itemType,
-        };
-
-        // ✅ LOG THIS - check your browser console
-        console.log('📤 Sending to backend:', requestBody);
-        console.log('📤 user_id:', requestBody.user_id, 'type:', typeof requestBody.user_id);
-        console.log('📤 listing_id:', requestBody.listing_id, 'type:', typeof requestBody.listing_id);
-        console.log('📤 listing_type:', requestBody.listing_type, 'type:', typeof requestBody.listing_type);
-
-        const response = await fetch(`http://localhost:4000/api/saved/`, {
-            method: method,
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(requestBody),
-        });
-
-        // ✅ Log the response
-        const responseText = await response.text();
-        console.log('📥 Response status:', response.status);
-        console.log('📥 Response body:', responseText);
-
+    
+            const requestBody = {
+                user_id: user.id,
+                listing_id: Number(itemId),
+                listing_type: itemType,
+            };
+    
+            const response = await fetch(`http://localhost:4000/api/saved/`, {
+                method: method,
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(requestBody),
+            });
+    
             if (!response.ok) {
                 throw new Error("HTTP Error: " + response.status);
             }
-
+    
             setIsSaved(!isSaved);
         } catch (error) {
             console.error("Error toggling save status", error);
