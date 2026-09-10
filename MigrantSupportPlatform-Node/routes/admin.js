@@ -105,6 +105,7 @@ router.get('/events', authenticateToken, async (req, res) => {
     }
 });
 
+// PATCH /api/admin/approve/:type/:id - Approve an item
 router.patch('/approve/:type/:id', authenticateToken, async (req, res) => {
     if (req.user.role !== 'admin') {
         return res.status(403).json({ error: 'Access denied' });
@@ -136,6 +137,44 @@ router.patch('/approve/:type/:id', authenticateToken, async (req, res) => {
 
         await pool.query(query, [id]);
         res.status(200).json({ message: 'Item approved successfully' });
+    } catch (error) {
+        console.error('Database update error:', error.message);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+// PATCH /api/admin/reject/:type/:id - Reject an item
+router.patch('/reject/:type/:id', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const { type, id } = req.params;
+
+    try {
+        let query;
+        switch (type) {
+            case 'service':
+                query = "UPDATE services SET status = 'rejected' WHERE id = $1";
+                break;
+            case 'resource':
+                query = "UPDATE resources SET status = 'rejected' WHERE id = $1";
+                break;
+            case 'job':
+                query = "UPDATE jobs SET status = 'rejected' WHERE id = $1";
+                break;
+            case 'group':
+                query = "UPDATE community_groups SET status = 'rejected' WHERE id = $1";
+                break;
+            case 'event':
+                query = "UPDATE community_events SET status = 'rejected' WHERE id = $1";
+                break;
+            default:
+                return res.status(400).json({ error: 'Invalid type' });
+        }
+
+        await pool.query(query, [id]);
+        res.status(200).json({ message: 'Item rejected successfully' });
     } catch (error) {
         console.error('Database update error:', error.message);
         res.status(500).json({ error: 'Internal Server Error' });

@@ -10,6 +10,11 @@ import CommunityEventCard from "@/components/CommunityEventCard";
 import ResourcesCard from "@/components/ResourcesCard";
 import ServiceCard from "@/components/ServicesCard";
 import Modal from "../../components/Modal";
+import { CommunityEvent } from "@/types/event";
+import { CommunityGroup } from "@/types/group";
+import { Job } from "@/types/job";
+import { Resource } from "@/types/resource";
+import { Service } from "@/types/service";
 
 export const dynamic = 'force-dynamic';
 
@@ -19,52 +24,6 @@ type User ={
     email: string;
     role: string;
 }
-
-type Job = {
-    id: number;
-    title: string;
-    company: string;
-    location: string;
-    employment_type: string;
-    description: string;
-    status: string;
-};
-
-type CommunityEvent = {
-    id: number;
-    title: string;
-    location: string;
-    event_date: string;
-    event_time: string;
-    description: string;
-    status: string;
-}
-
-type CommunityGroup = {
-    id: number;
-    name: string;
-    category: string;
-    description: string;
-    status: string;
-}
-
-type Resource = {
-    id: number;
-    title: string;
-    description: string;
-    link: string;
-    category: string;
-    status: string;
-};
-
-type Service = {
-    id: number;
-    name: string;
-    category: string;
-    description: string;
-    location: string;
-    status: string;
-};
 
 export default function Admin() {
     const [error, setError] = useState<string | null>(null);
@@ -90,7 +49,6 @@ export default function Admin() {
         if (!isLoading && !user) {
             router.push("/login");
         }
-
         if (!isLoading && user && user.role !== "admin") {
             router.push("/userDashboard");
         }
@@ -99,7 +57,6 @@ export default function Admin() {
     if (isLoading || !user) return null;
 
     async function fetchUsers() {
-
         try {
             const response = await fetch("http://localhost:4000/api/admin/users", {
                 method: "GET",
@@ -108,11 +65,9 @@ export default function Admin() {
                     "Authorization": `Bearer ${token}`
                 }
             });
-
             if (!response.ok) {
                 throw new Error("Failed to fetch users");
             }
-
             setUsers(await response.json());
         } catch {
             setError("Error fetching users");
@@ -130,11 +85,9 @@ export default function Admin() {
                     "Authorization": `Bearer ${token}`
                 }
             });
-
             if (!response.ok) {
                 throw new Error("Failed to fetch events");
             }
-
             setEvents(await response.json());
         } catch {
             setError("Error fetching events");
@@ -152,11 +105,9 @@ export default function Admin() {
                     "Authorization": `Bearer ${token}`
                 }
             });
-
             if (!response.ok) {
                 throw new Error("Failed to fetch jobs");
             }
-
             setJobs(await response.json());
         } catch {
             setError("Error fetching jobs");
@@ -174,11 +125,9 @@ export default function Admin() {
                     "Authorization": `Bearer ${token}`
                 }
             });
-
             if (!response.ok) {
                 throw new Error("Failed to fetch groups");
             }
-
             setGroups(await response.json());
         } catch {
             setError("Error fetching groups");
@@ -196,11 +145,9 @@ export default function Admin() {
                     "Authorization": `Bearer ${token}`
                 }
             });
-
             if (!response.ok) {
                 throw new Error("Failed to fetch resources");
             }
-
             setResources(await response.json());
         } catch {
             setError("Error fetching resources");
@@ -218,11 +165,9 @@ export default function Admin() {
                     "Authorization": `Bearer ${token}`
                 }
             });
-
             if (!response.ok) {
                 throw new Error("Failed to fetch services");
             }
-
             setServices(await response.json());
         } catch {
             setError("Error fetching services");
@@ -240,12 +185,47 @@ export default function Admin() {
                     "Authorization": `Bearer ${token}`
                 }
             });
-
             if (!response.ok) {
                 throw new Error(`Failed to approve ${postType}`);
             }
-
             // Refresh the relevant list after approval
+            switch (postType) {
+                case 'service':
+                    fetchServices();
+                    break;
+                case 'resource':
+                    fetchResources();
+                    break;
+                case 'job':
+                    fetchJobs();
+                    break;
+                case 'group':
+                    fetchGroups();
+                    break;
+                case 'event':
+                    fetchEvents();
+                    break;
+                default:
+                    throw new Error('Invalid post type');
+            }
+        } catch {
+            setError(`Error approving ${postType}`);
+        }
+    };
+
+    async function handleRejectPost(postType: string, postId: number) {
+        try {
+            const response = await fetch(`http://localhost:4000/api/admin/reject/${postType}/${postId}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+            if (!response.ok) {
+                throw new Error(`Failed to reject ${postType}`);
+            }
+            // Refresh the relevant list after rejection
             switch (postType) {
                 case 'service':
                     fetchServices();
@@ -319,164 +299,166 @@ export default function Admin() {
                         ))}
                     </ul>
                 ) : (
-                    <ul className="mt-4 space-y-2">
-                        <h1 className="text-3xl font-semibold text-black mb-6">Services</h1>
-                        {services.length === 0 ? (
-                            <p className="text-sm text-gray-600">No services pending approval.</p>
-                        ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-                                {services.map((service) => (
-                                    <div
-                                        key={service.id}
-                                        role="button"
-                                        onClick={() => setSelectedService(service)}
-                                        aria-label={`View details for ${service.name}`}
-                                        onKeyDown={(keyEvent) => {
-                                            if (keyEvent.key === "Enter" || keyEvent.key === " ") {
-                                                keyEvent.preventDefault();
-                                                setSelectedService(service);
-                                            }
-                                        }}
-                                        className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
-                                    >
-                                        <ServiceCard
-                                            id={service.id}
-                                            name={service.name}
-                                            category={service.category}
-                                            description={service.description}
-                                            location={service.location}
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                    <div>
+                        <ul className="mt-4 space-y-2">
+                            <h1 className="text-3xl font-semibold text-black mb-6">Services</h1>
+                            {services.length === 0 ? (
+                                <p className="text-sm text-gray-600">No services pending approval.</p>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                                    {services.map((service) => (
+                                        <div
+                                            key={service.id}
+                                            role="button"
+                                            onClick={() => setSelectedService(service)}
+                                            aria-label={`View details for ${service.name}`}
+                                            onKeyDown={(keyEvent) => {
+                                                if (keyEvent.key === "Enter" || keyEvent.key === " ") {
+                                                    keyEvent.preventDefault();
+                                                    setSelectedService(service);
+                                                }
+                                            }}
+                                            className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
+                                        >
+                                            <ServiceCard
+                                                id={service.id}
+                                                name={service.name}
+                                                category={service.category}
+                                                description={service.description}
+                                                location={service.location}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
 
-                        <h1 className="text-3xl font-semibold text-black mb-6">Jobs</h1>
-                        {jobs.length === 0 ? (
-                            <p className="text-sm text-gray-600">No job listings pending approval.</p>
-                        ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-                                {jobs.map((job) => (
-                                    <div
-                                        key={job.id}
-                                        role="button"
-                                        onClick={() => setSelectedJob(job)}
-                                        aria-label={`View details for ${job.title}`}
-                                        onKeyDown={(keyEvent) => {
-                                            if (keyEvent.key === "Enter" || keyEvent.key === " ") {
-                                                keyEvent.preventDefault();
-                                                setSelectedJob(job);
-                                            }
-                                        }}
-                                        className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
-                                    >
-                                        <JobsCard
-                                            id={job.id}
-                                            title={job.title}
-                                            company={job.company}
-                                            location={job.location}
-                                            description={job.description}
-                                            employmentType={job.employment_type}
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                            <h1 className="text-3xl font-semibold text-black mb-6">Jobs</h1>
+                            {jobs.length === 0 ? (
+                                <p className="text-sm text-gray-600">No job listings pending approval.</p>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                                    {jobs.map((job) => (
+                                        <div
+                                            key={job.id}
+                                            role="button"
+                                            onClick={() => setSelectedJob(job)}
+                                            aria-label={`View details for ${job.title}`}
+                                            onKeyDown={(keyEvent) => {
+                                                if (keyEvent.key === "Enter" || keyEvent.key === " ") {
+                                                    keyEvent.preventDefault();
+                                                    setSelectedJob(job);
+                                                }
+                                            }}
+                                            className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
+                                        >
+                                            <JobsCard
+                                                id={job.id}
+                                                title={job.title}
+                                                company={job.company}
+                                                location={job.location}
+                                                description={job.description}
+                                                employmentType={job.employment_type}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
 
-                        <h1 className="text-3xl font-semibold text-black mb-6">Community Groups</h1>
-                        {groups.length === 0 ? (
-                            <p className="text-sm text-gray-600">No groups pending approval.</p>
-                        ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-                                {groups.map((group) => (
-                                    <div
-                                        key={group.id}
-                                        role="button"
-                                        onClick={() => setSelectedGroup(group)}
-                                        aria-label={`View details for ${group.name}`}
-                                        onKeyDown={(keyEvent) => {
-                                            if (keyEvent.key === "Enter" || keyEvent.key === " ") {
-                                                keyEvent.preventDefault();
-                                                setSelectedGroup(group);
-                                            }
-                                        }}
-                                        className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
-                                    >
-                                        <CommunityGroupCard
-                                            id={group.id}
-                                            name={group.name}
-                                            category={group.category}
-                                            description={group.description}
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                            <h1 className="text-3xl font-semibold text-black mb-6">Community Groups</h1>
+                            {groups.length === 0 ? (
+                                <p className="text-sm text-gray-600">No groups pending approval.</p>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                                    {groups.map((group) => (
+                                        <div
+                                            key={group.id}
+                                            role="button"
+                                            onClick={() => setSelectedGroup(group)}
+                                            aria-label={`View details for ${group.name}`}
+                                            onKeyDown={(keyEvent) => {
+                                                if (keyEvent.key === "Enter" || keyEvent.key === " ") {
+                                                    keyEvent.preventDefault();
+                                                    setSelectedGroup(group);
+                                                }
+                                            }}
+                                            className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
+                                        >
+                                            <CommunityGroupCard
+                                                id={group.id}
+                                                name={group.name}
+                                                category={group.category}
+                                                description={group.description}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
 
-                        <h1 className="text-3xl font-semibold text-black mb-6">Community Events</h1>
-                        {events.length === 0 ? (
-                            <p className="text-sm text-gray-600">No events pending approval.</p>
-                        ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-                                {events.map((event) => (
-                                    <div
-                                        key={event.id}
-                                        role="button"
-                                        onClick={() => setSelectedEvent(event)}
-                                        aria-label={`View details for ${event.title}`}
-                                        onKeyDown={(keyEvent) => {
-                                            if (keyEvent.key === "Enter" || keyEvent.key === " ") {
-                                                keyEvent.preventDefault();
-                                                setSelectedEvent(event);
-                                            }
-                                        }}
-                                        className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
-                                    >
-                                        <CommunityEventCard
-                                            id={event.id}
-                                            title={event.title}
-                                            location={event.location}
-                                            eventDate={event.event_date}
-                                            eventTime={event.event_time}
-                                            description={event.description}
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                            <h1 className="text-3xl font-semibold text-black mb-6">Community Events</h1>
+                            {events.length === 0 ? (
+                                <p className="text-sm text-gray-600">No events pending approval.</p>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                                    {events.map((event) => (
+                                        <div
+                                            key={event.id}
+                                            role="button"
+                                            onClick={() => setSelectedEvent(event)}
+                                            aria-label={`View details for ${event.title}`}
+                                            onKeyDown={(keyEvent) => {
+                                                if (keyEvent.key === "Enter" || keyEvent.key === " ") {
+                                                    keyEvent.preventDefault();
+                                                    setSelectedEvent(event);
+                                                }
+                                            }}
+                                            className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
+                                        >
+                                            <CommunityEventCard
+                                                id={event.id}
+                                                title={event.title}
+                                                location={event.location}
+                                                eventDate={event.event_date}
+                                                eventTime={event.event_time}
+                                                description={event.description}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
 
-                        <h1 className="text-3xl font-semibold text-black mb-6">Resources</h1>
-                        {resources.length === 0 ? (
-                            <p className="text-sm text-gray-600">No resources pending approval.</p>
-                        ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-                                {resources.map((resource) => (
-                                    <div
-                                        key={resource.id}
-                                        role="button"
-                                        onClick={() => setSelectedResource(resource)}
-                                        aria-label={`View details for ${resource.title}`}
-                                        onKeyDown={(keyEvent) => {
-                                            if (keyEvent.key === "Enter" || keyEvent.key === " ") {
-                                                keyEvent.preventDefault();
-                                                setSelectedResource(resource);
-                                            }
-                                        }}
-                                        className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
-                                    >
-                                        <ResourcesCard
-                                            id={resource.id}
-                                            title={resource.title}
-                                            category={resource.category}
-                                            description={resource.description}
-                                            link={resource.link}
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                            <h1 className="text-3xl font-semibold text-black mb-6">Resources</h1>
+                            {resources.length === 0 ? (
+                                <p className="text-sm text-gray-600">No resources pending approval.</p>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                                    {resources.map((resource) => (
+                                        <div
+                                            key={resource.id}
+                                            role="button"
+                                            onClick={() => setSelectedResource(resource)}
+                                            aria-label={`View details for ${resource.title}`}
+                                            onKeyDown={(keyEvent) => {
+                                                if (keyEvent.key === "Enter" || keyEvent.key === " ") {
+                                                    keyEvent.preventDefault();
+                                                    setSelectedResource(resource);
+                                                }
+                                            }}
+                                            className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
+                                        >
+                                            <ResourcesCard
+                                                id={resource.id}
+                                                title={resource.title}
+                                                category={resource.category}
+                                                description={resource.description}
+                                                link={resource.link}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
 
-                    </ul>
+                        </ul>
+                    </div>
                 )}
 
                 {selectedService && (
@@ -507,6 +489,7 @@ export default function Admin() {
 
                             <button
                                 onClick={() => {
+                                    handleRejectPost('service', selectedService.id);
                                     setSelectedService(null);
                                 }}
                                 className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap text-sm"
@@ -537,6 +520,7 @@ export default function Admin() {
 
                             <button
                                 onClick={() => {
+                                    handleRejectPost('job', selectedJob.id);
                                     setSelectedJob(null);
                                 }}
                                 className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap text-sm"
@@ -560,6 +544,7 @@ export default function Admin() {
 
                         <button
                             onClick={() => {
+                                handleRejectPost('group', selectedGroup.id);
                                 setSelectedGroup(null);
                             }}
                             className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap text-sm"
@@ -591,6 +576,7 @@ export default function Admin() {
 
                         <button
                             onClick={() => {
+                                handleRejectPost('event', selectedEvent.id);
                                 setSelectedEvent(null);
                             }}
                             className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap text-sm"
@@ -630,6 +616,7 @@ export default function Admin() {
 
                         <button
                             onClick={() => {
+                                handleRejectPost('resource', selectedResource.id);
                                 setSelectedResource(null);
                             }}
                             className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap text-sm"
