@@ -112,37 +112,38 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <div className="relative bg-primary/10 overflow-hidden">
-        <div className="w-full max-w-5xl mx-auto px-6 py-16 md:py-20">
-          <div className="relative flex flex-col md:flex-row items-center">
+        <div className="w-full max-w-5xl mx-auto px-6 py-10 md:py-20">
+          <div className="relative flex flex-col gap-8 md:flex-row md:gap-6 items-center">
             {/* Left Column */}
-            <div className="flex-[1.6] flex flex-col gap-4 z-10">
-              <h2 className="text-m font-semibold text-primary leading-tight">
+            <div className="w-full min-w-0 md:flex-[1.6] flex flex-col gap-4 z-10">
+              <h2 className="text-sm font-semibold text-primary leading-tight">
               New Zealand&apos;s Migrant Support Platform 
               </h2>
-              <h1 className="text-5xl font-bold text-text-primary leading-tight">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-text-primary leading-tight">
                 Welcome to Your <br />
                 <span className="text-primary">New Journey</span>
               </h1>
-              <p className="text-neutral text-base max-w-md text-xl text-text-secondary">
+              <p className="text-base md:text-xl max-w-md text-text-secondary">
                 Everything you need to settle, connect and succeed in New Zealand.
               </p>
 
-              <form onSubmit={handleSearch} className="flex items-center gap-2 mt-2 max-w-lg">
-                <div className="flex-1 flex items-center gap-2 border border-neutral/30 rounded-lg px-4 py-3 bg-white">
-                  <Search size={20} className="text-neutral" />
+              <form onSubmit={handleSearch} className="flex w-full min-w-0 flex-col sm:flex-row sm:items-center gap-3 mt-2 max-w-lg">
+                <div className="w-full min-w-0 sm:flex-1 flex items-center gap-2 border border-neutral/30 rounded-lg px-4 py-3 bg-white">
+                  <Search size={20} aria-hidden="true" className="shrink-0 text-neutral" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search services, jobs, resources..."
-                    className="flex-1 outline-none body-small"
+                    aria-label="Search services, jobs, and resources"
+                    className="w-full min-w-0 flex-1 outline-none body-small"
                     minLength={2}
                     required
                   />
                 </div>
                 <button 
                   type="submit"
-                  className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap body-small"
+                  className="w-full sm:w-auto shrink-0 bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors whitespace-nowrap body-small"
                 >
                   Search
                 </button>
@@ -150,12 +151,8 @@ export default function Home() {
             </div>
 
             {/* Purple Box */}
-            <div className="flex-1 w-full -ml-16 md:-ml-24">
-              <div className="bg-primary rounded-2xl p-6 md:p-8 text-white min-h-[280px]">
-                <div className="flex items-center justify-between mb-4">
-        
-                </div>
-                
+            <div className="w-full min-w-0 md:flex-1">
+              <div className="bg-primary rounded-2xl p-4 sm:p-6 md:p-8 text-white min-h-[280px]">
                 <div className="space-y-4">
         {/* Upcoming Event */}
         {upcomingEvent ? (
@@ -164,7 +161,7 @@ export default function Home() {
                     <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                         <Calendar size={16} className="text-white" />
                     </div>
-                    <div>
+                    <div className="min-w-0 break-words">
                         <p className="body-small font-bold text-white">Upcoming Event</p>
                         <p className="body-small text-xs text-white/90">{upcomingEvent.title}</p>
                         <p className="body-small text-white/60 text-xs">
@@ -186,7 +183,7 @@ export default function Home() {
                     <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                         <Briefcase size={16} className="text-white" />
                     </div>
-                    <div>
+                    <div className="min-w-0 break-words">
                         <p className="body-small font-bold text-white">New Job Listing</p>
                         <p className="body-small text-xs text-white/90">{newestJob.title}</p>
                         <p className="body-small text-white/60 text-xs">{newestJob.company} · {newestJob.location || 'TBC'}</p>
@@ -206,7 +203,7 @@ export default function Home() {
                     <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                         <Users size={16} className="text-white" />
                     </div>
-                    <div>
+                    <div className="min-w-0 break-words">
                         <p className="body-small font-bold text-white">New Community Group</p>
                         <p className="body-small text-xs text-white/90">{popularGroup.name}</p>
                         <p className="body-small text-white/60 text-xs">{popularGroup.category || 'Community Group'}</p>

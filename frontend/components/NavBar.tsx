@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
 import { Handshake } from "lucide-react";
 
@@ -17,6 +17,7 @@ export default function NavBar() {
 
     const { user, logout } = useAuth();
     const router = useRouter();
+    const pathname = usePathname();
 
     function handleLogout() {
         logout();
@@ -24,7 +25,7 @@ export default function NavBar() {
     }
 
     return (
-        <nav className="hidden md:flex w-full items-center justify-between px-8 py-4 border-b border-neutral/20 bg-white">
+        <nav className={`${pathname === "/" ? "flex" : "hidden md:flex"} w-full flex-wrap gap-3 items-center justify-between px-4 md:px-8 py-4 border-b border-neutral/20 bg-white`}>
             <Link href="/" className="flex items-center gap-2">
                 <div className="w-8 h-8 flex items-center justify-center bg-primary rounded-lg flex-shrink-0">
                     <Handshake size={18} className="text-white" />
@@ -32,7 +33,7 @@ export default function NavBar() {
                 <span className="text-xl font-semibold text-primary">MigrantHub</span>
             </Link>
 
-            <div className="flex items-center gap-6">
+            <div className="hidden md:flex items-center gap-6">
                 {navLinks.map((link) => (
                     <Link
                         key={link.href}
@@ -44,7 +45,7 @@ export default function NavBar() {
                 ))}
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1 sm:gap-3">
                 {user ? (
                     <>
                     <Link 
@@ -64,13 +65,13 @@ export default function NavBar() {
           <>    
                 <Link
                     href="/login"
-                    className="px-4 py-2 text-black font-bold rounded-lg hover:text-primary transition-colors"
+                    className="px-3 sm:px-4 py-2 text-sm font-bold text-black rounded-lg hover:text-primary transition-colors"
                 >
                     Login
                 </Link>
                 <Link
                     href="/signup"
-                    className="px-4 py-2 bg-primary font-bold text-white rounded-lg hover:bg-primary/5 transition-colors"
+                    className="px-3 sm:px-4 py-2 text-sm bg-primary font-bold text-white rounded-lg hover:bg-primary-hover transition-colors"
                 >
                     Sign Up
                 </Link>

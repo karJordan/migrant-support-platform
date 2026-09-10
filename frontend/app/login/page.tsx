@@ -35,8 +35,8 @@ async function handleSubmit(e: React.FormEvent) {
         const data = await response.json();
         login(data.token, data.user);
 
-        // Redirect to the home page after successful login
-        router.push("/");
+        // Open the appropriate dashboard after successful login.
+        router.replace(data.user.role === "admin" ? "/admin" : "/userDashboard");
     } catch {
         setError("Invalid username or password");
     } finally {

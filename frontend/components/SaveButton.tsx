@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
+import Button from "@/components/ui/Button";
 import { Heart } from "lucide-react";
 
 interface SaveButtonProps {
@@ -83,7 +84,7 @@ export default function SaveButton({ itemId, itemType }: SaveButtonProps) {
     }
 
     return (
-        <button
+        <Button
             onClick={toggleSave}
             onKeyDown={(event) => {
                 if (event.key === "Enter" || event.key === " ") {
@@ -91,14 +92,15 @@ export default function SaveButton({ itemId, itemType }: SaveButtonProps) {
                 }
             }}
             disabled={isSaving}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${isSaved
-                    ? 'bg-primary text-white'
-                    : 'bg-white text-primary border-primary'
-                }`}
+            variant={isSaved ? "primary" : "secondary"}
+            size="sm"
+            loading={isSaving}
+            loadingLabel="Saving..."
+            aria-pressed={isSaved}
             aria-label={isSaved ? "Unsave" : "Save"}
         >
-            <Heart size={20} fill={isSaved ? "currentColor" : "none"} />
+            <Heart aria-hidden="true" size={20} fill={isSaved ? "currentColor" : "none"} />
             {isSaved ? "Saved" : "Save"}
-        </button>
+        </Button>
     );
 }
