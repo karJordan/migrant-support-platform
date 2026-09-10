@@ -1,5 +1,8 @@
 "use client";
 
+import Button from "@/components/ui/Button";
+import Input, { Textarea } from "@/components/ui/Input";
+import Feedback from "@/components/ui/Feedback";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Service } from "@/types/service";
@@ -25,17 +28,22 @@ export default function ServiceForm({
     const [website, setWebsite] = useState(service?.website ?? "");
 
     const [message, setMessage] = useState("");
+    const [messageType, setMessageType] = useState<"success" | "error">("error");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
+        if (isSubmitting) return;
         setMessage("");
+        setMessageType("error");
 
         if (!token || !user) {
             setMessage("You must be logged in to submit a service.");
             return;
         }
 
+        setIsSubmitting(true);
         try {
             const response = await fetch(
                 service
@@ -66,6 +74,7 @@ export default function ServiceForm({
                 );
             }
             const updatedService = await response.json();
+            setMessageType("success");
 
             setMessage(
                 service
@@ -87,23 +96,26 @@ export default function ServiceForm({
             }
         } catch (error) {
             console.error(error);
+            setMessageType("error");
 
             setMessage(
                 service
                     ? "Unable to update service."
                     : "Unable to submit service."
             );
+        } finally {
+            setIsSubmitting(false);
         }
     }
 
     return (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4" aria-busy={isSubmitting}>
             <div>
-                <h2 className="text-2xl font-semibold">
+                <h2 className="heading-3">
                     {service ? "Edit Service" : "Add a Service"}
                 </h2>
 
-                <p className="text-neutral mt-1">
+                <p className="text-text-secondary mt-1">
                     {service
                         ? "Update this service."
                         : "Submit a service for the community."}
@@ -117,14 +129,13 @@ export default function ServiceForm({
                 >
                     Service Name
                 </label>
-                <input
+                <Input
                     id="service-name"
                     type="text"
                     placeholder="Service name"
                     value={name}
                     onChange={(event) => setName(event.target.value)}
                     required
-                    className="w-full border border-neutral/20 rounded-lg px-4 py-3"
                 />
             </div>
 
@@ -135,14 +146,13 @@ export default function ServiceForm({
                 >
                     Category
                 </label>
-                <input
+                <Input
                     id="service-category"
                     type="text"
                     placeholder="Category"
                     value={category}
                     onChange={(event) => setCategory(event.target.value)}
                     required
-                    className="w-full border border-neutral/20 rounded-lg px-4 py-3"
                 />
             </div>
 
@@ -153,12 +163,11 @@ export default function ServiceForm({
                 >
                     Description
                 </label>
-                <textarea
+                <Textarea
                     id="service-description"
                     placeholder="Description"
                     value={description}
                     onChange={(event) => setDescription(event.target.value)}
-                    className="w-full border border-neutral/20 rounded-lg px-4 py-3 min-h-28"
                 />
             </div>
 
@@ -169,13 +178,12 @@ export default function ServiceForm({
                 >
                     Location
                 </label>
-                <input
+                <Input
                     id="service-location"
                     type="text"
                     placeholder="Location"
                     value={location}
                     onChange={(event) => setLocation(event.target.value)}
-                    className="w-full border border-neutral/20 rounded-lg px-4 py-3"
                 />
             </div>
 
@@ -186,13 +194,12 @@ export default function ServiceForm({
                 >
                     Phone
                 </label>
-                <input
+                <Input
                     id="service-phone"
                     type="text"
                     placeholder="Phone"
                     value={phone}
                     onChange={(event) => setPhone(event.target.value)}
-                    className="w-full border border-neutral/20 rounded-lg px-4 py-3"
                 />
             </div>
 
@@ -203,35 +210,36 @@ export default function ServiceForm({
                 >
                     Website
                 </label>
-                <input
+                <Input
                     id="service-website"
                     type="url"
                     placeholder="Website"
                     value={website}
                     onChange={(event) => setWebsite(event.target.value)}
-                    className="w-full border border-neutral/20 rounded-lg px-4 py-3"
                 />
             </div>
 
-            <button
+            <Button
                 type="submit"
-                className="bg-primary text-white px-4 py-3 rounded-lg"
+                loading={isSubmitting}
+                loadingLabel="Saving..."
             >
                 {service ? "Save Changes" : "Submit Service"}
-            </button>
+            </Button>
 
             {service && onCancel && (
-                <button
+                <Button
                     type="button"
                     onClick={onCancel}
-                    className="border px-4 py-3 rounded-lg"
+                    variant="secondary"
+                    disabled={isSubmitting}
                 >
                     Cancel
-                </button>
+                </Button>
             )}
 
             {!service && (
-                <p className="text-neutral mt-1">
+                <p className="text-text-secondary mt-1">
                     {user?.role === "admin"
                         ? "This service will be published immediately."
                         : "This service will be submitted for admin approval."}
@@ -239,9 +247,7 @@ export default function ServiceForm({
             )}
 
             {message && (
-                <p className="text-sm text-neutral">
-                    {message}
-                </p>
+                <Feedback variant={messageType}>{message}</Feedback>
             )}
         </form>
     );

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
+import Button from "@/components/ui/Button";
 import { Heart } from "lucide-react";
 
 interface SaveButtonProps {
@@ -23,7 +24,7 @@ export default function SaveButton({ itemId, itemType }: SaveButtonProps) {
     }, [shouldShowButton, itemId, itemType]);
 
     async function checkIfSaved() {
-        
+
         if (!user) return;
 
         try {
@@ -40,7 +41,9 @@ export default function SaveButton({ itemId, itemType }: SaveButtonProps) {
         }
     }
 
-    async function toggleSave() {
+    async function toggleSave(event: React.MouseEvent) {
+        event.stopPropagation();
+
         if (!user) {
             window.location.href = "/login";
             return;
@@ -49,32 +52,20 @@ export default function SaveButton({ itemId, itemType }: SaveButtonProps) {
         setIsSaving(true);
         try {
             const method = isSaved ? "DELETE" : "POST";
-            
-            // ✅ Build the request body
-        const requestBody = {
-            user_id: user.id,
-            listing_id: Number(itemId),
-            listing_type: itemType,
-        };
 
-        // ✅ LOG THIS - check your browser console
-        console.log('📤 Sending to backend:', requestBody);
-        console.log('📤 user_id:', requestBody.user_id, 'type:', typeof requestBody.user_id);
-        console.log('📤 listing_id:', requestBody.listing_id, 'type:', typeof requestBody.listing_id);
-        console.log('📤 listing_type:', requestBody.listing_type, 'type:', typeof requestBody.listing_type);
+            const requestBody = {
+                user_id: user.id,
+                listing_id: Number(itemId),
+                listing_type: itemType,
+            };
 
-        const response = await fetch(`http://localhost:4000/api/saved/`, {
-            method: method,
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(requestBody),
-        });
-
-        // ✅ Log the response
-        const responseText = await response.text();
-        console.log('📥 Response status:', response.status);
-        console.log('📥 Response body:', responseText);
+            const response = await fetch(`http://localhost:4000/api/saved/`, {
+                method: method,
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(requestBody),
+            });
 
             if (!response.ok) {
                 throw new Error("HTTP Error: " + response.status);
@@ -93,18 +84,23 @@ export default function SaveButton({ itemId, itemType }: SaveButtonProps) {
     }
 
     return (
-        <button
+        <Button
             onClick={toggleSave}
+            onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                    event.stopPropagation();
+                }
+            }}
             disabled={isSaving}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
-                isSaved 
-                ? 'bg-primary text-white' 
-                : 'bg-white text-primary border-primary'
-            }`}
+            variant={isSaved ? "primary" : "secondary"}
+            size="sm"
+            loading={isSaving}
+            loadingLabel="Saving..."
+            aria-pressed={isSaved}
             aria-label={isSaved ? "Unsave" : "Save"}
         >
-            <Heart size={20} fill={isSaved ? "currentColor" : "none"} />
+            <Heart aria-hidden="true" size={20} fill={isSaved ? "currentColor" : "none"} />
             {isSaved ? "Saved" : "Save"}
-        </button>
+        </Button>
     );
 }

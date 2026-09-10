@@ -1,33 +1,25 @@
+import Card from "@/components/ui/Card";
+import { Users } from "lucide-react";
 import SaveButton from "./SaveButton";
 
-type CommunityEventProps = {
+type CommunityGroupProps = {
     id: string | number;
     name: string;
     category: string;
     description: string;
 };
 
-export default function CommunityEventCard({
-    id,
-    name,
-    category,
-    description,
-}: CommunityEventProps) {
+export default function CommunityGroupCard({ id, name, category }: CommunityGroupProps) {
     return (
-        <div className="border border-neutral/20 rounded-xl p-5 bg-white">
-            <div className="flex items-start justify-between">
-            <span className="text-sm text-primary font-medium">
-                {name}
-            </span>
-            <SaveButton itemType="community_group" itemId={id} />
+        <Card hoverable className="h-full">
+            <div className="flex items-start gap-3">
+                <div aria-hidden="true" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary-light text-primary"><Users size={22} /></div>
+                <div className="min-w-0 flex-1">
+                    <h2 className="break-words text-base font-semibold leading-snug">{name}</h2>
+                    <p className="mt-1 break-words text-sm text-text-secondary">{category || "Community group"}</p>
+                    <div className="mt-3 flex justify-end"><SaveButton itemType="community_group" itemId={id} /></div>
+                </div>
             </div>
-            <h2 className="text-xl font-semibold mt-2">
-                {category}
-            </h2>
-
-            <p className="text-neutral mt-2">
-                {description}
-            </p>
-        </div>
+        </Card>
     );
 }
