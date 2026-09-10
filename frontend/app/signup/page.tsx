@@ -8,12 +8,13 @@ export default function SignUpPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [, setError] = useState<string | null>(null);
-  const [, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   async function handleSubmit (e: React.FormEvent) {
     e.preventDefault();
+    if (loading) return;
     setError("");
     setLoading(true);
   
@@ -27,10 +28,11 @@ export default function SignUpPage() {
     });
 
     if (!response.ok) {
-      throw new Error("Failed to sign up");
+      setError("Could not create your account. Please check your details and try again.");
+      return;
     }
 
-    // Redirect to the login page or home page after successful signup
+    // Redirect to login after successful signup
     router.push("/login");
   } catch {
     setError("Could not connect to server");
@@ -70,11 +72,14 @@ export default function SignUpPage() {
           required
           className="border border-neutral/30 rounded-lg px-4 py-3 bg-white outline-none"
         />
+        {error && <p role="alert" className="text-red-500 text-sm">{error}</p>}
         <button
           type="submit"
-          className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors text-sm font-semibold"
+          disabled={loading}
+          aria-busy={loading}
+          className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Create Account
+          {loading ? "Creating account..." : "Create Account"}
         </button>
       </form>
       <p className="mt-4 text-sm text-neutral">
