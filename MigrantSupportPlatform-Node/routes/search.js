@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 
-// GET 
+// GET
 router.get('/', async (req, res) => {
     const { query } = req.query;
 
@@ -18,94 +18,106 @@ router.get('/', async (req, res) => {
         // Search in services
         const services = await pool.query(`
             SELECT
-                id,
-                name as title,
-                description, 
-                category,
-                location,
+                listing.id,
+                listing.name as title,
+                listing.description,
+                listing.category_id,
+                c.name AS category,
+                listing.location,
                 'service' as type,
-                '/services/' || id as href
-            FROM services
-            WHERE 
-                name ILIKE $1
-                OR description ILIKE $1 
-                OR category ILIKE $1 
-                OR location ILIKE $1
+                '/services/' || listing.id as href
+            FROM services AS listing
+            LEFT JOIN categories AS c ON listing.category_id = c.id
+            WHERE
+                listing.name ILIKE $1
+                OR listing.description ILIKE $1
+                OR c.name ILIKE $1
+                OR listing.location ILIKE $1
         `, [searchTerm]);
         results.push(...services.rows);
 
         // Search in jobs
         const jobs = await pool.query(`
             SELECT
-                id,
-                title,
-                description,
-                company,
-                employment_type as category,
-                location,
+                listing.id,
+                listing.title,
+                listing.description,
+                listing.company,
+                listing.category_id,
+                c.name AS category,
+                listing.location,
                 'job' as type,
-                '/jobs/' || id as href
-            FROM jobs
-            WHERE 
-                title ILIKE $1
-                OR description ILIKE $1 
-                OR employment_type ILIKE $1
-                OR location ILIKE $1
-                OR company ILIKE $1
+                '/jobs/' || listing.id as href
+            FROM jobs AS listing
+            LEFT JOIN categories AS c ON listing.category_id = c.id
+            WHERE
+                listing.title ILIKE $1
+                OR listing.description ILIKE $1
+                OR listing.employment_type ILIKE $1
+                OR listing.location ILIKE $1
+                OR listing.company ILIKE $1
+                OR c.name ILIKE $1
         `, [searchTerm]);
         results.push(...jobs.rows);
 
         // Search in resources
         const resources = await pool.query(`
             SELECT
-                id,
-                title,
-                description,
-                category,
+                listing.id,
+                listing.title,
+                listing.description,
+                listing.category_id,
+                c.name AS category,
                 NULL as location,
                 'resource' as type,
-                '/resources/' || id as href
-            FROM resources
-            WHERE 
-                title ILIKE $1
-                OR description ILIKE $1 
-                OR category ILIKE $1 
+                '/resources/' || listing.id as href
+            FROM resources AS listing
+            LEFT JOIN categories AS c ON listing.category_id = c.id
+            WHERE
+                listing.title ILIKE $1
+                OR listing.description ILIKE $1
+                OR c.name ILIKE $1
         `, [searchTerm]);
         results.push(...resources.rows);
 
-        // Search in community events 
+        // Search in community events
         const events = await pool.query(`
             SELECT
-                id,
-                title,
-                description,
-                'Event' as category,
-                location,
+                listing.id,
+                listing.title,
+                listing.description,
+                listing.category_id,
+                c.name AS category,
+                listing.location,
                 'community_event' as type,
-                '/events/' || id as href
-            FROM community_events
-            WHERE 
-                title ILIKE $1
-                OR description ILIKE $1  
-                OR location ILIKE $1
+                '/events/' || listing.id as href
+            FROM community_events AS listing
+            LEFT JOIN categories AS c ON listing.category_id = c.id
+            WHERE
+                listing.title ILIKE $1
+                OR listing.description ILIKE $1
+                OR listing.location ILIKE $1
+                OR c.name ILIKE $1
         `, [searchTerm]);
         results.push(...events.rows);
 
         // Search in community groups
         const groups = await pool.query(`
             SELECT
-                id,
-                name as title,
-                description,
-                'Group' as category,
+                listing.id,
+                listing.name as title,
+                listing.description,
+                listing.category_id,
+                c.name AS category,
                 NULL as location,
                 'community_group' as type,
-                '/groups/' || id as href
-            FROM community_groups
-            WHERE 
-                name ILIKE $1
-                OR description ILIKE $1  
-                OR category ILIKE $1
+                '/groups/' || listing.id as href
+            FROM community_groups AS listing
+            LEFT JOIN categories AS c ON listing.category_id = c.id
+            WHERE
+                listing.name ILIKE $1
+                OR listing.description ILIKE $1
+                OR c.name ILIKE $1
         `, [searchTerm]);
         results.push(...groups.rows);
 
@@ -117,17 +129,19 @@ router.get('/', async (req, res) => {
         if (lowerQuery === 'job' || lowerQuery === 'jobs') {
             const allJobs = await pool.query(`
                 SELECT
-                    id,
-                    title,
-                    description,
-                    company,
-                    employment_type as category,
-                    location,
+                    listing.id,
+                    listing.title,
+                    listing.description,
+                    listing.company,
+                    listing.category_id,
+                    c.name AS category,
+                    listing.location,
                     'job' as type,
-                    '/jobs/' || id as href
-                FROM jobs
-                WHERE status = 'approved' OR status IS NULL
-                ORDER BY created_at DESC
+                    '/jobs/' || listing.id as href
+                FROM jobs AS listing
+                LEFT JOIN categories AS c ON listing.category_id = c.id
+                WHERE listing.status = 'approved' OR listing.status IS NULL
+                ORDER BY listing.created_at DESC
                 LIMIT 20
             `);
             results.push(...allJobs.rows);
@@ -137,16 +151,18 @@ router.get('/', async (req, res) => {
         if (lowerQuery === 'service' || lowerQuery === 'services') {
             const allServices = await pool.query(`
                 SELECT
-                    id,
-                    name as title,
-                    description,
-                    category,
-                    location,
+                    listing.id,
+                    listing.name as title,
+                    listing.description,
+                    listing.category_id,
+                    c.name AS category,
+                    listing.location,
                     'service' as type,
-                    '/services/' || id as href
-                FROM services
-                WHERE status = 'approved' OR status IS NULL
-                ORDER BY created_at DESC
+                    '/services/' || listing.id as href
+                FROM services AS listing
+                LEFT JOIN categories AS c ON listing.category_id = c.id
+                WHERE listing.status = 'approved' OR listing.status IS NULL
+                ORDER BY listing.created_at DESC
                 LIMIT 20
             `);
             results.push(...allServices.rows);
@@ -156,16 +172,18 @@ router.get('/', async (req, res) => {
         if (lowerQuery === 'resource' || lowerQuery === 'resources') {
             const allResources = await pool.query(`
                 SELECT
-                    id,
-                    title,
-                    description,
-                    category,
+                    listing.id,
+                    listing.title,
+                    listing.description,
+                    listing.category_id,
+                    c.name AS category,
                     NULL as location,
                     'resource' as type,
-                    '/resources/' || id as href
-                FROM resources
-                WHERE status = 'approved' OR status IS NULL
-                ORDER BY created_at DESC
+                    '/resources/' || listing.id as href
+                FROM resources AS listing
+                LEFT JOIN categories AS c ON listing.category_id = c.id
+                WHERE listing.status = 'approved' OR listing.status IS NULL
+                ORDER BY listing.created_at DESC
                 LIMIT 20
             `);
             results.push(...allResources.rows);
@@ -175,16 +193,18 @@ router.get('/', async (req, res) => {
         if (lowerQuery === 'event' || lowerQuery === 'events') {
             const allEvents = await pool.query(`
                 SELECT
-                    id,
-                    title,
-                    description,
-                    'Event' as category,
-                    location,
+                    listing.id,
+                    listing.title,
+                    listing.description,
+                    listing.category_id,
+                    c.name AS category,
+                    listing.location,
                     'community_event' as type,
-                    '/events/' || id as href
-                FROM community_events
-                WHERE status = 'approved' OR status IS NULL
-                ORDER BY created_at DESC
+                    '/events/' || listing.id as href
+                FROM community_events AS listing
+                LEFT JOIN categories AS c ON listing.category_id = c.id
+                WHERE listing.status = 'approved' OR listing.status IS NULL
+                ORDER BY listing.created_at DESC
                 LIMIT 20
             `);
             results.push(...allEvents.rows);
@@ -194,16 +214,18 @@ router.get('/', async (req, res) => {
         if (lowerQuery === 'group' || lowerQuery === 'groups') {
             const allGroups = await pool.query(`
                 SELECT
-                    id,
-                    name as title,
-                    description,
-                    'Group' as category,
+                    listing.id,
+                    listing.name as title,
+                    listing.description,
+                    listing.category_id,
+                    c.name AS category,
                     NULL as location,
                     'community_group' as type,
-                    '/groups/' || id as href
-                FROM community_groups
-                WHERE status = 'approved' OR status IS NULL
-                ORDER BY created_at DESC
+                    '/groups/' || listing.id as href
+                FROM community_groups AS listing
+                LEFT JOIN categories AS c ON listing.category_id = c.id
+                WHERE listing.status = 'approved' OR listing.status IS NULL
+                ORDER BY listing.created_at DESC
                 LIMIT 20
             `);
             results.push(...allGroups.rows);
@@ -213,32 +235,36 @@ router.get('/', async (req, res) => {
         if (lowerQuery === 'community') {
             const allEvents = await pool.query(`
                 SELECT
-                    id,
-                    title,
-                    description,
-                    'Event' as category,
-                    location,
+                    listing.id,
+                    listing.title,
+                    listing.description,
+                    listing.category_id,
+                    c.name AS category,
+                    listing.location,
                     'community_event' as type,
-                    '/events/' || id as href
-                FROM community_events
-                WHERE status = 'approved' OR status IS NULL
-                ORDER BY created_at DESC
+                    '/events/' || listing.id as href
+                FROM community_events AS listing
+                LEFT JOIN categories AS c ON listing.category_id = c.id
+                WHERE listing.status = 'approved' OR listing.status IS NULL
+                ORDER BY listing.created_at DESC
                 LIMIT 20
             `);
             results.push(...allEvents.rows);
-            
+
             const allGroups = await pool.query(`
                 SELECT
-                    id,
-                    name as title,
-                    description,
-                    'Group' as category,
+                    listing.id,
+                    listing.name as title,
+                    listing.description,
+                    listing.category_id,
+                    c.name AS category,
                     NULL as location,
                     'community_group' as type,
-                    '/groups/' || id as href
-                FROM community_groups
-                WHERE status = 'approved' OR status IS NULL
-                ORDER BY created_at DESC
+                    '/groups/' || listing.id as href
+                FROM community_groups AS listing
+                LEFT JOIN categories AS c ON listing.category_id = c.id
+                WHERE listing.status = 'approved' OR listing.status IS NULL
+                ORDER BY listing.created_at DESC
                 LIMIT 20
             `);
             results.push(...allGroups.rows);

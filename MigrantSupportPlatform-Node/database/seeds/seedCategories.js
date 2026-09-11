@@ -5,7 +5,7 @@ const pool = require('../../db');
 async function seedCategories() {
     try {
         const categories = [
-            { name: 'Healthcare', applies_to: ['job', 'service'] },
+            { name: 'Healthcare', applies_to: ['job', 'service', 'resource'] },
             { name: 'Transport', applies_to: ['service'] },
             { name: 'Legal', applies_to: ['service', 'resource'] },
             { name: 'Translation', applies_to: ['service'] },
@@ -26,24 +26,20 @@ async function seedCategories() {
         ];
 
         for (const category of categories) {
-            const existing = await pool.query(
-                'SELECT id FROM categories WHERE name = $1',
-                [category.name]
-            );
-
-            if (existing.rows.length === 0) {
-                await pool.query(`
-                    INSERT INTO categories (name, applies_to)
-                    VALUES ($1, $2)
-                `, [category.name, category.applies_to]);
-                console.log(`✅ Created category: ${category.name}`);
-            } else {
-                console.log(`⏭️ Category already exists: ${category.name}`);
-            }
+            await pool.query(`
+                INSERT INTO categories (name, applies_to)
+                VALUES ($1, $2)
+                ON CONFLICT (name) DO UPDATE
+                SET applies_to = ARRAY(
+                    SELECT DISTINCT unnest(categories.applies_to || EXCLUDED.applies_to)
+                )
+            `, [category.name, category.applies_to]);
+            console.log(`Seeded category: ${category.name}`);
         }
 
         console.log('Categories seeded successfully.');
     } catch (err) {
+        process.exitCode = 1;
         console.error('Error seeding categories:', err);
     } finally {
         await pool.end();
