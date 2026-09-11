@@ -6,9 +6,21 @@ const authenticateToken = require('../middleware/authMiddleware');
 // GET /api/resources - Get approved resources
 router.get('/', async (req, res) => {
     try {
-        const result = await pool.query(
-            "SELECT * FROM resources WHERE status = 'approved' ORDER BY id ASC"
-        );
+        const result = await pool.query(`
+            SELECT 
+                resources.id,
+                resources.title,
+                resources.description,
+                resources.link,
+                resources.status,
+                resources.created_at,
+                resources.category_id,
+                categories.name AS category
+            FROM resources
+            LEFT JOIN categories ON resources.category_id = categories.id
+            WHERE resources.status = 'approved'
+            ORDER BY resources.id ASC
+        `);
 
         res.status(200).json(result.rows);
     } catch (error) {
@@ -19,9 +31,9 @@ router.get('/', async (req, res) => {
 
 // POST /api/resources - Create a new resource (requires login)
 router.post('/', authenticateToken, async (req, res) => {
-    const { title, description, link, category } = req.body;
+    const { title, description, link, category_id } = req.body;
 
-    if (!title || !link || !category) {
+    if (!title || !link || !category_id) {
         return res.status(400).json({ message: 'Title, Link, and Category are required' });
     }
 
@@ -30,8 +42,8 @@ router.post('/', authenticateToken, async (req, res) => {
         const status = req.user.role === 'admin' ? 'approved' : 'pending';
 
         const result = await pool.query(
-            'INSERT INTO resources (title, description, link, category, status, created_by) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-            [title, description, link, category, status, req.user.id]
+            'INSERT INTO resources (title, description, link, category_id, status, created_by) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+            [title, description, link, category_id, status, req.user.id]
         );
 
         res.status(201).json(result.rows[0]);
@@ -53,10 +65,10 @@ router.patch('/:id', authenticateToken, async (req, res) => {
         title,
         description,
         link,
-        category
+        category_id
     } = req.body;
 
-    if (!title || !link || !category) {
+    if (!title || !link || !category_id) {
         return res.status(400).json({
             message: 'Title, Link, and Category are required'
         });
@@ -68,14 +80,14 @@ router.patch('/:id', authenticateToken, async (req, res) => {
              SET title = $1,
                  description = $2,
                  link = $3,
-                 category = $4
+                 category_id = $4
              WHERE id = $5
              RETURNING *`,
             [
                 title,
                 description,
                 link,
-                category,
+                category_id,
                 id
             ]
         );

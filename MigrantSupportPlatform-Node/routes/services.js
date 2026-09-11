@@ -6,9 +6,23 @@ const authenticateToken = require('../middleware/authMiddleware');
 // GET /api/services - Fetch approved services
 router.get('/', async (req, res) => {
     try {
-        const result = await pool.query(
-            "SELECT * FROM services WHERE status = 'approved' ORDER BY id ASC"
-        );
+        const result = await pool.query(`
+            SELECT 
+                services.id,
+                services.name,
+                services.description,
+                services.location,
+                services.phone,
+                services.website,
+                services.status,
+                services.created_at,
+                services.category_id,
+                categories.name AS category
+            FROM services
+            LEFT JOIN categories ON services.category_id = categories.id
+            WHERE services.status = 'approved'
+            ORDER BY services.id ASC
+        `);
 
         res.status(200).json(result.rows);
     } catch (error) {
@@ -21,14 +35,14 @@ router.get('/', async (req, res) => {
 router.post('/', authenticateToken, async (req, res) => {
     const {
         name,
-        category,
+        category_id,
         description,
         location,
         phone,
         website
     } = req.body;
 
-    if (!name || !category) {
+    if (!name || !category_id) {
         return res.status(400).json({
             message: 'Name and category are required'
         });
@@ -42,12 +56,12 @@ router.post('/', authenticateToken, async (req, res) => {
 
         const result = await pool.query(
             `INSERT INTO services
-            (name, category, description, location, phone, website, status, created_by)
+            (name, category_id, description, location, phone, website, status, created_by)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
             RETURNING *`,
             [
                 name,
-                category,
+                category_id,
                 description,
                 location,
                 phone,
@@ -77,14 +91,14 @@ router.patch('/:id', authenticateToken, async (req, res) => {
 
     const {
         name,
-        category,
+        category_id,
         description,
         location,
         phone,
         website
     } = req.body;
 
-    if (!name || !category) {
+    if (!name || !category_id) {
         return res.status(400).json({
             message: 'Name and category are required'
         });
@@ -94,7 +108,7 @@ router.patch('/:id', authenticateToken, async (req, res) => {
         const result = await pool.query(
             `UPDATE services
              SET name = $1,
-                 category = $2,
+                 category_id = $2,
                  description = $3,
                  location = $4,
                  phone = $5,
@@ -103,7 +117,7 @@ router.patch('/:id', authenticateToken, async (req, res) => {
              RETURNING *`,
             [
                 name,
-                category,
+                category_id,
                 description,
                 location,
                 phone,

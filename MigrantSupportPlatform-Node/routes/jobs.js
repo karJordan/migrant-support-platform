@@ -6,9 +6,23 @@ const authenticateToken = require('../middleware/authMiddleware');
 // GET /api/jobs - Get approved jobs
 router.get('/', async (req, res) => {
     try {
-        const result = await pool.query(
-            "SELECT * FROM jobs WHERE status = 'approved' ORDER BY id ASC"
-        );
+        const result = await pool.query(`
+            SELECT 
+                jobs.id,
+                jobs.title,
+                jobs.company,
+                jobs.location,
+                jobs.employment_type,
+                jobs.description,
+                jobs.status,
+                jobs.created_at,
+                jobs.category_id,
+                categories.name AS category
+            FROM jobs
+            LEFT JOIN categories ON jobs.category_id = categories.id
+            WHERE jobs.status = 'approved'
+            ORDER BY jobs.id ASC
+        `);
 
         res.status(200).json(result.rows);
     } catch (error) {
@@ -19,10 +33,10 @@ router.get('/', async (req, res) => {
 
 // POST /api/jobs - Create a new job (requires login)
 router.post('/', authenticateToken, async (req, res) => {
-    const { title, company, location, employment_type, description } = req.body;
+    const { title, company, location, employment_type, category_id, description } = req.body;
 
-    if (!title || !company) {
-        return res.status(400).json({ message: 'Title and Company are required' });
+    if (!title || !company || !category_id) {
+        return res.status(400).json({ message: 'Title, Company, and Category are required' });
     }
 
     try {
@@ -30,8 +44,8 @@ router.post('/', authenticateToken, async (req, res) => {
         const status = req.user.role === 'admin' ? 'approved' : 'pending';
 
         const result = await pool.query(
-            'INSERT INTO jobs (title, company, location, employment_type, description, status, created_by) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-            [title, company, location, employment_type, description, status, req.user.id]
+            'INSERT INTO jobs (title, company, location, employment_type, category_id, description, status, created_by) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+            [title, company, location, employment_type, category_id, description, status, req.user.id]
         );
 
         res.status(201).json(result.rows[0]);
@@ -54,12 +68,13 @@ router.patch('/:id', authenticateToken, async (req, res) => {
         company,
         location,
         employment_type,
+        category_id,
         description
     } = req.body;
 
-    if (!title || !company) {
+    if (!title || !company || !category_id) {
         return res.status(400).json({
-            message: 'Title and Company are required'
+            message: 'Title, Company, and Category are required'
         });
     }
 
@@ -70,14 +85,16 @@ router.patch('/:id', authenticateToken, async (req, res) => {
                  company = $2,
                  location = $3,
                  employment_type = $4,
-                 description = $5
-             WHERE id = $6
+                 category_id = $5,
+                 description = $6
+             WHERE id = $7
              RETURNING *`,
             [
                 title,
                 company,
                 location,
                 employment_type,
+                category_id,
                 description,
                 id
             ]
@@ -98,4 +115,3 @@ router.patch('/:id', authenticateToken, async (req, res) => {
     }
 });
 module.exports = router;
-
