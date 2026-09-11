@@ -1,3 +1,4 @@
+import Card from "@/components/ui/Card";
 import { MapPin } from "lucide-react";
 import SaveButton from "@/components/SaveButton";
 
@@ -24,25 +25,25 @@ export default function CommunityEventCard({
         year: "numeric",
     });
     return (
-        <div className="border border-neutral/20 rounded-xl p-5 bg-white">
-            <div className="flex items-start justify-between">
-            <span className="text-sm text-primary font-medium">
+        <Card hoverable>
+            <div className="flex items-start justify-between gap-4">
+            <h2 className="heading-4 min-w-0 break-words">
                 {title}
-            </span>
+            </h2>
             <SaveButton itemType="community_event" itemId={id} />
             </div>
-            <h2 className="text-xl font-semibold mt-2">
+            <p className="mt-2 text-sm font-medium text-text-secondary">
                 {formattedDate} at {eventTime}
-            </h2>
+            </p>
 
-            <p className="text-neutral mt-2">
+            <p className="text-text-secondary mt-2 break-words">
                 {description}
             </p>
 
-            <div className="flex items-center gap-2 mt-4 text-neutral">
-                <MapPin size={18} />
+            <div className="flex items-center gap-2 mt-4 text-text-secondary">
+                <MapPin size={18} aria-hidden="true" className="shrink-0" />
                 <span>{location}</span>
             </div>
-        </div>
+        </Card>
     );
 }

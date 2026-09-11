@@ -1,33 +1,34 @@
+import Card from "@/components/ui/Card";
 import SaveButton from "./SaveButton";
 
-type CommunityEventProps = {
+type CommunityGroupProps = {
     id: string | number;
     name: string;
     category: string;
     description: string;
 };
 
-export default function CommunityEventCard({
+export default function CommunityGroupCard({
     id,
     name,
     category,
     description,
-}: CommunityEventProps) {
+}: CommunityGroupProps) {
     return (
-        <div className="border border-neutral/20 rounded-xl p-5 bg-white">
-            <div className="flex items-start justify-between">
-            <span className="text-sm text-primary font-medium">
+        <Card hoverable>
+            <div className="flex items-start justify-between gap-4">
+            <h2 className="heading-4 min-w-0 break-words">
                 {name}
-            </span>
+            </h2>
             <SaveButton itemType="community_group" itemId={id} />
             </div>
-            <h2 className="text-xl font-semibold mt-2">
+            <p className="mt-2 text-sm font-medium text-text-secondary">
                 {category}
-            </h2>
+            </p>
 
-            <p className="text-neutral mt-2">
+            <p className="text-text-secondary mt-2 break-words">
                 {description}
             </p>
-        </div>
+        </Card>
     );
 }

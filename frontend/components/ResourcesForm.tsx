@@ -1,11 +1,15 @@
 "use client";
 
+import Button from "@/components/ui/Button";
+import Input, { Textarea } from "@/components/ui/Input";
+import Feedback from "@/components/ui/Feedback";
+import CategoryField, { useCategoryOptions } from "@/components/CategoryField";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Resource } from "@/types/resource";
 
 type ResourcesFormProps = {
-    resource?: Resource;
+    resource?: Resource & { category_id?: number | null };
     onCancel?: () => void;
     onSaved?: (updatedResource: Resource) => void;
 };
@@ -16,26 +20,46 @@ export default function ResourcesForm({
     onSaved,
 }: ResourcesFormProps) {
     const { user, token } = useAuth();
+    const [categoryId, setCategoryId] = useState(String(resource?.category_id ?? ""));
+    const [categoryChanged, setCategoryChanged] = useState(false);
+    const categories = useCategoryOptions("resource");
 
     const [title, setTitle] = useState(resource?.title ?? "");
-    const [category, setCategory] = useState(resource?.category ?? "");
     const [description, setDescription] = useState(
         resource?.description ?? ""
     );
     const [link, setLink] = useState(resource?.link ?? "");
 
     const [message, setMessage] = useState("");
+    const [messageType, setMessageType] = useState<"success" | "error">("error");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
+        if (isSubmitting) return;
         setMessage("");
+        setMessageType("error");
 
         if (!token || !user) {
             setMessage("You must be logged in to submit a resource.");
             return;
         }
 
+        if (categories.loading || categories.error) {
+            setMessage("Wait for categories to load, or retry loading them.");
+            return;
+        }
+        if (!categoryId) {
+            setMessage("Please select a category.");
+            return;
+        }
+        if (categoryId && (!resource || categoryChanged) && !categories.options.some(option => String(option.id) === categoryId)) {
+            setMessage("Please select an available category.");
+            return;
+        }
+
+        setIsSubmitting(true);
         try {
             const response = await fetch(
                 resource
@@ -48,8 +72,8 @@ export default function ResourcesForm({
                         Authorization: `Bearer ${token}`,
                     },
                     body: JSON.stringify({
+                        ...(resource && !categoryChanged ? {} : { category_id: categoryId === "" ? null : Number(categoryId) }),
                         title,
-                        category,
                         description,
                         link,
                     }),
@@ -57,6 +81,8 @@ export default function ResourcesForm({
             );
 
             if (!response.ok) {
+                const failure = await response.json().catch(() => null);
+                if (failure?.message || failure?.error) throw new Error(failure.message || failure.error);
                 throw new Error(
                     resource
                         ? "Failed to update resource"
@@ -65,6 +91,7 @@ export default function ResourcesForm({
             }
 
             const updatedResource = await response.json();
+            setMessageType("success");
 
             setMessage(
                 resource
@@ -80,29 +107,33 @@ export default function ResourcesForm({
 
             if (!resource) {
                 setTitle("");
-                setCategory("");
+                setCategoryId("");
+                setCategoryChanged(false);
                 setDescription("");
                 setLink("");
             }
         } catch (error) {
             console.error(error);
+            setMessageType("error");
 
             setMessage(
-                resource
+                error instanceof Error ? error.message : resource
                     ? "Unable to update resource."
                     : "Unable to submit resource."
             );
+        } finally {
+            setIsSubmitting(false);
         }
     }
 
     return (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4" aria-busy={isSubmitting}>
             <div>
-                <h2 className="text-2xl font-semibold">
+                <h2 className="heading-3">
                     {resource ? "Edit Resource" : "Add a Resource"}
                 </h2>
 
-                <p className="text-neutral mt-1">
+                <p className="text-text-secondary mt-1">
                     {resource
                         ? "Update this resource."
                         : "Submit a resource for the community."}
@@ -115,34 +146,24 @@ export default function ResourcesForm({
                 >
                     Resource Title
                 </label>
-                <input
+                <Input
                     id="resource-title"
                     type="text"
                     placeholder="Resource title"
                     value={title}
                     onChange={(event) => setTitle(event.target.value)}
                     required
-                    className="w-full border border-neutral/20 rounded-lg px-4 py-3"
                 />
             </div>
 
-            <div>
-                <label
-                    htmlFor="resource-category"
-                    className="block text-sm font-medium mb-1"
-                >
-                    Category
-                </label>
-                <input
-                    id="resource-category"
-                    type="text"
-                    placeholder="Category"
-                    value={category}
-                    onChange={(event) => setCategory(event.target.value)}
-                    required
-                    className="w-full border border-neutral/20 rounded-lg px-4 py-3"
-                />
-            </div>
+            <CategoryField
+                id="resource-category"
+                value={categoryId}
+                onChange={value => { setCategoryId(value); setCategoryChanged(true); }}
+                {...categories}
+                optional={false}
+                disabled={isSubmitting}
+            />
 
             <div>
                 <label
@@ -151,13 +172,12 @@ export default function ResourcesForm({
                 >
                     Description
                 </label>
-                <textarea
+                <Textarea
                     id="resource-description"
                     placeholder="Description"
                     value={description}
                     onChange={(event) => setDescription(event.target.value)}
                     required
-                    className="w-full border border-neutral/20 rounded-lg px-4 py-3 min-h-28"
                 />
             </div>
 
@@ -168,36 +188,39 @@ export default function ResourcesForm({
                 >
                     Resource Link
                 </label>
-                <input
+                <Input
                     id="resource-link"
+                    helpText="Enter a complete URL, such as https://example.com."
                     type="url"
                     placeholder="Resource link"
                     value={link}
                     onChange={(event) => setLink(event.target.value)}
                     required
-                    className="w-full border border-neutral/20 rounded-lg px-4 py-3"
                 />
             </div>
 
-            <button
+            <Button
                 type="submit"
-                className="bg-primary text-white px-4 py-3 rounded-lg"
+                disabled={categories.loading || Boolean(categories.error) || !categoryId}
+                loading={isSubmitting}
+                loadingLabel="Saving..."
             >
                 {resource ? "Save Changes" : "Submit Resource"}
-            </button>
+            </Button>
 
             {resource && onCancel && (
-                <button
+                <Button
                     type="button"
                     onClick={onCancel}
-                    className="border px-4 py-3 rounded-lg"
+                    variant="secondary"
+                    disabled={isSubmitting}
                 >
                     Cancel
-                </button>
+                </Button>
             )}
 
             {!resource && (
-                <p className="text-neutral mt-1">
+                <p className="text-text-secondary mt-1">
                     {user?.role === "admin"
                         ? "This resource will be published immediately."
                         : "This resource will be submitted for admin approval."}
@@ -205,9 +228,7 @@ export default function ResourcesForm({
             )}
 
             {message && (
-                <p className="text-sm text-neutral">
-                    {message}
-                </p>
+                <Feedback variant={messageType}>{message}</Feedback>
             )}
         </form>
     );

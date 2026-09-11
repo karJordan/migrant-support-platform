@@ -1,11 +1,15 @@
 "use client";
 
+import Button from "@/components/ui/Button";
+import Input, { Textarea } from "@/components/ui/Input";
+import Feedback from "@/components/ui/Feedback";
+import CategoryField, { useCategoryOptions } from "@/components/CategoryField";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { CommunityGroup } from "@/types/group";
 
 type CommunityGroupFormProps = {
-    group?: CommunityGroup;
+    group?: CommunityGroup & { category_id?: number | null };
     onCancel?: () => void;
     onSaved?: (updatedGroup: CommunityGroup) => void;
 };
@@ -16,25 +20,41 @@ export default function CommunityGroupForm({
     onSaved,
 }: CommunityGroupFormProps) {
     const { user, token } = useAuth();
+    const [categoryId, setCategoryId] = useState(String(group?.category_id ?? ""));
+    const [categoryChanged, setCategoryChanged] = useState(false);
+    const categories = useCategoryOptions("community");
 
     const [name, setName] = useState(group?.name ?? "");
-    const [category, setCategory] = useState(group?.category ?? "");
     const [description, setDescription] = useState(
         group?.description ?? ""
     );
 
     const [message, setMessage] = useState("");
+    const [messageType, setMessageType] = useState<"success" | "error">("error");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
+        if (isSubmitting) return;
         setMessage("");
+        setMessageType("error");
 
         if (!token || !user) {
             setMessage("You must be logged in to submit a community group.");
             return;
         }
 
+        if (categories.loading || categories.error) {
+            setMessage("Wait for categories to load, or retry loading them.");
+            return;
+        }
+        if (categoryId && (!group || categoryChanged) && !categories.options.some(option => String(option.id) === categoryId)) {
+            setMessage("Please select an available category.");
+            return;
+        }
+
+        setIsSubmitting(true);
         try {
             const response = await fetch(
                 group
@@ -47,14 +67,16 @@ export default function CommunityGroupForm({
                         Authorization: `Bearer ${token}`,
                     },
                     body: JSON.stringify({
+                        ...(group && !categoryChanged ? {} : { category_id: categoryId === "" ? null : Number(categoryId) }),
                         name,
-                        category,
                         description,
                     }),
                 }
             );
 
             if (!response.ok) {
+                const failure = await response.json().catch(() => null);
+                if (failure?.message || failure?.error) throw new Error(failure.message || failure.error);
                 throw new Error(
                     group
                         ? "Failed to update community group"
@@ -63,6 +85,7 @@ export default function CommunityGroupForm({
             }
 
             const updatedGroup = await response.json();
+            setMessageType("success");
 
             setMessage(
                 group
@@ -78,30 +101,34 @@ export default function CommunityGroupForm({
 
             if (!group) {
                 setName("");
-                setCategory("");
+                setCategoryId("");
+                setCategoryChanged(false);
                 setDescription("");
             }
         } catch (error) {
             console.error(error);
+            setMessageType("error");
 
             setMessage(
-                group
+                error instanceof Error ? error.message : group
                     ? "Unable to update community group."
                     : "Unable to submit community group."
             );
+        } finally {
+            setIsSubmitting(false);
         }
     }
 
     return (
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4" aria-busy={isSubmitting}>
             <div>
-                <h2 className="text-2xl font-semibold">
+                <h2 className="heading-3">
                     {group
                         ? "Edit Community Group"
                         : "Add a Community Group"}
                 </h2>
 
-                <p className="text-neutral mt-1">
+                <p className="text-text-secondary mt-1">
                     {group
                         ? "Update this community group."
                         : "Submit a community group."}
@@ -115,34 +142,24 @@ export default function CommunityGroupForm({
                 >
                     Group Name
                 </label>
-                <input
+                <Input
                     id="group-name"
                     type="text"
                     placeholder="Group name"
                     value={name}
                     onChange={(event) => setName(event.target.value)}
                     required
-                    className="w-full border border-neutral/20 rounded-lg px-4 py-3"
                 />
             </div>
 
-            <div>
-                <label
-                    htmlFor="group-category"
-                    className="block text-sm font-medium mb-1"
-                >
-                    Category
-                </label>
-                <input
-                    id="group-category"
-                    type="text"
-                    placeholder="Category"
-                    value={category}
-                    onChange={(event) => setCategory(event.target.value)}
-                    required
-                    className="w-full border border-neutral/20 rounded-lg px-4 py-3"
-                />
-            </div>
+            <CategoryField
+                id="group-category"
+                value={categoryId}
+                onChange={value => { setCategoryId(value); setCategoryChanged(true); }}
+                {...categories}
+                optional={true}
+                disabled={isSubmitting}
+            />
 
             <div>
                 <label
@@ -151,35 +168,37 @@ export default function CommunityGroupForm({
                 >
                     Description
                 </label>
-                <textarea
+                <Textarea
                     id="group-description"
                     placeholder="Group description"
                     value={description}
                     onChange={(event) => setDescription(event.target.value)}
                     required
-                    className="w-full border border-neutral/20 rounded-lg px-4 py-3 min-h-28"
                 />
             </div>
 
-            <button
+            <Button
                 type="submit"
-                className="bg-primary text-white px-4 py-3 rounded-lg"
+                disabled={categories.loading || Boolean(categories.error)}
+                loading={isSubmitting}
+                loadingLabel="Saving..."
             >
                 {group ? "Save Changes" : "Submit Group"}
-            </button>
+            </Button>
 
             {group && onCancel && (
-                <button
+                <Button
                     type="button"
                     onClick={onCancel}
-                    className="border px-4 py-3 rounded-lg"
+                    variant="secondary"
+                    disabled={isSubmitting}
                 >
                     Cancel
-                </button>
+                </Button>
             )}
 
             {!group && (
-                <p className="text-neutral mt-1">
+                <p className="text-text-secondary mt-1">
                     {user?.role === "admin"
                         ? "This group will be published immediately."
                         : "This group will be submitted for admin approval."}
@@ -187,9 +206,7 @@ export default function CommunityGroupForm({
             )}
 
             {message && (
-                <p className="text-sm text-neutral">
-                    {message}
-                </p>
+                <Feedback variant={messageType}>{message}</Feedback>
             )}
         </form>
     );

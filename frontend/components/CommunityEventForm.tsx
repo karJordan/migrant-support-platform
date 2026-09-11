@@ -1,11 +1,15 @@
 "use client";
 
+import Button from "@/components/ui/Button";
+import Input, { Textarea } from "@/components/ui/Input";
+import Feedback from "@/components/ui/Feedback";
+import CategoryField, { useCategoryOptions } from "@/components/CategoryField";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { CommunityEvent } from "@/types/event";
 
 type CommunityEventFormProps = {
-    communityEvent?: CommunityEvent;
+    communityEvent?: CommunityEvent & { category_id?: number | null };
     onCancel?: () => void;
     onSaved?: (updatedEvent: CommunityEvent) => void;
 };
@@ -16,13 +20,16 @@ export default function CommunityEventForm({
     onSaved,
 }: CommunityEventFormProps) {
     const { user, token } = useAuth();
+    const [categoryId, setCategoryId] = useState(String(communityEvent?.category_id ?? ""));
+    const [categoryChanged, setCategoryChanged] = useState(false);
+    const categories = useCategoryOptions("community");
 
     const [title, setTitle] = useState(communityEvent?.title ?? "");
     const [location, setLocation] = useState(
         communityEvent?.location ?? ""
     );
     const [eventDate, setEventDate] = useState(
-        communityEvent?.event_date ?? ""
+        communityEvent?.event_date?.slice(0, 10) ?? ""
     );
     const [eventTime, setEventTime] = useState(
         communityEvent?.event_time ?? ""
@@ -32,10 +39,14 @@ export default function CommunityEventForm({
     );
 
     const [message, setMessage] = useState("");
+    const [messageType, setMessageType] = useState<"success" | "error">("error");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
+        if (isSubmitting) return;
+        setMessageType("error");
         setMessage("");
 
         if (!token || !user) {
@@ -43,6 +54,16 @@ export default function CommunityEventForm({
             return;
         }
 
+        if (categories.loading || categories.error) {
+            setMessage("Wait for categories to load, or retry loading them.");
+            return;
+        }
+        if (categoryId && (!communityEvent || categoryChanged) && !categories.options.some(option => String(option.id) === categoryId)) {
+            setMessage("Please select an available category.");
+            return;
+        }
+
+        setIsSubmitting(true);
         try {
             const response = await fetch(
                 communityEvent
@@ -55,6 +76,7 @@ export default function CommunityEventForm({
                         Authorization: `Bearer ${token}`,
                     },
                     body: JSON.stringify({
+                        ...(communityEvent && !categoryChanged ? {} : { category_id: categoryId === "" ? null : Number(categoryId) }),
                         title,
                         location,
                         event_date: eventDate,
@@ -65,6 +87,8 @@ export default function CommunityEventForm({
             );
 
             if (!response.ok) {
+                const failure = await response.json().catch(() => null);
+                if (failure?.message || failure?.error) throw new Error(failure.message || failure.error);
                 throw new Error(
                     communityEvent
                         ? "Failed to update event"
@@ -73,6 +97,7 @@ export default function CommunityEventForm({
             }
 
             const updatedEvent = await response.json();
+            setMessageType("success");
 
             setMessage(
                 communityEvent
@@ -87,6 +112,8 @@ export default function CommunityEventForm({
             }
 
             if (!communityEvent) {
+                setCategoryId("");
+                setCategoryChanged(false);
                 setTitle("");
                 setLocation("");
                 setEventDate("");
@@ -97,23 +124,25 @@ export default function CommunityEventForm({
             console.error(error);
 
             setMessage(
-                communityEvent
+                error instanceof Error ? error.message : communityEvent
                     ? "Unable to update event."
                     : "Unable to submit event."
             );
+        } finally {
+            setIsSubmitting(false);
         }
     }
 
     return (
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
-                <h2 className="text-2xl font-semibold">
+                <h2 className="heading-3">
                     {communityEvent
                         ? "Edit Community Event"
                         : "Add a Community Event"}
                 </h2>
 
-                <p className="text-neutral mt-1">
+                <p className="text-text-secondary mt-1">
                     {communityEvent
                         ? "Update this community event."
                         : "Submit a community event."}
@@ -127,14 +156,13 @@ export default function CommunityEventForm({
                 >
                     Event Title
                 </label>
-                <input
+                <Input
                     id="event-title"
                     type="text"
                     placeholder="Event title"
                     value={title}
                     onChange={(event) => setTitle(event.target.value)}
                     required
-                    className="w-full border border-neutral/20 rounded-lg px-4 py-3"
                 />
             </div>
 
@@ -145,14 +173,13 @@ export default function CommunityEventForm({
                 >
                     Location
                 </label>
-                <input
+                <Input
                     id="event-location"
                     type="text"
                     placeholder="Location"
                     value={location}
                     onChange={(event) => setLocation(event.target.value)}
                     required
-                    className="w-full border border-neutral/20 rounded-lg px-4 py-3"
                 />
             </div>
 
@@ -163,13 +190,12 @@ export default function CommunityEventForm({
                 >
                     Event Date
                 </label>
-                <input
+                <Input
                     id="event-date"
                     type="date"
                     value={eventDate}
                     onChange={(event) => setEventDate(event.target.value)}
                     required
-                    className="w-full border border-neutral/20 rounded-lg px-4 py-3"
                 />
             </div>
 
@@ -180,13 +206,12 @@ export default function CommunityEventForm({
                 >
                     Event Time
                 </label>
-                <input
+                <Input
                     id="event-time"
                     type="time"
                     value={eventTime}
                     onChange={(event) => setEventTime(event.target.value)}
                     required
-                    className="w-full border border-neutral/20 rounded-lg px-4 py-3"
                 />
             </div>
 
@@ -197,35 +222,44 @@ export default function CommunityEventForm({
                 >
                     Description
                 </label>
-                <textarea
+                <Textarea
                     id="event-description"
                     placeholder="Event description"
                     value={description}
                     onChange={(event) => setDescription(event.target.value)}
                     required
-                    className="w-full border border-neutral/20 rounded-lg px-4 py-3 min-h-28"
                 />
             </div>
 
-            <button
+            <CategoryField
+                id="event-category"
+                value={categoryId}
+                onChange={value => { setCategoryId(value); setCategoryChanged(true); }}
+                {...categories}
+                optional={true}
+                disabled={isSubmitting}
+            />
+
+            <Button
                 type="submit"
-                className="bg-primary text-white px-4 py-3 rounded-lg"
+                disabled={categories.loading || Boolean(categories.error)}
+                loading={isSubmitting} loadingLabel="Saving..."
             >
                 {communityEvent ? "Save Changes" : "Submit Event"}
-            </button>
+            </Button>
 
             {communityEvent && onCancel && (
-                <button
+                <Button
                     type="button"
                     onClick={onCancel}
-                    className="border px-4 py-3 rounded-lg"
+                    variant="secondary" disabled={isSubmitting}
                 >
                     Cancel
-                </button>
+                </Button>
             )}
 
             {!communityEvent && (
-                <p className="text-neutral mt-1">
+                <p className="text-text-secondary mt-1">
                     {user?.role === "admin"
                         ? "This event will be published immediately."
                         : "This event will be submitted for admin approval."}
@@ -233,9 +267,7 @@ export default function CommunityEventForm({
             )}
 
             {message && (
-                <p className="text-sm text-neutral">
-                    {message}
-                </p>
+                <Feedback variant={messageType}>{message}</Feedback>
             )}
         </form>
     );

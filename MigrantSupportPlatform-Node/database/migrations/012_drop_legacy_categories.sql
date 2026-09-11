@@ -1,0 +1,3 @@
+ALTER TABLE services DROP COLUMN IF EXISTS category;
+ALTER TABLE resources DROP COLUMN IF EXISTS category;
+ALTER TABLE community_groups DROP COLUMN IF EXISTS category;
