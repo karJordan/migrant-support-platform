@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 const authenticateToken = require('../middleware/authMiddleware');
+const validateCategory = require('../middleware/validateCategory');
 
 // GET /api/jobs - Get approved jobs
 router.get('/', async (req, res) => {
@@ -32,11 +33,11 @@ router.get('/', async (req, res) => {
 });
 
 // POST /api/jobs - Create a new job (requires login)
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authenticateToken, validateCategory('job'), async (req, res) => {
     const { title, company, location, employment_type, category_id, description } = req.body;
 
-    if (!title || !company || !category_id) {
-        return res.status(400).json({ message: 'Title, Company, and Category are required' });
+    if (!title || !company) {
+        return res.status(400).json({ message: 'Title and Company are required' });
     }
 
     try {
@@ -44,7 +45,7 @@ router.post('/', authenticateToken, async (req, res) => {
         const status = req.user.role === 'admin' ? 'approved' : 'pending';
 
         const result = await pool.query(
-            'INSERT INTO jobs (title, company, location, employment_type, category_id, description, status, created_by) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+            'INSERT INTO jobs (title, company, location, employment_type, category_id, description, status, created_by) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *, (SELECT name FROM categories WHERE categories.id = jobs.category_id) AS category',
             [title, company, location, employment_type, category_id, description, status, req.user.id]
         );
 
@@ -55,7 +56,7 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 });
 // PATCH /api/jobs/:id - Update an existing job
-router.patch('/:id', authenticateToken, async (req, res) => {
+router.patch('/:id', authenticateToken, validateCategory('job'), async (req, res) => {
     if (req.user.role !== 'admin') {
         return res.status(403).json({
             message: 'Admin access required'
@@ -72,9 +73,9 @@ router.patch('/:id', authenticateToken, async (req, res) => {
         description
     } = req.body;
 
-    if (!title || !company || !category_id) {
+    if (!title || !company) {
         return res.status(400).json({
-            message: 'Title, Company, and Category are required'
+            message: 'Title and Company are required'
         });
     }
 
@@ -85,10 +86,10 @@ router.patch('/:id', authenticateToken, async (req, res) => {
                  company = $2,
                  location = $3,
                  employment_type = $4,
-                 category_id = $5,
+                 category_id = CASE WHEN $8::boolean THEN $5 ELSE category_id END,
                  description = $6
              WHERE id = $7
-             RETURNING *`,
+             RETURNING *, (SELECT name FROM categories WHERE categories.id = jobs.category_id) AS category`,
             [
                 title,
                 company,
@@ -96,7 +97,8 @@ router.patch('/:id', authenticateToken, async (req, res) => {
                 employment_type,
                 category_id,
                 description,
-                id
+                id,
+                Object.prototype.hasOwnProperty.call(req.body, 'category_id')
             ]
         );
 

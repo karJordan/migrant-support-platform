@@ -28,7 +28,7 @@ router.get('/services', authenticateToken, async (req, res) => {
     }
     try {
         const result = await pool.query(
-            "SELECT * FROM services WHERE status = 'pending' ORDER BY id ASC"
+            "SELECT listing.*, categories.name AS category FROM services AS listing LEFT JOIN categories ON listing.category_id = categories.id WHERE listing.status = 'pending' ORDER BY listing.id ASC"
         );
 
         res.status(200).json(result.rows);
@@ -45,7 +45,7 @@ router.get('/resources', authenticateToken, async (req, res) => {
     }
     try {
         const result = await pool.query(
-            "SELECT * FROM resources WHERE status = 'pending' ORDER BY id ASC"
+            "SELECT listing.*, categories.name AS category FROM resources AS listing LEFT JOIN categories ON listing.category_id = categories.id WHERE listing.status = 'pending' ORDER BY listing.id ASC"
         );
 
         res.status(200).json(result.rows);
@@ -62,7 +62,7 @@ router.get('/jobs', authenticateToken, async (req, res) => {
     }
     try {
         const result = await pool.query(
-            "SELECT * FROM jobs WHERE status = 'pending' ORDER BY id ASC"
+            "SELECT listing.*, categories.name AS category FROM jobs AS listing LEFT JOIN categories ON listing.category_id = categories.id WHERE listing.status = 'pending' ORDER BY listing.id ASC"
         );
 
         res.status(200).json(result.rows);
@@ -79,7 +79,7 @@ router.get('/groups', authenticateToken, async (req, res) => {
     }
     try {
         const result = await pool.query(
-            "SELECT * FROM community_groups WHERE status = 'pending' ORDER BY id ASC"
+            "SELECT listing.*, categories.name AS category FROM community_groups AS listing LEFT JOIN categories ON listing.category_id = categories.id WHERE listing.status = 'pending' ORDER BY listing.id ASC"
         );
 
         res.status(200).json(result.rows);
@@ -96,7 +96,7 @@ router.get('/events', authenticateToken, async (req, res) => {
     }
     try {
         const result = await pool.query(
-            "SELECT * FROM community_events WHERE status = 'pending' ORDER BY event_date ASC"
+            "SELECT listing.*, categories.name AS category FROM community_events AS listing LEFT JOIN categories ON listing.category_id = categories.id WHERE listing.status = 'pending' ORDER BY listing.event_date ASC"
         );
         res.status(200).json(result.rows);
     } catch (error) {

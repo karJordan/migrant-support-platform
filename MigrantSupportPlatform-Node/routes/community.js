@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 const authenticateToken = require('../middleware/authMiddleware');
+const validateCategory = require('../middleware/validateCategory');
 
 // GROUPS
 router.get('/groups', async (req, res) => {
@@ -27,7 +28,7 @@ router.get('/groups', async (req, res) => {
     }
 });
 
-router.post('/groups', authenticateToken, async (req, res) => {
+router.post('/groups', authenticateToken, validateCategory('community', { optional: true }), async (req, res) => {
     const { name, category_id, description } = req.body;
 
     if (!name) {
@@ -37,7 +38,7 @@ router.post('/groups', authenticateToken, async (req, res) => {
     try {
         const status = req.user.role === 'admin' ? 'approved' : 'pending';
         const result = await pool.query(
-            'INSERT INTO community_groups (name, category_id, description, status, created_by) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+            'INSERT INTO community_groups (name, category_id, description, status, created_by) VALUES ($1, $2, $3, $4, $5) RETURNING *, (SELECT name FROM categories WHERE categories.id = community_groups.category_id) AS category',
             [name, category_id, description, status, req.user.id]
         );
         res.status(201).json(result.rows[0]);
@@ -47,7 +48,7 @@ router.post('/groups', authenticateToken, async (req, res) => {
     }
 });
 // PATCH /api/community/groups/:id - Update an existing community group
-router.patch('/groups/:id', authenticateToken, async (req, res) => {
+router.patch('/groups/:id', authenticateToken, validateCategory('community', { optional: true }), async (req, res) => {
     if (req.user.role !== 'admin') {
         return res.status(403).json({
             message: 'Admin access required'
@@ -67,15 +68,16 @@ router.patch('/groups/:id', authenticateToken, async (req, res) => {
         const result = await pool.query(
             `UPDATE community_groups
              SET name = $1,
-                 category_id = $2,
+                 category_id = CASE WHEN $5::boolean THEN $2 ELSE category_id END,
                  description = $3
              WHERE id = $4
-             RETURNING *`,
+             RETURNING *, (SELECT name FROM categories WHERE categories.id = community_groups.category_id) AS category`,
             [
                 name,
                 category_id,
                 description,
-                id
+                id,
+                Object.prototype.hasOwnProperty.call(req.body, 'category_id')
             ]
         );
 
@@ -121,17 +123,17 @@ router.get('/events', async (req, res) => {
     }
 });
 
-router.post('/events', authenticateToken, async (req, res) => {
+router.post('/events', authenticateToken, validateCategory('community', { optional: true }), async (req, res) => {
     const { title, category_id, location, event_date, event_time, description } = req.body;
 
-    if (!title || !event_date || !event_time || !category_id) {
-        return res.status(400).json({ message: 'Title, Category, Event Date, and Event Time is required' });
+    if (!title || !event_date || !event_time) {
+        return res.status(400).json({ message: 'Title, Event Date, and Event Time are required' });
     }
 
     try {
         const status = req.user.role === 'admin' ? 'approved' : 'pending';
         const result = await pool.query(
-            'INSERT INTO community_events (title, category_id, location, event_date, event_time, description, status, created_by) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
+            'INSERT INTO community_events (title, category_id, location, event_date, event_time, description, status, created_by) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *, (SELECT name FROM categories WHERE categories.id = community_events.category_id) AS category',
             [title, category_id, location, event_date, event_time, description, status, req.user.id]
         );
         res.status(201).json(result.rows[0]);
@@ -141,7 +143,7 @@ router.post('/events', authenticateToken, async (req, res) => {
     }
 });
 // PATCH /api/community/events/:id - Update an existing community event
-router.patch('/events/:id', authenticateToken, async (req, res) => {
+router.patch('/events/:id', authenticateToken, validateCategory('community', { optional: true }), async (req, res) => {
     if (req.user.role !== 'admin') {
         return res.status(403).json({
             message: 'Admin access required'
@@ -168,13 +170,13 @@ router.patch('/events/:id', authenticateToken, async (req, res) => {
         const result = await pool.query(
             `UPDATE community_events
              SET title = $1,
-                 category_id = $2,
+                 category_id = CASE WHEN $8::boolean THEN $2 ELSE category_id END,
                  location = $3,
                  event_date = $4,
                  event_time = $5,
                  description = $6
              WHERE id = $7
-             RETURNING *`,
+             RETURNING *, (SELECT name FROM categories WHERE categories.id = community_events.category_id) AS category`,
             [
                 title,
                 category_id,
@@ -182,7 +184,8 @@ router.patch('/events/:id', authenticateToken, async (req, res) => {
                 event_date,
                 event_time,
                 description,
-                id
+                id,
+                Object.prototype.hasOwnProperty.call(req.body, 'category_id')
             ]
         );
 
