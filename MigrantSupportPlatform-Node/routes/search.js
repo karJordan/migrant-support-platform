@@ -28,11 +28,13 @@ router.get('/', async (req, res) => {
                 '/services/' || listing.id as href
             FROM services AS listing
             LEFT JOIN categories AS c ON listing.category_id = c.id
-            WHERE
-                listing.name ILIKE $1
-                OR listing.description ILIKE $1
-                OR c.name ILIKE $1
-                OR listing.location ILIKE $1
+            WHERE listing.status = 'approved'
+AND (
+    listing.name ILIKE $1
+    OR listing.description ILIKE $1
+    OR c.name ILIKE $1
+    OR listing.location ILIKE $1
+)
         `, [searchTerm]);
         results.push(...services.rows);
 
@@ -50,13 +52,15 @@ router.get('/', async (req, res) => {
                 '/jobs/' || listing.id as href
             FROM jobs AS listing
             LEFT JOIN categories AS c ON listing.category_id = c.id
-            WHERE
-                listing.title ILIKE $1
-                OR listing.description ILIKE $1
-                OR listing.employment_type ILIKE $1
-                OR listing.location ILIKE $1
-                OR listing.company ILIKE $1
-                OR c.name ILIKE $1
+            WHERE listing.status = 'approved'
+AND (
+    listing.title ILIKE $1
+    OR listing.description ILIKE $1
+    OR listing.employment_type ILIKE $1
+    OR listing.location ILIKE $1
+    OR listing.company ILIKE $1
+    OR c.name ILIKE $1
+)
         `, [searchTerm]);
         results.push(...jobs.rows);
 
@@ -73,10 +77,12 @@ router.get('/', async (req, res) => {
                 '/resources/' || listing.id as href
             FROM resources AS listing
             LEFT JOIN categories AS c ON listing.category_id = c.id
-            WHERE
-                listing.title ILIKE $1
-                OR listing.description ILIKE $1
-                OR c.name ILIKE $1
+            WHERE listing.status = 'approved'
+AND (
+    listing.title ILIKE $1
+    OR listing.description ILIKE $1
+    OR c.name ILIKE $1
+)
         `, [searchTerm]);
         results.push(...resources.rows);
 
@@ -93,11 +99,13 @@ router.get('/', async (req, res) => {
                 '/events/' || listing.id as href
             FROM community_events AS listing
             LEFT JOIN categories AS c ON listing.category_id = c.id
-            WHERE
-                listing.title ILIKE $1
-                OR listing.description ILIKE $1
-                OR listing.location ILIKE $1
-                OR c.name ILIKE $1
+           WHERE listing.status = 'approved'
+AND (
+    listing.title ILIKE $1
+    OR listing.description ILIKE $1
+    OR listing.location ILIKE $1
+    OR c.name ILIKE $1
+)
         `, [searchTerm]);
         results.push(...events.rows);
 
@@ -114,10 +122,12 @@ router.get('/', async (req, res) => {
                 '/groups/' || listing.id as href
             FROM community_groups AS listing
             LEFT JOIN categories AS c ON listing.category_id = c.id
-            WHERE
-                listing.name ILIKE $1
-                OR listing.description ILIKE $1
-                OR c.name ILIKE $1
+            WHERE listing.status = 'approved'
+AND (
+    listing.name ILIKE $1
+    OR listing.description ILIKE $1
+    OR c.name ILIKE $1
+)
         `, [searchTerm]);
         results.push(...groups.rows);
 
