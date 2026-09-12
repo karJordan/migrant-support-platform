@@ -1,5 +1,8 @@
 "use client";
 
+import Button from "@/components/ui/Button";
+import { Select } from "@/components/ui/Input";
+import { Plus } from "lucide-react";
 import CommunityGroupCard from "@/components/CommunityGroupCard";
 import CommunityEventCard from "@/components/CommunityEventCard";
 import { useState, useEffect } from "react";
@@ -29,6 +32,20 @@ export default function CommunityPage() {
     const [isEditingGroup, setIsEditingGroup] = useState(false);
 
     const { user } = useAuth();
+    const [eventSort, setEventSort] = useState("soonest");
+    const sortedEvents = [...event].sort((a, b) => {
+        if (eventSort === "title") return a.title.localeCompare(b.title, "en-NZ");
+        const dateValue = (item: CommunityEvent) => {
+            const day = item.event_date?.slice(0, 10);
+            return day ? Date.parse(`${day}T${item.event_time || "00:00:00"}`) : NaN;
+        };
+        const first = dateValue(a);
+        const second = dateValue(b);
+        // Undated events stay last in either date order.
+        if (Number.isNaN(first)) return Number.isNaN(second) ? a.id - b.id : 1;
+        if (Number.isNaN(second)) return -1;
+        return (eventSort === "latest" ? second - first : first - second) || a.id - b.id;
+    });
 
     useEffect(() => {
         async function fetchEvents() {
@@ -77,23 +94,28 @@ export default function CommunityPage() {
     }, []);
 
     return (
-        <div className="w-full max-w-5xl mx-auto px-6 py-10">
-            <h1 className="text-4xl font-semibold">Find Communities</h1>
+        <div className="w-full max-w-5xl mx-auto px-4 py-6 sm:px-6 sm:py-10">
+            <h1 className="text-2xl sm:text-3xl font-bold">Community</h1>
 
-            <p className="text-neutral mt-2">
+            <p className="text-sm text-text-secondary mt-2 mb-6">
                 Browse community events and groups for migrants in New Zealand.
             </p>
             <div>
-                <h2 className="text-3xl font-semibold">Upcoming Events</h2>
-                <div className="flex gap-3 mt-6">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <h2 className="text-lg font-semibold">Upcoming Events</h2>
                     {user && (
-                        <button
-                            onClick={() => setShowEventForm(true)}
-                            className="bg-primary text-white px-4 py-2 rounded-lg"
-                        >
-                            Add Community Event
-                        </button>
+                        <Button size="sm" variant="ghost" onClick={() => setShowEventForm(true)}>
+                            <Plus size={16} aria-hidden="true" /> Add Event
+                        </Button>
                     )}
+                </div>
+                <div className="mt-4 mb-4 max-w-xs">
+                    <label htmlFor="event-sort" className="mb-1 block text-sm font-medium">Sort events</label>
+                    <Select id="event-sort" value={eventSort} onChange={(event) => setEventSort(event.target.value)}>
+                        <option value="soonest">Soonest first</option>
+                        <option value="latest">Latest date first</option>
+                        <option value="title">Title A–Z</option>
+                    </Select>
                 </div>
 
                 {eventsLoading && (
@@ -110,8 +132,8 @@ export default function CommunityPage() {
                         {event.length === 0 ? (
                             <p className="mt-8 text-neutral">No events found.</p>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-                                {event.map((e) => (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
+                                {sortedEvents.map((e) => (
                                     <div
                                         key={e.id}
                                         role="button"
@@ -122,6 +144,7 @@ export default function CommunityPage() {
                                             setIsEditingEvent(false);
                                         }}
                                         onKeyDown={(keyEvent) => {
+                                            if (keyEvent.target !== keyEvent.currentTarget) return;
                                             if (keyEvent.key === "Enter" || keyEvent.key === " ") {
                                                 keyEvent.preventDefault();
                                                 setSelectedEvent(e);
@@ -145,16 +168,13 @@ export default function CommunityPage() {
                     </>
                 )}
             </div>
-            <div className="mt-12">
-                <h2 className="text-3xl font-semibold">Community Groups</h2>
-                <div className="flex gap-3 mt-6">
+            <div className="mt-8">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                    <h2 className="text-lg font-semibold">Community Groups</h2>
                     {user && (
-                        <button
-                            onClick={() => setShowGroupForm(true)}
-                            className="bg-primary text-white px-4 py-2 rounded-lg"
-                        >
-                            Add Community Group
-                        </button>
+                        <Button size="sm" variant="ghost" onClick={() => setShowGroupForm(true)}>
+                            <Plus size={16} aria-hidden="true" /> Add Group
+                        </Button>
                     )}
                 </div>
                 {groupsLoading && (
@@ -170,7 +190,7 @@ export default function CommunityPage() {
                         {group.length === 0 ? (
                             <p className="mt-8 text-neutral">No groups found.</p>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">
                                 {group.map((g) => (
                                     <div
                                         key={g.id}
@@ -182,6 +202,7 @@ export default function CommunityPage() {
                                             setIsEditingGroup(false);
                                         }} 
                                         onKeyDown={(keyEvent) => {
+                                            if (keyEvent.target !== keyEvent.currentTarget) return;
                                             if (keyEvent.key === "Enter" || keyEvent.key === " ") {
                                                 keyEvent.preventDefault();
                                                 setSelectedGroup(g);

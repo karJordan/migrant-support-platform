@@ -1,5 +1,5 @@
 import Card from "@/components/ui/Card";
-import { MapPin } from "lucide-react";
+import { CalendarDays, MapPin, Clock } from "lucide-react";
 import SaveButton from "@/components/SaveButton";
 
 type CommunityEventProps = {
@@ -11,38 +11,28 @@ type CommunityEventProps = {
     location: string;
 };
 
-export default function CommunityEventCard({
-    id,
-    title,
-    description,
-    eventDate,
-    eventTime,
-    location,
-}: CommunityEventProps) {
-    const formattedDate = new Date(eventDate).toLocaleDateString("en-NZ", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
+const iconColours = ["bg-pink-500", "bg-violet-500", "bg-amber-500"];
+
+export default function CommunityEventCard({ id, title, eventDate, eventTime, location }: CommunityEventProps) {
+    const date = new Date(eventDate);
+    const formattedDate = Number.isNaN(date.getTime()) ? "Date to be confirmed" : date.toLocaleDateString("en-NZ", {
+        weekday: "short", day: "numeric", month: "short", year: "numeric",
     });
+    const colourIndex = Array.from(String(id)).reduce((sum, character) => sum + character.charCodeAt(0), 0) % iconColours.length;
+
     return (
-        <Card hoverable>
-            <div className="flex items-start justify-between gap-4">
-            <h2 className="heading-4 min-w-0 break-words">
-                {title}
-            </h2>
-            <SaveButton itemType="community_event" itemId={id} />
-            </div>
-            <p className="mt-2 text-sm font-medium text-text-secondary">
-                {formattedDate} at {eventTime}
-            </p>
-
-            <p className="text-text-secondary mt-2 break-words">
-                {description}
-            </p>
-
-            <div className="flex items-center gap-2 mt-4 text-text-secondary">
-                <MapPin size={18} aria-hidden="true" className="shrink-0" />
-                <span>{location}</span>
+        <Card hoverable className="h-full">
+            <div className="grid grid-cols-[2.5rem_minmax(0,1fr)] gap-3 sm:grid-cols-[3rem_minmax(0,1fr)]">
+                <div aria-hidden="true" className={`flex h-16 items-center justify-center rounded-2xl text-white ${iconColours[colourIndex]}`}>
+                    <CalendarDays size={22} />
+                </div>
+                <div className="min-w-0">
+                    <h2 className="break-words text-base font-semibold leading-snug">{title}</h2>
+                    <p className="mt-1 text-sm font-medium text-primary">{formattedDate}</p>
+                    {eventTime && <p className="mt-1 flex items-start gap-1.5 text-sm text-text-secondary"><Clock size={14} aria-hidden="true" className="mt-0.5 shrink-0" /><span>{eventTime.slice(0, 5)}</span></p>}
+                    <p className="mt-1 flex items-start gap-1.5 text-sm text-text-secondary"><MapPin size={14} aria-hidden="true" className="mt-0.5 shrink-0" /><span className="break-words">{location || "Location to be confirmed"}</span></p>
+                    <div className="mt-3 flex justify-end"><SaveButton itemType="community_event" itemId={id} /></div>
+                </div>
             </div>
         </Card>
     );
