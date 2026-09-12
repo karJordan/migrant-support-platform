@@ -105,6 +105,12 @@ export default function Admin() {
 
     const [error, setError] = useState<string | null>(null);
     const [users, setUsers] = useState<User[]>([]);
+    const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [editedUserName, setEditedUserName] = useState("");
+    const [editedUserEmail, setEditedUserEmail] = useState("");
+    const [editedUserRole, setEditedUserRole] = useState<"user" | "admin">("user");
+    const [isSavingUser, setIsSavingUser] = useState(false);
+    const [userEditError, setUserEditError] = useState<string | null>(null);
     const [services, setServices] = useState<Service[]>([]);
     const [jobs, setJobs] = useState<Job[]>([]);
     const [groups, setGroups] = useState<CommunityGroup[]>([]);
@@ -119,6 +125,7 @@ export default function Admin() {
     const [isSaving, setIsSaving] = useState(false);
     const [savingAction, setSavingAction] = useState<Action | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
+
 
     // A ref blocks duplicate requests immediately, before React rerenders.
     const savingRef = useRef(false);
@@ -190,6 +197,71 @@ export default function Admin() {
         }
     }
 
+    function openUserEditor(listedUser: User) {
+        setSelectedUser(listedUser);
+        setEditedUserName(listedUser.name);
+        setEditedUserEmail(listedUser.email);
+        setEditedUserRole(listedUser.role === "admin" ? "admin" : "user");
+        setUserEditError(null);
+    }
+
+    function closeUserEditor() {
+        if (isSavingUser) return;
+
+        setSelectedUser(null);
+        setUserEditError(null);
+    }
+
+    async function handleUserSave(event: React.FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+
+        if (!selectedUser || isSavingUser) return;
+
+        setIsSavingUser(true);
+        setUserEditError(null);
+
+        try {
+            const response = await fetch(
+                `${API_URL}/api/admin/users/${selectedUser.id}`,
+                {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        name: editedUserName,
+                        email: editedUserEmail,
+                        role: editedUserRole,
+                    }),
+                },
+            );
+
+            const result = await response.json().catch(() => null);
+
+            if (!response.ok) {
+                throw new Error(
+                    result?.error || "Could not update this user.",
+                );
+            }
+
+            setUsers((currentUsers) =>
+                currentUsers.map((listedUser) =>
+                    listedUser.id === result.id ? result : listedUser,
+                ),
+            );
+
+            setSelectedUser(null);
+        } catch (caught) {
+            setUserEditError(
+                caught instanceof Error
+                    ? caught.message
+                    : "Could not update this user.",
+            );
+        } finally {
+            setIsSavingUser(false);
+        }
+    }
     function openPost(post: SelectedPost) {
         if (savingRef.current) return;
 
@@ -414,15 +486,25 @@ export default function Admin() {
                     )}
 
                     {users.map((listedUser) => (
-                        <li
-                            key={listedUser.id}
-                            className="bg-gray-100 p-4 rounded-lg"
-                        >
-                            <p className="font-semibold">{listedUser.role}</p>
-                            <p className="font-semibold">{listedUser.name}</p>
-                            <p className="text-sm text-gray-600">
-                                {listedUser.email}
-                            </p>
+                        <li key={listedUser.id}>
+                            <button
+                                type="button"
+                                onClick={() => openUserEditor(listedUser)}
+                                aria-label={`Edit ${listedUser.name}`}
+                                className="w-full bg-gray-100 p-4 rounded-lg text-left cursor-pointer transition hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-primary"
+                            >
+                                <p className="text-sm capitalize text-primary">
+                                    {listedUser.role}
+                                </p>
+
+                                <p className="font-semibold">
+                                    {listedUser.name}
+                                </p>
+
+                                <p className="text-sm text-gray-600">
+                                    {listedUser.email}
+                                </p>
+                            </button>
                         </li>
                     ))}
                 </ul>
@@ -539,7 +621,120 @@ export default function Admin() {
                     </PostSection>
                 </>
             )}
+            {selectedUser && (
+                <Modal onClose={closeUserEditor}>
+                    <form onSubmit={handleUserSave} className="flex flex-col gap-4">
+                        <div>
+                            <h2 className="text-2xl font-semibold">
+                                Edit User
+                            </h2>
 
+                            <p className="mt-1 text-sm text-gray-600">
+                                Update this user&apos;s account details.
+                            </p>
+                        </div>
+
+                        <div>
+                            <label
+                                htmlFor="admin-user-name"
+                                className="block text-sm font-medium mb-1"
+                            >
+                                Name
+                            </label>
+
+                            <input
+                                id="admin-user-name"
+                                type="text"
+                                value={editedUserName}
+                                onChange={(event) =>
+                                    setEditedUserName(event.target.value)
+                                }
+                                required
+                                disabled={isSavingUser}
+                                className="w-full border rounded-lg px-4 py-3"
+                            />
+                        </div>
+
+                        <div>
+                            <label
+                                htmlFor="admin-user-email"
+                                className="block text-sm font-medium mb-1"
+                            >
+                                Email
+                            </label>
+
+                            <input
+                                id="admin-user-email"
+                                type="email"
+                                value={editedUserEmail}
+                                onChange={(event) =>
+                                    setEditedUserEmail(event.target.value)
+                                }
+                                required
+                                disabled={isSavingUser}
+                                className="w-full border rounded-lg px-4 py-3"
+                            />
+                        </div>
+
+                        <div>
+                            <label
+                                htmlFor="admin-user-role"
+                                className="block text-sm font-medium mb-1"
+                            >
+                                Role
+                            </label>
+
+                            <select
+                                id="admin-user-role"
+                                value={editedUserRole}
+                                onChange={(event) =>
+                                    setEditedUserRole(
+                                        event.target.value as "user" | "admin",
+                                    )
+                                }
+                                disabled={
+                                    isSavingUser || selectedUser.id === user.id
+                                }
+                                className="w-full border rounded-lg px-4 py-3"
+                            >
+                                <option value="user">User</option>
+                                <option value="admin">Admin</option>
+                            </select>
+
+                            {selectedUser.id === user.id && (
+                                <p className="mt-1 text-sm text-gray-600">
+                                    You cannot remove your own admin role.
+                                </p>
+                            )}
+                        </div>
+
+                        {userEditError && (
+                            <p role="alert" className="text-sm text-red-600">
+                                {userEditError}
+                            </p>
+                        )}
+
+                        <div className="flex flex-wrap gap-3">
+                            <button
+                                type="submit"
+                                disabled={isSavingUser}
+                                className={buttonClass}
+                            >
+                                {isSavingUser ? "Saving..." : "Save Changes"}
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={closeUserEditor}
+                                disabled={isSavingUser}
+                                className="border px-6 py-3 rounded-lg disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </form>
+                </Modal>
+            )}
             {selectedPost && (
                 <Modal onClose={closePost}>
                     {renderPostDetails(selectedPost)}

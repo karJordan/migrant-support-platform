@@ -24,12 +24,77 @@ router.get('/users', authenticateToken, async (req, res) => {
 
     try {
         const result = await pool.query(
-            'SELECT * FROM users ORDER BY id ASC'
+            `SELECT id, name, email, role, created_at
+             FROM users 
+             ORDER BY id ASC`
         );
 
         res.status(200).json(result.rows);
     } catch (error) {
         console.error('Database query error:', error.message);
+        res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+// PATCH /api/admin/users/:id - Update a user
+router.patch('/users/:id', authenticateToken, async (req, res) => {
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const userId = Number(req.params.id);
+    const name = req.body.name?.trim();
+    const email = req.body.email?.trim().toLowerCase();
+    const role = req.body.role;
+
+    if (!Number.isInteger(userId)) {
+        return res.status(400).json({ error: 'Invalid user ID' });
+    }
+
+    if (!name || !email || !role) {
+        return res.status(400).json({
+            error: 'Name, email and role are required'
+        });
+    }
+
+    if (!['user', 'admin'].includes(role)) {
+        return res.status(400).json({ error: 'Invalid role' });
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return res.status(400).json({ error: 'Invalid email address' });
+    }
+
+    // Prevent the signed-in admin from removing their own admin access.
+    if (userId === req.user.id && role !== 'admin') {
+        return res.status(400).json({
+            error: 'You cannot remove your own admin role'
+        });
+    }
+
+    try {
+        const result = await pool.query(
+            `UPDATE users
+             SET name = $1,
+                 email = $2,
+                 role = $3
+             WHERE id = $4
+             RETURNING id, name, email, role, created_at`,
+            [name, email, role, userId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        res.status(200).json(result.rows[0]);
+    } catch (error) {
+        if (error.code === '23505') {
+            return res.status(409).json({
+                error: 'That email address is already being used'
+            });
+        }
+
+        console.error('Database update error:', error.message);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
