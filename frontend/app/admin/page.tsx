@@ -15,16 +15,32 @@ import type { Job } from "@/types/job";
 import type { Resource } from "@/types/resource";
 import type { Service } from "@/types/service";
 import type { ReactNode } from "react";
+import ServiceForm from "@/components/ServiceForm";
+import JobsForm from "@/components/JobsForm";
+import ResourcesForm from "@/components/ResourcesForm";
+import CommunityGroupForm from "@/components/CommunityGroupForm";
+import CommunityEventForm from "@/components/CommunityEventForm";
 
 export const dynamic = "force-dynamic";
 
+// Types and configuration used by the admin dashboard.
 type User = {
     id: number;
     name: string;
     email: string;
     role: string;
 };
+type ModerationStatus = "pending" | "approved" | "rejected";
 
+// Maps each moderation status to the badge colours shown on admin cards.
+const statusClasses: Record<ModerationStatus, string> = {
+    pending:
+        "border-amber-200 bg-amber-100 text-amber-800",
+    approved:
+        "border-emerald-200 bg-emerald-100 text-emerald-800",
+    rejected:
+        "border-red-200 bg-red-100 text-red-800",
+};
 type PostFilter =
     | "all"
     | "service"
@@ -32,6 +48,7 @@ type PostFilter =
     | "community"
     | "resource";
 
+// Content-type filters. Community includes both groups and events.
 const postFilterOptions: {
     value: PostFilter;
     label: string;
@@ -45,6 +62,7 @@ const postFilterOptions: {
 
 type PostStatus = "all" | "pending" | "approved" | "rejected";
 
+// Status filters passed to the backend admin endpoints.
 const postStatusOptions: {
     value: PostStatus;
     label: string;
@@ -70,12 +88,15 @@ const buttonClass =
     "hover:bg-primary/90 transition-colors text-sm " +
     "disabled:opacity-50 disabled:cursor-not-allowed";
 
+// Wraps a listing card with keyboard interaction and an admin-only status badge.
 function PostCard({
     label,
+    status,
     onOpen,
     children,
 }: {
     label: string;
+    status: ModerationStatus;
     onOpen: () => void;
     children: ReactNode;
 }) {
@@ -86,21 +107,34 @@ function PostCard({
             aria-label={label}
             onClick={onOpen}
             onKeyDown={(event) => {
-                // Let controls inside the card handle their own keyboard events.
                 if (event.target !== event.currentTarget) return;
 
-                if (event.key === "Enter" || event.key === " ") {
+                if (
+                    event.key === "Enter" ||
+                    event.key === " "
+                ) {
                     event.preventDefault();
                     onOpen();
                 }
             }}
-            className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
+            className="relative cursor-pointer rounded-xl focus:outline-none focus:ring-2 focus:ring-primary [&>div]:pt-14"
         >
+            {/* Admin-only moderation status badge */}
+            <span
+                className={
+                    "pointer-events-none absolute left-6 top-4 z-10 rounded-full border px-3 py-1 text-xs font-semibold capitalize " +
+                    statusClasses[status]
+                }
+            >
+                {status}
+            </span>
+
             {children}
         </div>
     );
 }
 
+// Provides a consistent heading, card grid and empty state for each content type.
 function PostSection({
     title,
     empty,
@@ -132,6 +166,8 @@ export default function Admin() {
     const router = useRouter();
 
     const [error, setError] = useState<string | null>(null);
+
+    // User list and user-editing modal state.
     const [users, setUsers] = useState<User[]>([]);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
     const [editedUserName, setEditedUserName] = useState("");
@@ -139,12 +175,15 @@ export default function Admin() {
     const [editedUserRole, setEditedUserRole] = useState<"user" | "admin">("user");
     const [isSavingUser, setIsSavingUser] = useState(false);
     const [userEditError, setUserEditError] = useState<string | null>(null);
+
+    // Content returned from the five admin post endpoints.
     const [services, setServices] = useState<Service[]>([]);
     const [jobs, setJobs] = useState<Job[]>([]);
     const [groups, setGroups] = useState<CommunityGroup[]>([]);
     const [events, setEvents] = useState<CommunityEvent[]>([]);
     const [resources, setResources] = useState<Resource[]>([]);
 
+    // Dashboard navigation and post-filter selections.
     const [view, setView] = useState<"users" | "posts">("users");
 
     const [postTypeFilter, setPostTypeFilter] =
@@ -157,7 +196,9 @@ export default function Admin() {
 
     const [hasLoaded, setHasLoaded] = useState(false);
 
+    // Post details, editing and moderation modal state.
     const [selectedPost, setSelectedPost] = useState<SelectedPost | null>(null);
+    const [isEditingPost, setIsEditingPost] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [savingAction, setSavingAction] = useState<Action | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
@@ -167,6 +208,7 @@ export default function Admin() {
     // A ref blocks duplicate requests immediately, before React rerenders.
     const savingRef = useRef(false);
 
+    // Protect the page by redirecting signed-out and non-admin users.
     useEffect(() => {
         if (isLoading) return;
 
@@ -177,6 +219,7 @@ export default function Admin() {
         }
     }, [isLoading, user, router]);
 
+    // Shared helper for authenticated admin GET requests.
     async function fetchAdminList<T>(path: string): Promise<T[]> {
         const response = await fetch(`${API_URL}/api/admin/${path}`, {
             headers: {
@@ -191,6 +234,7 @@ export default function Admin() {
         return response.json();
     }
 
+    // Loads either the user list or all content types for the selected status.
     async function loadView(
         nextView: "users" | "posts",
         requestedStatus: PostStatus = postStatus,
@@ -247,6 +291,7 @@ export default function Admin() {
         }
     }
 
+    // User editor modal handlers.
     function openUserEditor(listedUser: User) {
         setSelectedUser(listedUser);
         setEditedUserName(listedUser.name);
@@ -312,10 +357,13 @@ export default function Admin() {
             setIsSavingUser(false);
         }
     }
+
+    // Post modal and approve/reject handlers.
     function openPost(post: SelectedPost) {
         if (savingRef.current) return;
 
         setActionError(null);
+        setIsEditingPost(false);
         setSelectedPost(post);
     }
 
@@ -323,9 +371,9 @@ export default function Admin() {
         if (savingRef.current) return;
 
         setActionError(null);
+        setIsEditingPost(false);
         setSelectedPost(null);
     }
-
     async function handlePostAction(action: Action) {
         if (savingRef.current || !selectedPost) return;
 
@@ -366,6 +414,63 @@ export default function Admin() {
         }
     }
 
+    // Post editing and rendering helpers.
+    function handlePostSaved() {
+        setIsEditingPost(false);
+        setSelectedPost(null);
+        void loadView("posts", postStatus);
+    }
+
+    function renderPostEditor(selection: SelectedPost) {
+        switch (selection.type) {
+            case "service":
+                return (
+                    <ServiceForm
+                        service={selection.post}
+                        onCancel={() => setIsEditingPost(false)}
+                        onSaved={handlePostSaved}
+                    />
+                );
+
+            case "job":
+                return (
+                    <JobsForm
+                        job={selection.post}
+                        onCancel={() => setIsEditingPost(false)}
+                        onSaved={handlePostSaved}
+                    />
+                );
+
+            case "group":
+                return (
+                    <CommunityGroupForm
+                        group={selection.post}
+                        onCancel={() => setIsEditingPost(false)}
+                        onSaved={handlePostSaved}
+                    />
+                );
+
+            case "event":
+                return (
+                    <CommunityEventForm
+                        communityEvent={selection.post}
+                        onCancel={() => setIsEditingPost(false)}
+                        onSaved={handlePostSaved}
+                    />
+                );
+
+            case "resource":
+                return (
+                    <ResourcesForm
+                        resource={selection.post}
+                        onCancel={() => setIsEditingPost(false)}
+                        onSaved={handlePostSaved}
+                    />
+                );
+        }
+    }
+
+    // Selects the appropriate read-only detail layout for each content type.
     function renderPostDetails(selection: SelectedPost) {
         switch (selection.type) {
             case "service": {
@@ -465,6 +570,7 @@ export default function Admin() {
             <h1 className="text-4xl font-semibold mb-6">Admin</h1>
 
             <div className="flex flex-wrap gap-3">
+                {/* Primary admin dashboard navigation */}
                 <button
                     type="button"
                     disabled={loading}
@@ -561,6 +667,7 @@ export default function Admin() {
                 </div>
             )}
 
+            {/* Shared loading and error feedback */}
             {loading && (
                 <p role="status" className="mt-4">
                     Loading {view}...
@@ -618,6 +725,7 @@ export default function Admin() {
                                 <PostCard
                                     key={service.id}
                                     label={`View details for ${service.name}`}
+                                    status={service.status}
                                     onOpen={() =>
                                         openPost({ type: "service", post: service })
                                     }
@@ -640,6 +748,7 @@ export default function Admin() {
                                     <PostCard
                                         key={job.id}
                                         label={`View details for ${job.title}`}
+                                        status={job.status}
                                         onOpen={() => openPost({ type: "job", post: job })}
                                     >
                                         <JobsCard
@@ -664,6 +773,7 @@ export default function Admin() {
                                     <PostCard
                                         key={group.id}
                                         label={`View details for ${group.name}`}
+                                        status={group.status}
                                         onOpen={() =>
                                             openPost({ type: "group", post: group })
                                         }
@@ -689,6 +799,7 @@ export default function Admin() {
                                         <PostCard
                                             key={event.id}
                                             label={`View details for ${event.title}`}
+                                            status={event.status}
                                             onOpen={() =>
                                                 openPost({ type: "event", post: event })
                                             }
@@ -716,6 +827,7 @@ export default function Admin() {
                                     <PostCard
                                         key={resource.id}
                                         label={`View details for ${resource.title}`}
+                                        status={resource.status}
                                         onOpen={() =>
                                             openPost({ type: "resource", post: resource })
                                         }
@@ -733,6 +845,8 @@ export default function Admin() {
                         )}
                 </>
             )}
+
+            {/* User editing modal */}
             {selectedUser && (
                 <Modal onClose={closeUserEditor}>
                     <form onSubmit={handleUserSave} className="flex flex-col gap-4">
@@ -847,43 +961,71 @@ export default function Admin() {
                     </form>
                 </Modal>
             )}
+
+            {/* Post details and editing modal */}
             {selectedPost && (
                 <Modal onClose={closePost}>
-                    {renderPostDetails(selectedPost)}
+                    {isEditingPost ? (
+                        renderPostEditor(selectedPost)
+                    ) : (
+                        <>
+                            {renderPostDetails(selectedPost)}
 
-                    {isSaving && (
-                        <p role="status" className="mt-4 text-sm">
-                            {savingAction === "approve"
-                                ? "Approving..."
-                                : "Rejecting..."}
-                        </p>
+                            {isSaving && (
+                                <p role="status" className="mt-4 text-sm">
+                                    {savingAction === "approve"
+                                        ? "Approving..."
+                                        : "Rejecting..."}
+                                </p>
+                            )}
+
+                            {actionError && (
+                                <p
+                                    role="alert"
+                                    className="mt-4 text-sm text-red-600"
+                                >
+                                    {actionError}
+                                </p>
+                            )}
+
+                            <div className="flex flex-wrap gap-3 mt-6">
+                                <button
+                                    type="button"
+                                    disabled={isSaving}
+                                    onClick={() => setIsEditingPost(true)}
+                                    className={buttonClass}
+                                >
+                                    Edit
+                                </button>
+
+                                {selectedPost.post.status !== "approved" && (
+                                    <button
+                                        type="button"
+                                        disabled={isSaving}
+                                        onClick={() =>
+                                            void handlePostAction("approve")
+                                        }
+                                        className={buttonClass}
+                                    >
+                                        Approve
+                                    </button>
+                                )}
+
+                                {selectedPost.post.status !== "rejected" && (
+                                    <button
+                                        type="button"
+                                        disabled={isSaving}
+                                        onClick={() =>
+                                            void handlePostAction("reject")
+                                        }
+                                        className={buttonClass}
+                                    >
+                                        Reject
+                                    </button>
+                                )}
+                            </div>
+                        </>
                     )}
-
-                    {actionError && (
-                        <p role="alert" className="mt-4 text-sm text-red-600">
-                            {actionError}
-                        </p>
-                    )}
-
-                    <div className="flex flex-wrap gap-3 mt-6">
-                        <button
-                            type="button"
-                            disabled={isSaving}
-                            onClick={() => void handlePostAction("approve")}
-                            className={buttonClass}
-                        >
-                            Approve
-                        </button>
-
-                        <button
-                            type="button"
-                            disabled={isSaving}
-                            onClick={() => void handlePostAction("reject")}
-                            className={buttonClass}
-                        >
-                            Reject
-                        </button>
-                    </div>
                 </Modal>
             )}
         </div>
