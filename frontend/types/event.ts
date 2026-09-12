@@ -1,5 +1,6 @@
 export type CommunityEvent = {
     id: number;
+    category_id?: number | null;
     title: string;
     location: string;
     event_date: string;

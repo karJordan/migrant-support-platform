@@ -10,6 +10,7 @@ const communityRoutes = require('./routes/community');
 const resourcesRoutes = require('./routes/resources');
 const searchRoutes = require('./routes/search');
 const savedRoutes = require('./routes/saved');
+const categoriesRoutes = require('./routes/categories');
 const authenticateToken = require('./middleware/authMiddleware');
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -24,6 +25,7 @@ app.use("/api/community", communityRoutes);
 app.use("/api/resources", resourcesRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/saved", savedRoutes);
+app.use("/api/categories", categoriesRoutes);
 
 app.get('/api/test', (req, res) => {
     res.json({ message: 'Node API is working!' });

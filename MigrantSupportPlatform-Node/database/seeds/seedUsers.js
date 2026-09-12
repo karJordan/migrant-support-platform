@@ -35,6 +35,7 @@ async function seedUsers() {
 
         console.log('Users seeded successfully.');
     } catch (err) {
+        process.exitCode = 1;
         console.error('Error seeding users:', err);
     } finally {
        await pool.end();

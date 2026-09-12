@@ -3,32 +3,57 @@ const router = express.Router();
 const pool = require('../db');
 const authenticateToken = require('../middleware/authMiddleware');
 
+const allowedStatuses = ['pending', 'approved', 'rejected'];
+
+function getRequestedStatus(req, res) {
+    const status = req.query.status || 'pending';
+
+    if (!allowedStatuses.includes(status)) {
+        res.status(400).json({ error: 'Invalid status' });
+        return null;
+    }
+
+    return status;
+}
+
+// GET /api/admin/users
 router.get('/users', authenticateToken, async (req, res) => {
     if (req.user.role !== 'admin') {
         return res.status(403).json({ error: 'Access denied' });
     }
-    try {
-        // Execute SQL query to fetch all data
-        const result = await pool.query('SELECT * FROM users');
 
-        // Return rows as a JSON response
+    try {
+        const result = await pool.query(
+            'SELECT * FROM users ORDER BY id ASC'
+        );
+
         res.status(200).json(result.rows);
     } catch (error) {
         console.error('Database query error:', error.message);
         res.status(500).json({ error: 'Internal Server Error' });
-    } finally {
-        console.log('Request completed');
     }
 });
 
-// GET /api/admin/services - Get pending services
+// GET /api/admin/services?status=pending
 router.get('/services', authenticateToken, async (req, res) => {
     if (req.user.role !== 'admin') {
         return res.status(403).json({ error: 'Access denied' });
     }
+
+    const status = getRequestedStatus(req, res);
+    if (!status) return;
+
     try {
         const result = await pool.query(
-            "SELECT * FROM services WHERE status = 'pending' ORDER BY id ASC"
+            `SELECT
+                listing.*,
+                categories.name AS category
+             FROM services AS listing
+             LEFT JOIN categories
+                ON listing.category_id = categories.id
+             WHERE listing.status = $1
+             ORDER BY listing.id ASC`,
+            [status]
         );
 
         res.status(200).json(result.rows);
@@ -38,14 +63,26 @@ router.get('/services', authenticateToken, async (req, res) => {
     }
 });
 
-// GET /api/admin/resources - Get pending resources
+// GET /api/admin/resources?status=pending
 router.get('/resources', authenticateToken, async (req, res) => {
     if (req.user.role !== 'admin') {
         return res.status(403).json({ error: 'Access denied' });
     }
+
+    const status = getRequestedStatus(req, res);
+    if (!status) return;
+
     try {
         const result = await pool.query(
-            "SELECT * FROM resources WHERE status = 'pending' ORDER BY id ASC"
+            `SELECT
+                listing.*,
+                categories.name AS category
+             FROM resources AS listing
+             LEFT JOIN categories
+                ON listing.category_id = categories.id
+             WHERE listing.status = $1
+             ORDER BY listing.id ASC`,
+            [status]
         );
 
         res.status(200).json(result.rows);
@@ -55,14 +92,26 @@ router.get('/resources', authenticateToken, async (req, res) => {
     }
 });
 
-// GET /api/admin/jobs - Get pending jobs
+// GET /api/admin/jobs?status=pending
 router.get('/jobs', authenticateToken, async (req, res) => {
     if (req.user.role !== 'admin') {
         return res.status(403).json({ error: 'Access denied' });
     }
+
+    const status = getRequestedStatus(req, res);
+    if (!status) return;
+
     try {
         const result = await pool.query(
-            "SELECT * FROM jobs WHERE status = 'pending' ORDER BY id ASC"
+            `SELECT
+                listing.*,
+                categories.name AS category
+             FROM jobs AS listing
+             LEFT JOIN categories
+                ON listing.category_id = categories.id
+             WHERE listing.status = $1
+             ORDER BY listing.id ASC`,
+            [status]
         );
 
         res.status(200).json(result.rows);
@@ -72,14 +121,26 @@ router.get('/jobs', authenticateToken, async (req, res) => {
     }
 });
 
-// GET /api/admin/groups - Get pending groups
+// GET /api/admin/groups?status=pending
 router.get('/groups', authenticateToken, async (req, res) => {
     if (req.user.role !== 'admin') {
         return res.status(403).json({ error: 'Access denied' });
     }
+
+    const status = getRequestedStatus(req, res);
+    if (!status) return;
+
     try {
         const result = await pool.query(
-            "SELECT * FROM community_groups WHERE status = 'pending' ORDER BY id ASC"
+            `SELECT
+                listing.*,
+                categories.name AS category
+             FROM community_groups AS listing
+             LEFT JOIN categories
+                ON listing.category_id = categories.id
+             WHERE listing.status = $1
+             ORDER BY listing.id ASC`,
+            [status]
         );
 
         res.status(200).json(result.rows);
@@ -89,15 +150,28 @@ router.get('/groups', authenticateToken, async (req, res) => {
     }
 });
 
-// GET /api/admin/events - Get pending events
+// GET /api/admin/events?status=pending
 router.get('/events', authenticateToken, async (req, res) => {
     if (req.user.role !== 'admin') {
         return res.status(403).json({ error: 'Access denied' });
     }
+
+    const status = getRequestedStatus(req, res);
+    if (!status) return;
+
     try {
         const result = await pool.query(
-            "SELECT * FROM community_events WHERE status = 'pending' ORDER BY event_date ASC"
+            `SELECT
+                listing.*,
+                categories.name AS category
+             FROM community_events AS listing
+             LEFT JOIN categories
+                ON listing.category_id = categories.id
+             WHERE listing.status = $1
+             ORDER BY listing.event_date ASC`,
+            [status]
         );
+
         res.status(200).json(result.rows);
     } catch (error) {
         console.error('Database query error:', error.message);
@@ -105,7 +179,7 @@ router.get('/events', authenticateToken, async (req, res) => {
     }
 });
 
-// PATCH /api/admin/approve/:type/:id - Approve an item
+// PATCH /api/admin/approve/:type/:id
 router.patch('/approve/:type/:id', authenticateToken, async (req, res) => {
     if (req.user.role !== 'admin') {
         return res.status(403).json({ error: 'Access denied' });
@@ -113,37 +187,43 @@ router.patch('/approve/:type/:id', authenticateToken, async (req, res) => {
 
     const { type, id } = req.params;
 
+    const tables = {
+        service: 'services',
+        resource: 'resources',
+        job: 'jobs',
+        group: 'community_groups',
+        event: 'community_events'
+    };
+
+    const table = tables[type];
+
+    if (!table) {
+        return res.status(400).json({ error: 'Invalid type' });
+    }
+
     try {
-        let query;
-        switch (type) {
-            case 'service':
-                query = "UPDATE services SET status = 'approved' WHERE id = $1";
-                break;
-            case 'resource':
-                query = "UPDATE resources SET status = 'approved' WHERE id = $1";
-                break;
-            case 'job':
-                query = "UPDATE jobs SET status = 'approved' WHERE id = $1";
-                break;
-            case 'group':
-                query = "UPDATE community_groups SET status = 'approved' WHERE id = $1";
-                break;
-            case 'event':
-                query = "UPDATE community_events SET status = 'approved' WHERE id = $1";
-                break;
-            default:
-                return res.status(400).json({ error: 'Invalid type' });
+        const result = await pool.query(
+            `UPDATE ${table}
+             SET status = 'approved'
+             WHERE id = $1
+             RETURNING id`,
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Item not found' });
         }
 
-        await pool.query(query, [id]);
-        res.status(200).json({ message: 'Item approved successfully' });
+        res.status(200).json({
+            message: 'Item approved successfully'
+        });
     } catch (error) {
         console.error('Database update error:', error.message);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
-// PATCH /api/admin/reject/:type/:id - Reject an item
+// PATCH /api/admin/reject/:type/:id
 router.patch('/reject/:type/:id', authenticateToken, async (req, res) => {
     if (req.user.role !== 'admin') {
         return res.status(403).json({ error: 'Access denied' });
@@ -151,30 +231,36 @@ router.patch('/reject/:type/:id', authenticateToken, async (req, res) => {
 
     const { type, id } = req.params;
 
+    const tables = {
+        service: 'services',
+        resource: 'resources',
+        job: 'jobs',
+        group: 'community_groups',
+        event: 'community_events'
+    };
+
+    const table = tables[type];
+
+    if (!table) {
+        return res.status(400).json({ error: 'Invalid type' });
+    }
+
     try {
-        let query;
-        switch (type) {
-            case 'service':
-                query = "UPDATE services SET status = 'rejected' WHERE id = $1";
-                break;
-            case 'resource':
-                query = "UPDATE resources SET status = 'rejected' WHERE id = $1";
-                break;
-            case 'job':
-                query = "UPDATE jobs SET status = 'rejected' WHERE id = $1";
-                break;
-            case 'group':
-                query = "UPDATE community_groups SET status = 'rejected' WHERE id = $1";
-                break;
-            case 'event':
-                query = "UPDATE community_events SET status = 'rejected' WHERE id = $1";
-                break;
-            default:
-                return res.status(400).json({ error: 'Invalid type' });
+        const result = await pool.query(
+            `UPDATE ${table}
+             SET status = 'rejected'
+             WHERE id = $1
+             RETURNING id`,
+            [id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Item not found' });
         }
 
-        await pool.query(query, [id]);
-        res.status(200).json({ message: 'Item rejected successfully' });
+        res.status(200).json({
+            message: 'Item rejected successfully'
+        });
     } catch (error) {
         console.error('Database update error:', error.message);
         res.status(500).json({ error: 'Internal Server Error' });

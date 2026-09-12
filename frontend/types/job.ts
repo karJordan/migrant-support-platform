@@ -1,5 +1,6 @@
 export type Job = {
     id: number;
+    category_id?: number | null;
     title: string;
     company: string;
     location: string;
