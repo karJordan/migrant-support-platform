@@ -3,7 +3,7 @@ const router = express.Router();
 const pool = require('../db');
 const authenticateToken = require('../middleware/authMiddleware');
 
-const allowedStatuses = ['pending', 'approved', 'rejected'];
+const allowedStatuses = ['all', 'pending', 'approved', 'rejected'];
 
 function getRequestedStatus(req, res) {
     const status = req.query.status || 'pending';
@@ -116,7 +116,7 @@ router.get('/services', authenticateToken, async (req, res) => {
              FROM services AS listing
              LEFT JOIN categories
                 ON listing.category_id = categories.id
-             WHERE listing.status = $1
+             WHERE ($1 = 'all' OR listing.status = $1)
              ORDER BY listing.id ASC`,
             [status]
         );
@@ -145,7 +145,7 @@ router.get('/resources', authenticateToken, async (req, res) => {
              FROM resources AS listing
              LEFT JOIN categories
                 ON listing.category_id = categories.id
-             WHERE listing.status = $1
+             WHERE ($1 = 'all' OR listing.status = $1)
              ORDER BY listing.id ASC`,
             [status]
         );
@@ -174,7 +174,7 @@ router.get('/jobs', authenticateToken, async (req, res) => {
              FROM jobs AS listing
              LEFT JOIN categories
                 ON listing.category_id = categories.id
-             WHERE listing.status = $1
+             WHERE ($1 = 'all' OR listing.status = $1)
              ORDER BY listing.id ASC`,
             [status]
         );
@@ -203,7 +203,7 @@ router.get('/groups', authenticateToken, async (req, res) => {
              FROM community_groups AS listing
              LEFT JOIN categories
                 ON listing.category_id = categories.id
-             WHERE listing.status = $1
+             WHERE ($1 = 'all' OR listing.status = $1)
              ORDER BY listing.id ASC`,
             [status]
         );
@@ -232,7 +232,7 @@ router.get('/events', authenticateToken, async (req, res) => {
              FROM community_events AS listing
              LEFT JOIN categories
                 ON listing.category_id = categories.id
-             WHERE listing.status = $1
+             WHERE ($1 = 'all' OR listing.status = $1)
              ORDER BY listing.event_date ASC`,
             [status]
         );

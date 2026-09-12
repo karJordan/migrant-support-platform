@@ -25,7 +25,35 @@ type User = {
     role: string;
 };
 
-type PostType = "service" | "job" | "group" | "event" | "resource";
+type PostFilter =
+    | "all"
+    | "service"
+    | "job"
+    | "community"
+    | "resource";
+
+const postFilterOptions: {
+    value: PostFilter;
+    label: string;
+}[] = [
+        { value: "all", label: "All" },
+        { value: "service", label: "Services" },
+        { value: "job", label: "Jobs" },
+        { value: "community", label: "Community" },
+        { value: "resource", label: "Resources" },
+    ];
+
+type PostStatus = "all" | "pending" | "approved" | "rejected";
+
+const postStatusOptions: {
+    value: PostStatus;
+    label: string;
+}[] = [
+        { value: "all", label: "All" },
+        { value: "pending", label: "Pending" },
+        { value: "approved", label: "Approved" },
+        { value: "rejected", label: "Rejected" },
+    ];
 type Action = "approve" | "reject";
 
 type SelectedPost =
@@ -88,7 +116,7 @@ function PostSection({
 
             {empty ? (
                 <p className="text-sm text-gray-600">
-                    No {title.toLowerCase()} pending approval.
+                    No {title.toLowerCase()} found.
                 </p>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -118,13 +146,22 @@ export default function Admin() {
     const [resources, setResources] = useState<Resource[]>([]);
 
     const [view, setView] = useState<"users" | "posts">("users");
+
+    const [postTypeFilter, setPostTypeFilter] =
+        useState<PostFilter>("all");
+
+    const [postStatus, setPostStatus] =
+        useState<PostStatus>("all");
+
     const [loading, setLoading] = useState(false);
+
     const [hasLoaded, setHasLoaded] = useState(false);
 
     const [selectedPost, setSelectedPost] = useState<SelectedPost | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [savingAction, setSavingAction] = useState<Action | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
+
 
 
     // A ref blocks duplicate requests immediately, before React rerenders.
@@ -154,7 +191,10 @@ export default function Admin() {
         return response.json();
     }
 
-    async function loadView(nextView: "users" | "posts") {
+    async function loadView(
+        nextView: "users" | "posts",
+        requestedStatus: PostStatus = postStatus,
+    ) {
         setView(nextView);
         setLoading(true);
         setHasLoaded(false);
@@ -171,11 +211,21 @@ export default function Admin() {
                     nextEvents,
                     nextResources,
                 ] = await Promise.all([
-                    fetchAdminList<Service>("services"),
-                    fetchAdminList<Job>("jobs"),
-                    fetchAdminList<CommunityGroup>("groups"),
-                    fetchAdminList<CommunityEvent>("events"),
-                    fetchAdminList<Resource>("resources"),
+                    fetchAdminList<Service>(
+                        `services?status=${requestedStatus}`,
+                    ),
+                    fetchAdminList<Job>(
+                        `jobs?status=${requestedStatus}`,
+                    ),
+                    fetchAdminList<CommunityGroup>(
+                        `groups?status=${requestedStatus}`,
+                    ),
+                    fetchAdminList<CommunityEvent>(
+                        `events?status=${requestedStatus}`,
+                    ),
+                    fetchAdminList<Resource>(
+                        `resources?status=${requestedStatus}`,
+                    ),
                 ]);
 
                 setServices(nextServices);
@@ -276,26 +326,6 @@ export default function Admin() {
         setSelectedPost(null);
     }
 
-    function removeFromPendingList(type: PostType, id: number) {
-        switch (type) {
-            case "service":
-                setServices((items) => items.filter((item) => item.id !== id));
-                break;
-            case "job":
-                setJobs((items) => items.filter((item) => item.id !== id));
-                break;
-            case "group":
-                setGroups((items) => items.filter((item) => item.id !== id));
-                break;
-            case "event":
-                setEvents((items) => items.filter((item) => item.id !== id));
-                break;
-            case "resource":
-                setResources((items) => items.filter((item) => item.id !== id));
-                break;
-        }
-    }
-
     async function handlePostAction(action: Action) {
         if (savingRef.current || !selectedPost) return;
 
@@ -321,9 +351,8 @@ export default function Admin() {
                 throw new Error(`Failed to ${action} this ${type}`);
             }
 
-            // The API confirmed success. The item is no longer pending.
-            removeFromPendingList(type, post.id);
-
+            // Reload the current status view so the item appears in the correct list.
+            await loadView("posts", postStatus);
             // Only close the modal after a successful response.
             setSelectedPost(null);
         } catch {
@@ -460,6 +489,77 @@ export default function Admin() {
             <p className="mt-4 text-sm text-neutral">
                 Admin Dashboard area to manage users and posts.
             </p>
+            {/* Horizontal filter bar for post type */}
+            {view === "posts" && (
+                <div
+                    className="-mx-6 mt-4 overflow-x-auto px-6 pb-2"
+                    aria-label="Filter posts by content type"
+                >
+                    <div className="flex w-max gap-3">
+                        {postFilterOptions.map((option) => {
+                            const isSelected =
+                                postTypeFilter === option.value;
+
+                            return (
+                                <button
+                                    key={option.value}
+                                    type="button"
+                                    aria-pressed={isSelected}
+                                    onClick={() =>
+                                        setPostTypeFilter(option.value)
+                                    }
+                                    className={
+                                        "shrink-0 whitespace-nowrap rounded-full border px-5 py-2 text-sm font-medium transition " +
+                                        (isSelected
+                                            ? "border-primary bg-primary text-white"
+                                            : "border-gray-200 bg-white text-gray-700 hover:border-primary hover:text-primary")
+                                    }
+                                >
+                                    {option.label}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+            {/* Horizontal filter bar for post status */}
+            {view === "posts" && (
+                <div
+                    className="-mx-6 mt-3 overflow-x-auto px-6 pb-2"
+                    aria-label="Filter posts by status"
+                >
+                    <div className="flex w-max gap-3">
+                        {postStatusOptions.map((option) => {
+                            const isSelected =
+                                postStatus === option.value;
+
+                            return (
+                                <button
+                                    key={option.value}
+                                    type="button"
+                                    disabled={loading}
+                                    aria-pressed={isSelected}
+                                    onClick={() => {
+                                        setPostStatus(option.value);
+                                        void loadView(
+                                            "posts",
+                                            option.value,
+                                        );
+                                    }}
+                                    className={
+                                        "shrink-0 whitespace-nowrap rounded-full border px-5 py-2 text-sm font-medium transition disabled:opacity-50 " +
+                                        (isSelected
+                                            ? "border-primary bg-primary text-white"
+                                            : "border-gray-200 bg-white text-gray-700 hover:border-primary hover:text-primary")
+                                    }
+                                >
+                                    {option.label}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
 
             {loading && (
                 <p role="status" className="mt-4">
@@ -511,114 +611,126 @@ export default function Admin() {
             )}
 
             {!loading && hasLoaded && view === "posts" && (
-                <>
-                    <PostSection title="Services" empty={services.length === 0}>
-                        {services.map((service) => (
-                            <PostCard
-                                key={service.id}
-                                label={`View details for ${service.name}`}
-                                onOpen={() =>
-                                    openPost({ type: "service", post: service })
-                                }
+                <>{(postTypeFilter === "all" ||
+                    postTypeFilter === "service") && (
+                        <PostSection title="Services" empty={services.length === 0}>
+                            {services.map((service) => (
+                                <PostCard
+                                    key={service.id}
+                                    label={`View details for ${service.name}`}
+                                    onOpen={() =>
+                                        openPost({ type: "service", post: service })
+                                    }
+                                >
+                                    <ServiceCard
+                                        id={service.id}
+                                        name={service.name}
+                                        category={service.category}
+                                        description={service.description}
+                                        location={service.location}
+                                    />
+                                </PostCard>
+                            ))}
+                        </PostSection>
+                    )}
+                    {(postTypeFilter === "all" ||
+                        postTypeFilter === "job") && (
+                            <PostSection title="Jobs" empty={jobs.length === 0}>
+                                {jobs.map((job) => (
+                                    <PostCard
+                                        key={job.id}
+                                        label={`View details for ${job.title}`}
+                                        onOpen={() => openPost({ type: "job", post: job })}
+                                    >
+                                        <JobsCard
+                                            id={job.id}
+                                            title={job.title}
+                                            company={job.company}
+                                            location={job.location}
+                                            description={job.description}
+                                            employmentType={job.employment_type}
+                                        />
+                                    </PostCard>
+                                ))}
+                            </PostSection>
+                        )}
+                    {(postTypeFilter === "all" ||
+                        postTypeFilter === "community") && (
+                            <PostSection
+                                title="Community Groups"
+                                empty={groups.length === 0}
                             >
-                                <ServiceCard
-                                    id={service.id}
-                                    name={service.name}
-                                    category={service.category}
-                                    description={service.description}
-                                    location={service.location}
-                                />
-                            </PostCard>
-                        ))}
-                    </PostSection>
-
-                    <PostSection title="Jobs" empty={jobs.length === 0}>
-                        {jobs.map((job) => (
-                            <PostCard
-                                key={job.id}
-                                label={`View details for ${job.title}`}
-                                onOpen={() => openPost({ type: "job", post: job })}
+                                {groups.map((group) => (
+                                    <PostCard
+                                        key={group.id}
+                                        label={`View details for ${group.name}`}
+                                        onOpen={() =>
+                                            openPost({ type: "group", post: group })
+                                        }
+                                    >
+                                        <CommunityGroupCard
+                                            id={group.id}
+                                            name={group.name}
+                                            category={group.category}
+                                            description={group.description}
+                                        />
+                                    </PostCard>
+                                ))}
+                            </PostSection>
+                        )}
+                    {(postTypeFilter === "all" ||
+                        postTypeFilter === "community") && (
+                            <>
+                                <PostSection
+                                    title="Community Events"
+                                    empty={events.length === 0}
+                                >
+                                    {events.map((event) => (
+                                        <PostCard
+                                            key={event.id}
+                                            label={`View details for ${event.title}`}
+                                            onOpen={() =>
+                                                openPost({ type: "event", post: event })
+                                            }
+                                        >
+                                            <CommunityEventCard
+                                                id={event.id}
+                                                title={event.title}
+                                                location={event.location}
+                                                eventDate={event.event_date}
+                                                eventTime={event.event_time}
+                                                description={event.description}
+                                            />
+                                        </PostCard>
+                                    ))}
+                                </PostSection>
+                            </>
+                        )}
+                    {(postTypeFilter === "all" ||
+                        postTypeFilter === "resource") && (
+                            <PostSection
+                                title="Resources"
+                                empty={resources.length === 0}
                             >
-                                <JobsCard
-                                    id={job.id}
-                                    title={job.title}
-                                    company={job.company}
-                                    location={job.location}
-                                    description={job.description}
-                                    employmentType={job.employment_type}
-                                />
-                            </PostCard>
-                        ))}
-                    </PostSection>
-
-                    <PostSection
-                        title="Community Groups"
-                        empty={groups.length === 0}
-                    >
-                        {groups.map((group) => (
-                            <PostCard
-                                key={group.id}
-                                label={`View details for ${group.name}`}
-                                onOpen={() =>
-                                    openPost({ type: "group", post: group })
-                                }
-                            >
-                                <CommunityGroupCard
-                                    id={group.id}
-                                    name={group.name}
-                                    category={group.category}
-                                    description={group.description}
-                                />
-                            </PostCard>
-                        ))}
-                    </PostSection>
-
-                    <PostSection
-                        title="Community Events"
-                        empty={events.length === 0}
-                    >
-                        {events.map((event) => (
-                            <PostCard
-                                key={event.id}
-                                label={`View details for ${event.title}`}
-                                onOpen={() =>
-                                    openPost({ type: "event", post: event })
-                                }
-                            >
-                                <CommunityEventCard
-                                    id={event.id}
-                                    title={event.title}
-                                    location={event.location}
-                                    eventDate={event.event_date}
-                                    eventTime={event.event_time}
-                                    description={event.description}
-                                />
-                            </PostCard>
-                        ))}
-                    </PostSection>
-
-                    <PostSection
-                        title="Resources"
-                        empty={resources.length === 0}
-                    >
-                        {resources.map((resource) => (
-                            <PostCard
-                                key={resource.id}
-                                label={`View details for ${resource.title}`}
-                                onOpen={() =>
-                                    openPost({ type: "resource", post: resource })
-                                }
-                            >
-                                <ResourcesCard
-                                    id={resource.id}
-                                    title={resource.title}
-                                    category={resource.category}
-                                    description={resource.description}
-                                    link={resource.link}
-                                />
-                            </PostCard>
-                        ))}
-                    </PostSection>
+                                {resources.map((resource) => (
+                                    <PostCard
+                                        key={resource.id}
+                                        label={`View details for ${resource.title}`}
+                                        onOpen={() =>
+                                            openPost({ type: "resource", post: resource })
+                                        }
+                                    >
+                                        <ResourcesCard
+                                            id={resource.id}
+                                            title={resource.title}
+                                            category={resource.category}
+                                            description={resource.description}
+                                            link={resource.link}
+                                        />
+                                    </PostCard>
+                                ))}
+                            </PostSection>
+                        )}
                 </>
             )}
             {selectedUser && (
