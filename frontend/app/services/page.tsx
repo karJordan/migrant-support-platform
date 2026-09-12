@@ -6,13 +6,13 @@ import Modal from "@/components/Modal";
 import ServiceForm from "@/components/ServiceForm";
 import { useAuth } from "@/context/AuthContext";
 import { Service } from "@/types/service";
+import FilterChipRow from "@/components/FilterChipRow";
 
 export default function ServicesPage() {
     const [services, setServices] = useState<Service[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("All");
-    const [showServiceForm, setShowServiceForm] = useState(false);
     const [selectedService, setSelectedService] = useState<Service | null>(null);
     const [isEditing, setIsEditing] = useState(false);
 
@@ -54,37 +54,20 @@ export default function ServicesPage() {
 
     return (
         <div className="w-full max-w-5xl mx-auto px-6 py-10">
-            <h1 className="text-4xl font-semibold">
-                Find Local Services
+            <h1 className="text-2xl font-bold sm:text-3xl">
+                Services
             </h1>
 
-            <p className="text-neutral mt-2">
+            <p className="hidden sm:block text-neutral mt-2">
                 Find services and support available in your community.
             </p>
 
-            <div className="flex flex-wrap gap-3 mt-6">
-                {user && (
-                    <button
-                        onClick={() => setShowServiceForm(true)}
-                        className="bg-primary text-white px-4 py-2 rounded-lg"
-                    >
-                        Add New Service
-                    </button>
-                )}
-
-                {categories.map((category) => (
-                    <button
-                        key={category}
-                        onClick={() => setSelectedCategory(category)}
-                        className={`px-4 py-2 rounded-lg border transition-colors ${selectedCategory === category
-                            ? "bg-primary text-white border-primary"
-                            : "bg-white border-neutral/20"
-                            }`}
-                    >
-                        {category}
-                    </button>
-                ))}
-            </div>
+            <FilterChipRow
+                options={categories}
+                selectedOption={selectedCategory}
+                onSelect={setSelectedCategory}
+                ariaLabel="Filter services by category"
+            />
 
             {loading && (
                 <p className="mt-8 text-neutral">
@@ -140,14 +123,6 @@ export default function ServicesPage() {
                         </div>
                     )}
                 </>
-            )}
-
-            {showServiceForm && (
-                <Modal
-                    onClose={() => setShowServiceForm(false)}
-                >
-                    <ServiceForm />
-                </Modal>
             )}
 
             {selectedService && (

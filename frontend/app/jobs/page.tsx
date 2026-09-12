@@ -6,6 +6,7 @@ import JobsForm from "@/components/JobsForm";
 import JobsCard from "@/components/JobsCard";
 import { useAuth } from "@/context/AuthContext";
 import { Job } from "@/types/job";
+import FilterChipRow from "@/components/FilterChipRow";
 
 
 
@@ -14,7 +15,6 @@ export default function JobsPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [selectedEmploymentType, setSelectedEmploymentType] = useState("All");
-    const [showJobForm, setShowJobForm] = useState(false);
     const [selectedJob, setSelectedJob] = useState<Job | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const { user } = useAuth();
@@ -55,34 +55,20 @@ export default function JobsPage() {
 
     return (
         <div className="w-full max-w-5xl mx-auto px-6 py-10">
-            <h1 className="text-4xl font-semibold">Find Jobs</h1>
+            <h1 className="text-2xl font-bold sm:text-3xl">
+                Find Jobs
+            </h1>
 
-            <p className="text-neutral mt-2">
+            <p className="hidden sm:block text-neutral mt-2">
                 Browse job opportunities for migrants in New Zealand.
             </p>
-            <div className="flex flex-wrap gap-3 mt-6">
-                {user && (
-                    <button
-                        onClick={() => setShowJobForm(true)}
-                        className="bg-primary text-white px-4 py-2 rounded-lg"
-                    >
-                        Add Job
-                    </button>
-                )}
+            <FilterChipRow
+                options={employmentTypes}
+                selectedOption={selectedEmploymentType}
+                onSelect={setSelectedEmploymentType}
+                ariaLabel="Filter jobs by employment type"
+            />
 
-                {employmentTypes.map((type) => (
-                    <button
-                        key={type}
-                        onClick={() => setSelectedEmploymentType(type)}
-                        className={`px-4 py-2 rounded-lg border transition-colors ${selectedEmploymentType === type
-                            ? "bg-primary text-white border-primary"
-                            : "bg-white border-neutral/20"
-                            }`}
-                    >
-                        {type}
-                    </button>
-                ))}
-            </div>
             {loading && (
                 <p className="mt-8 text-neutral">
                     Loading jobs...
@@ -136,11 +122,7 @@ export default function JobsPage() {
                     )}
                 </>
             )}
-            {showJobForm && (
-                <Modal onClose={() => setShowJobForm(false)}>
-                    <JobsForm />
-                </Modal>
-            )}
+
             {selectedJob && (
                 <Modal
                     onClose={() => {
