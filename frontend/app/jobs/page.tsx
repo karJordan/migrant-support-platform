@@ -6,6 +6,7 @@ import JobsForm from "@/components/JobsForm";
 import JobsCard from "@/components/JobsCard";
 import { useAuth } from "@/context/AuthContext";
 import { Job } from "@/types/job";
+import FilterChipRow from "@/components/FilterChipRow";
 
 
 
@@ -60,29 +61,26 @@ export default function JobsPage() {
             <p className="text-neutral mt-2">
                 Browse job opportunities for migrants in New Zealand.
             </p>
-            <div className="flex flex-wrap gap-3 mt-6">
-                {user && (
-                    <button
-                        onClick={() => setShowJobForm(true)}
-                        className="bg-primary text-white px-4 py-2 rounded-lg"
-                    >
-                        Add Job
-                    </button>
-                )}
+            <FilterChipRow
+                options={employmentTypes}
+                selectedOption={selectedEmploymentType}
+                onSelect={setSelectedEmploymentType}
+                ariaLabel="Filter jobs by employment type"
+            />
 
-                {employmentTypes.map((type) => (
-                    <button
-                        key={type}
-                        onClick={() => setSelectedEmploymentType(type)}
-                        className={`px-4 py-2 rounded-lg border transition-colors ${selectedEmploymentType === type
-                            ? "bg-primary text-white border-primary"
-                            : "bg-white border-neutral/20"
-                            }`}
-                    >
-                        {type}
-                    </button>
-                ))}
-            </div>
+            {user && (
+                <button
+                    type="button"
+                    onClick={() => setShowJobForm(true)}
+                    className="
+            mt-4 rounded-control bg-primary px-4 py-2
+            text-sm font-medium text-white
+            transition-colors hover:bg-primary-hover
+        "
+                >
+                    Add Job
+                </button>
+            )}
             {loading && (
                 <p className="mt-8 text-neutral">
                     Loading jobs...

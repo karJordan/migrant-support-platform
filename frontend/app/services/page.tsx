@@ -6,6 +6,7 @@ import Modal from "@/components/Modal";
 import ServiceForm from "@/components/ServiceForm";
 import { useAuth } from "@/context/AuthContext";
 import { Service } from "@/types/service";
+import FilterChipRow from "@/components/FilterChipRow";
 
 export default function ServicesPage() {
     const [services, setServices] = useState<Service[]>([]);
@@ -62,29 +63,26 @@ export default function ServicesPage() {
                 Find services and support available in your community.
             </p>
 
-            <div className="flex flex-wrap gap-3 mt-6">
-                {user && (
-                    <button
-                        onClick={() => setShowServiceForm(true)}
-                        className="bg-primary text-white px-4 py-2 rounded-lg"
-                    >
-                        Add New Service
-                    </button>
-                )}
+            <FilterChipRow
+                options={categories}
+                selectedOption={selectedCategory}
+                onSelect={setSelectedCategory}
+                ariaLabel="Filter services by category"
+            />
 
-                {categories.map((category) => (
-                    <button
-                        key={category}
-                        onClick={() => setSelectedCategory(category)}
-                        className={`px-4 py-2 rounded-lg border transition-colors ${selectedCategory === category
-                            ? "bg-primary text-white border-primary"
-                            : "bg-white border-neutral/20"
-                            }`}
-                    >
-                        {category}
-                    </button>
-                ))}
-            </div>
+            {user && (
+                <button
+                    type="button"
+                    onClick={() => setShowServiceForm(true)}
+                    className="
+            mt-4 rounded-control bg-primary px-4 py-2
+            text-sm font-medium text-white
+            transition-colors hover:bg-primary-hover
+        "
+                >
+                    Add New Service
+                </button>
+            )}
 
             {loading && (
                 <p className="mt-8 text-neutral">

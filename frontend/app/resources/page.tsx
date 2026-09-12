@@ -6,6 +6,7 @@ import Modal from "@/components/Modal";
 import ResourcesForm from "@/components/ResourcesForm";
 import { useAuth } from "@/context/AuthContext";
 import { Resource } from "@/types/resource";
+import FilterChipRow from "@/components/FilterChipRow";
 
 
 
@@ -61,28 +62,26 @@ export default function ResourcePage() {
                 Browse resources for migrants in New Zealand.
             </p>
 
-            <div className="flex flex-wrap gap-3 mt-6">
-                {user && (
-                    <button
-                        onClick={() => setShowResourcesForm(true)}
-                        className="bg-primary text-white px-4 py-2 rounded-lg"
-                    >
-                        Add Resource
-                    </button>
-                )}
-                {categories.map((category) => (
-                    <button
-                        key={category}
-                        onClick={() => setSelectedCategory(category)}
-                        className={`px-4 py-2 rounded-lg border transition-colors ${selectedCategory === category
-                            ? "bg-primary text-white border-primary"
-                            : "bg-white border-neutral/20"
-                            }`}
-                    >
-                        {category}
-                    </button>
-                ))}
-            </div>
+            <FilterChipRow
+                options={categories}
+                selectedOption={selectedCategory}
+                onSelect={setSelectedCategory}
+                ariaLabel="Filter resources by category"
+            />
+
+            {user && (
+                <button
+                    type="button"
+                    onClick={() => setShowResourcesForm(true)}
+                    className="
+            mt-4 rounded-control bg-primary px-4 py-2
+            text-sm font-medium text-white
+            transition-colors hover:bg-primary-hover
+        "
+                >
+                    Add Resource
+                </button>
+            )}
 
             {loading && (
                 <p className="mt-8 text-neutral">
