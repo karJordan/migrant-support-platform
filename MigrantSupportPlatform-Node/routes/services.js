@@ -2,13 +2,28 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 const authenticateToken = require('../middleware/authMiddleware');
+const validateCategory = require('../middleware/validateCategory');
 
 // GET /api/services - Fetch approved services
 router.get('/', async (req, res) => {
     try {
-        const result = await pool.query(
-            "SELECT * FROM services WHERE status = 'approved' ORDER BY id ASC"
-        );
+        const result = await pool.query(`
+            SELECT 
+                services.id,
+                services.name,
+                services.description,
+                services.location,
+                services.phone,
+                services.website,
+                services.status,
+                services.created_at,
+                services.category_id,
+                categories.name AS category
+            FROM services
+            LEFT JOIN categories ON services.category_id = categories.id
+            WHERE services.status = 'approved'
+            ORDER BY services.id ASC
+        `);
 
         res.status(200).json(result.rows);
     } catch (error) {
@@ -18,19 +33,19 @@ router.get('/', async (req, res) => {
 });
 
 // POST /api/services - Create a new service
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authenticateToken, validateCategory('service'), async (req, res) => {
     const {
         name,
-        category,
+        category_id,
         description,
         location,
         phone,
         website
     } = req.body;
 
-    if (!name || !category) {
+    if (!name) {
         return res.status(400).json({
-            message: 'Name and category are required'
+            message: 'Name is required'
         });
     }
 
@@ -42,12 +57,12 @@ router.post('/', authenticateToken, async (req, res) => {
 
         const result = await pool.query(
             `INSERT INTO services
-            (name, category, description, location, phone, website, status, created_by)
+            (name, category_id, description, location, phone, website, status, created_by)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-            RETURNING *`,
+            RETURNING *, (SELECT name FROM categories WHERE categories.id = services.category_id) AS category`,
             [
                 name,
-                category,
+                category_id,
                 description,
                 location,
                 phone,
@@ -66,7 +81,7 @@ router.post('/', authenticateToken, async (req, res) => {
     }
 });
 // PATCH /api/services/:id - Update an existing service
-router.patch('/:id', authenticateToken, async (req, res) => {
+router.patch('/:id', authenticateToken, validateCategory('service'), async (req, res) => {
     if (req.user.role !== 'admin') {
         return res.status(403).json({
             message: 'Admin access required'
@@ -77,16 +92,16 @@ router.patch('/:id', authenticateToken, async (req, res) => {
 
     const {
         name,
-        category,
+        category_id,
         description,
         location,
         phone,
         website
     } = req.body;
 
-    if (!name || !category) {
+    if (!name) {
         return res.status(400).json({
-            message: 'Name and category are required'
+            message: 'Name is required'
         });
     }
 
@@ -94,21 +109,22 @@ router.patch('/:id', authenticateToken, async (req, res) => {
         const result = await pool.query(
             `UPDATE services
              SET name = $1,
-                 category = $2,
+                 category_id = CASE WHEN $8::boolean THEN $2 ELSE category_id END,
                  description = $3,
                  location = $4,
                  phone = $5,
                  website = $6
              WHERE id = $7
-             RETURNING *`,
+             RETURNING *, (SELECT name FROM categories WHERE categories.id = services.category_id) AS category`,
             [
                 name,
-                category,
+                category_id,
                 description,
                 location,
                 phone,
                 website,
-                id
+                id,
+                Object.prototype.hasOwnProperty.call(req.body, 'category_id')
             ]
         );
 
