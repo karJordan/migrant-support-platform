@@ -5,6 +5,12 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
 import Link from "next/link";
 import Modal from "@/components/Modal";
+import { Plus } from "lucide-react";
+import ServiceForm from "@/components/ServiceForm";
+import JobsForm from "@/components/JobsForm";
+import ResourcesForm from "@/components/ResourcesForm";
+import CommunityGroupForm from "@/components/CommunityGroupForm";
+import CommunityEventForm from "@/components/CommunityEventForm";
 
 interface SavedItem {
     listing_type: string;
@@ -14,15 +20,53 @@ interface SavedItem {
 }
 
 interface SavedItemDetail {
-  id: number;
-  title?: string;
-  name?: string;
-  company?: string;
-  category?: string;
-  location?: string;
-  employment_type?: string;
-  description?: string;
+    id: number;
+    title?: string;
+    name?: string;
+    company?: string;
+    category?: string;
+    location?: string;
+    employment_type?: string;
+    description?: string;
 }
+type CreatePostType =
+    | "service"
+    | "job"
+    | "resource"
+    | "community-group"
+    | "community-event";
+
+const createPostOptions: {
+    type: CreatePostType;
+    label: string;
+    description: string;
+}[] = [
+        {
+            type: "service",
+            label: "Service",
+            description: "Share a local service or support provider.",
+        },
+        {
+            type: "job",
+            label: "Job",
+            description: "Advertise a job opportunity.",
+        },
+        {
+            type: "resource",
+            label: "Resource",
+            description: "Share useful information or guidance.",
+        },
+        {
+            type: "community-group",
+            label: "Community group",
+            description: "Add a group migrants can join.",
+        },
+        {
+            type: "community-event",
+            label: "Community event",
+            description: "Publish an upcoming event.",
+        },
+    ];
 
 export default function UserDashboardPage() {
     const { user, isLoading } = useAuth();
@@ -32,6 +76,10 @@ export default function UserDashboardPage() {
     const [loadingSaved, setLoadingSaved] = useState(true);
     const [itemDetails, setItemDetails] = useState<Record<string, SavedItemDetail>>({});
     const [selectedItem, setSelectedItem] = useState<SavedItem | null>(null);
+
+    const [showCreatePost, setShowCreatePost] = useState(false);
+    const [createPostType, setCreatePostType] =
+        useState<CreatePostType | null>(null);
 
     useEffect(() => {
         if (!isLoading && !user) {
@@ -120,11 +168,73 @@ export default function UserDashboardPage() {
 
     if (isLoading || !user) return null;
 
+    function closeCreatePost() {
+        setShowCreatePost(false);
+        setCreatePostType(null);
+    }
+
+    function renderCreatePostForm() {
+        switch (createPostType) {
+            case "service":
+                return (
+                    <ServiceForm
+                        onCancel={() => setCreatePostType(null)}
+                        onSaved={closeCreatePost}
+                    />
+                );
+
+            case "job":
+                return (
+                    <JobsForm
+                        onCancel={() => setCreatePostType(null)}
+                        onSaved={closeCreatePost}
+                    />
+                );
+
+            case "resource":
+                return (
+                    <ResourcesForm
+                        onCancel={() => setCreatePostType(null)}
+                        onSaved={closeCreatePost}
+                    />
+                );
+
+            case "community-group":
+                return (
+                    <CommunityGroupForm
+                        onCancel={() => setCreatePostType(null)}
+                        onSaved={closeCreatePost}
+                    />
+                );
+
+            case "community-event":
+                return (
+                    <CommunityEventForm
+                        onCancel={() => setCreatePostType(null)}
+                        onSaved={closeCreatePost}
+                    />
+                );
+
+            default:
+                return null;
+        }
+    }
     return (
         <div className="max-w-4xl mx-auto px-6 py-10">
             <h1 className="text-2xl font-semibold mb-2">Welcome back, {user.name}</h1>
             <p className="text-neutral mb-8">This is your dashboard.</p>
-
+            <button
+                type="button"
+                onClick={() => setShowCreatePost(true)}
+                className="
+        mb-8 inline-flex items-center gap-2 rounded-control
+        bg-primary px-5 py-3 font-medium text-white
+        transition-colors hover:bg-primary-hover
+    "
+            >
+                <Plus size={18} aria-hidden="true" />
+                Create a post
+            </button>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <Link href="/saved" className="border border-neutral/20 rounded-xl p-4 hover:border-primary transition-colors hover:shadow-sm">
                     <p className="text-2xl font-semibold text-primary">{savedCount}</p>
@@ -151,32 +261,32 @@ export default function UserDashboardPage() {
                 </div>
 
                 {loadingSaved ? (
-                  <p className="text-neutral">Loading saved items...</p>
-                  ) : savedItems.length === 0 ? (
-                  <p className="text-neutral">You have no saved items.</p>
-                  ) : (
-    <ul className="space-y-2">
-        {savedItems.map((item) => {
-            return (
-                <li key={`${item.listing_type}-${item.listing_id}`}>
-                    <div
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => setSelectedItem(item)}
-                        onKeyDown={(keyEvent) => {
-                            if (keyEvent.key === "Enter" || keyEvent.key === " ") {
-                                keyEvent.preventDefault();
-                                setSelectedItem(item);
-                            }
-                        }}
-                        className="text-primary hover:underline cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded"
-                    >
-                        {getItemTitle(item)} ({getTypeLabel(item.listing_type)})
-                    </div>
-                </li>
-            );
-        })}
-    </ul>
+                    <p className="text-neutral">Loading saved items...</p>
+                ) : savedItems.length === 0 ? (
+                    <p className="text-neutral">You have no saved items.</p>
+                ) : (
+                    <ul className="space-y-2">
+                        {savedItems.map((item) => {
+                            return (
+                                <li key={`${item.listing_type}-${item.listing_id}`}>
+                                    <div
+                                        role="button"
+                                        tabIndex={0}
+                                        onClick={() => setSelectedItem(item)}
+                                        onKeyDown={(keyEvent) => {
+                                            if (keyEvent.key === "Enter" || keyEvent.key === " ") {
+                                                keyEvent.preventDefault();
+                                                setSelectedItem(item);
+                                            }
+                                        }}
+                                        className="text-primary hover:underline cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded"
+                                    >
+                                        {getItemTitle(item)} ({getTypeLabel(item.listing_type)})
+                                    </div>
+                                </li>
+                            );
+                        })}
+                    </ul>
                 )}
             </div>
 
@@ -235,6 +345,56 @@ export default function UserDashboardPage() {
                             </>
                         );
                     })()}
+                </Modal>
+            )}
+            {showCreatePost && (
+                <Modal onClose={closeCreatePost}>
+                    {createPostType ? (
+                        <>
+                            <button
+                                type="button"
+                                onClick={() => setCreatePostType(null)}
+                                className="mb-4 text-sm font-medium text-primary hover:underline"
+                            >
+                                ← Back to post types
+                            </button>
+
+                            {renderCreatePostForm()}
+                        </>
+                    ) : (
+                        <>
+                            <h2 className="text-xl font-semibold">
+                                Create a post
+                            </h2>
+
+                            <p className="mt-2 text-sm text-text-secondary">
+                                What would you like to share?
+                            </p>
+
+                            <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                {createPostOptions.map((option) => (
+                                    <button
+                                        key={option.type}
+                                        type="button"
+                                        onClick={() => setCreatePostType(option.type)}
+                                        className="
+                                rounded-xl border border-border bg-white p-4
+                                text-left transition
+                                hover:border-primary hover:bg-primary-light
+                            "
+                                    >
+                                        <span className="block font-semibold text-text-primary">
+                                            {option.label}
+                                        </span>
+
+                                        <span className="mt-1 block text-sm text-text-secondary">
+                                            {option.description}
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+                        </>
+                    )}
                 </Modal>
             )}
         </div>

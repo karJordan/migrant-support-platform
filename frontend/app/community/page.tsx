@@ -1,8 +1,6 @@
 "use client";
 
-import Button from "@/components/ui/Button";
 import { Select } from "@/components/ui/Input";
-import { Plus } from "lucide-react";
 import CommunityGroupCard from "@/components/CommunityGroupCard";
 import CommunityEventCard from "@/components/CommunityEventCard";
 import { useState, useEffect } from "react";
@@ -24,8 +22,6 @@ export default function CommunityPage() {
     const [eventsError, setEventsError] = useState<string | null>(null);
     const [groupsError, setGroupsError] = useState<string | null>(null);
 
-    const [showGroupForm, setShowGroupForm] = useState(false);
-    const [showEventForm, setShowEventForm] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState<CommunityEvent | null>(null);
     const [selectedGroup, setSelectedGroup] = useState<CommunityGroup | null>(null);
     const [isEditingEvent, setIsEditingEvent] = useState(false);
@@ -95,19 +91,17 @@ export default function CommunityPage() {
 
     return (
         <div className="w-full max-w-5xl mx-auto px-4 py-6 sm:px-6 sm:py-10">
-            <h1 className="text-2xl sm:text-3xl font-bold">Community</h1>
+            <h1 className="text-2xl font-bold sm:text-3xl">
+                Community
+            </h1>
 
-            <p className="text-sm text-text-secondary mt-2 mb-6">
+            <p className="hidden sm:block text-sm text-text-secondary mt-2 mb-6">
                 Browse community events and groups for migrants in New Zealand.
             </p>
             <div>
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <h2 className="text-lg font-semibold">Upcoming Events</h2>
-                    {user && (
-                        <Button size="sm" variant="ghost" onClick={() => setShowEventForm(true)}>
-                            <Plus size={16} aria-hidden="true" /> Add Event
-                        </Button>
-                    )}
+
                 </div>
                 <div className="mt-4 mb-4 max-w-xs">
                     <label htmlFor="event-sort" className="mb-1 block text-sm font-medium">Sort events</label>
@@ -171,11 +165,6 @@ export default function CommunityPage() {
             <div className="mt-8">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <h2 className="text-lg font-semibold">Community Groups</h2>
-                    {user && (
-                        <Button size="sm" variant="ghost" onClick={() => setShowGroupForm(true)}>
-                            <Plus size={16} aria-hidden="true" /> Add Group
-                        </Button>
-                    )}
                 </div>
                 {groupsLoading && (
                     <p className="mt-8 text-neutral">Loading communities...</p>
@@ -200,7 +189,7 @@ export default function CommunityPage() {
                                         onClick={() => {
                                             setSelectedGroup(g);
                                             setIsEditingGroup(false);
-                                        }} 
+                                        }}
                                         onKeyDown={(keyEvent) => {
                                             if (keyEvent.target !== keyEvent.currentTarget) return;
                                             if (keyEvent.key === "Enter" || keyEvent.key === " ") {
@@ -224,16 +213,6 @@ export default function CommunityPage() {
                     </>
                 )}
             </div>
-            {showGroupForm && (
-                <Modal onClose={() => setShowGroupForm(false)}>
-                    <CommunityGroupForm />
-                </Modal>
-            )}
-            {showEventForm && (
-                <Modal onClose={() => setShowEventForm(false)}>
-                    <CommunityEventForm />
-                </Modal>
-            )}
             {selectedEvent && (
                 <Modal
                     onClose={() => {

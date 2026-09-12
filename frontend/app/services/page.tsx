@@ -13,7 +13,6 @@ export default function ServicesPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("All");
-    const [showServiceForm, setShowServiceForm] = useState(false);
     const [selectedService, setSelectedService] = useState<Service | null>(null);
     const [isEditing, setIsEditing] = useState(false);
 
@@ -55,11 +54,11 @@ export default function ServicesPage() {
 
     return (
         <div className="w-full max-w-5xl mx-auto px-6 py-10">
-            <h1 className="text-4xl font-semibold">
-                Find Local Services
+            <h1 className="text-2xl font-bold sm:text-3xl">
+                Services
             </h1>
 
-            <p className="text-neutral mt-2">
+            <p className="hidden sm:block text-neutral mt-2">
                 Find services and support available in your community.
             </p>
 
@@ -69,20 +68,6 @@ export default function ServicesPage() {
                 onSelect={setSelectedCategory}
                 ariaLabel="Filter services by category"
             />
-
-            {user && (
-                <button
-                    type="button"
-                    onClick={() => setShowServiceForm(true)}
-                    className="
-            mt-4 rounded-control bg-primary px-4 py-2
-            text-sm font-medium text-white
-            transition-colors hover:bg-primary-hover
-        "
-                >
-                    Add New Service
-                </button>
-            )}
 
             {loading && (
                 <p className="mt-8 text-neutral">
@@ -138,14 +123,6 @@ export default function ServicesPage() {
                         </div>
                     )}
                 </>
-            )}
-
-            {showServiceForm && (
-                <Modal
-                    onClose={() => setShowServiceForm(false)}
-                >
-                    <ServiceForm />
-                </Modal>
             )}
 
             {selectedService && (

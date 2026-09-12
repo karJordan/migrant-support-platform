@@ -15,7 +15,6 @@ export default function ResourcePage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [selectedCategory, setSelectedCategory] = useState("All");
-    const [showResourcesForm, setShowResourcesForm] = useState(false);
     const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
     const [isEditing, setIsEditing] = useState(false);
 
@@ -68,20 +67,6 @@ export default function ResourcePage() {
                 onSelect={setSelectedCategory}
                 ariaLabel="Filter resources by category"
             />
-
-            {user && (
-                <button
-                    type="button"
-                    onClick={() => setShowResourcesForm(true)}
-                    className="
-            mt-4 rounded-control bg-primary px-4 py-2
-            text-sm font-medium text-white
-            transition-colors hover:bg-primary-hover
-        "
-                >
-                    Add Resource
-                </button>
-            )}
 
             {loading && (
                 <p className="mt-8 text-neutral">
@@ -136,11 +121,6 @@ export default function ResourcePage() {
                 </>
             )}
 
-            {showResourcesForm && (
-                <Modal onClose={() => setShowResourcesForm(false)}>
-                    <ResourcesForm />
-                </Modal>
-            )}
             {selectedResource && (
                 <Modal
                     onClose={() => {

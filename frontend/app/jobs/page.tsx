@@ -15,7 +15,6 @@ export default function JobsPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [selectedEmploymentType, setSelectedEmploymentType] = useState("All");
-    const [showJobForm, setShowJobForm] = useState(false);
     const [selectedJob, setSelectedJob] = useState<Job | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const { user } = useAuth();
@@ -56,9 +55,11 @@ export default function JobsPage() {
 
     return (
         <div className="w-full max-w-5xl mx-auto px-6 py-10">
-            <h1 className="text-4xl font-semibold">Find Jobs</h1>
+            <h1 className="text-2xl font-bold sm:text-3xl">
+                Find Jobs
+            </h1>
 
-            <p className="text-neutral mt-2">
+            <p className="hidden sm:block text-neutral mt-2">
                 Browse job opportunities for migrants in New Zealand.
             </p>
             <FilterChipRow
@@ -68,19 +69,6 @@ export default function JobsPage() {
                 ariaLabel="Filter jobs by employment type"
             />
 
-            {user && (
-                <button
-                    type="button"
-                    onClick={() => setShowJobForm(true)}
-                    className="
-            mt-4 rounded-control bg-primary px-4 py-2
-            text-sm font-medium text-white
-            transition-colors hover:bg-primary-hover
-        "
-                >
-                    Add Job
-                </button>
-            )}
             {loading && (
                 <p className="mt-8 text-neutral">
                     Loading jobs...
@@ -134,11 +122,7 @@ export default function JobsPage() {
                     )}
                 </>
             )}
-            {showJobForm && (
-                <Modal onClose={() => setShowJobForm(false)}>
-                    <JobsForm />
-                </Modal>
-            )}
+
             {selectedJob && (
                 <Modal
                     onClose={() => {
