@@ -9,7 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { CommunityEvent } from "@/types/event";
 
 type CommunityEventFormProps = {
-    communityEvent?: CommunityEvent & { category_id?: number | null };
+    communityEvent?: CommunityEvent;
     onCancel?: () => void;
     onSaved?: (updatedEvent: CommunityEvent) => void;
 };

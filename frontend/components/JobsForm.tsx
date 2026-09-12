@@ -9,7 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Job } from "@/types/job";
 
 type JobsFormProps = {
-    job?: Job & { category_id?: number | null };
+    job?: Job;
     onCancel?: () => void;
     onSaved?: (updatedJob: Job) => void;
 };

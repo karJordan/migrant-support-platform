@@ -9,7 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { CommunityGroup } from "@/types/group";
 
 type CommunityGroupFormProps = {
-    group?: CommunityGroup & { category_id?: number | null };
+    group?: CommunityGroup;
     onCancel?: () => void;
     onSaved?: (updatedGroup: CommunityGroup) => void;
 };

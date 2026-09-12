@@ -9,7 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Service } from "@/types/service";
 
 type ServiceFormProps = {
-    service?: Service & { category_id?: number | null };
+    service?: Service;
     onCancel?: () => void;
     onSaved?: (updatedService: Service) => void;
 };

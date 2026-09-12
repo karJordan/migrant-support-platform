@@ -9,7 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Resource } from "@/types/resource";
 
 type ResourcesFormProps = {
-    resource?: Resource & { category_id?: number | null };
+    resource?: Resource;
     onCancel?: () => void;
     onSaved?: (updatedResource: Resource) => void;
 };
