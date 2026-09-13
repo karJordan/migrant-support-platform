@@ -3,6 +3,7 @@
 import Button from "@/components/ui/Button";
 import Input, { Textarea } from "@/components/ui/Input";
 import Feedback from "@/components/ui/Feedback";
+import CategoryField, { useCategoryOptions } from "@/components/CategoryField";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Resource } from "@/types/resource";
@@ -19,9 +20,11 @@ export default function ResourcesForm({
     onSaved,
 }: ResourcesFormProps) {
     const { user, token } = useAuth();
+    const [categoryId, setCategoryId] = useState(String(resource?.category_id ?? ""));
+    const [categoryChanged, setCategoryChanged] = useState(false);
+    const categories = useCategoryOptions("resource");
 
     const [title, setTitle] = useState(resource?.title ?? "");
-    const [category, setCategory] = useState(resource?.category ?? "");
     const [description, setDescription] = useState(
         resource?.description ?? ""
     );
@@ -43,6 +46,19 @@ export default function ResourcesForm({
             return;
         }
 
+        if (categories.loading || categories.error) {
+            setMessage("Wait for categories to load, or retry loading them.");
+            return;
+        }
+        if (!categoryId) {
+            setMessage("Please select a category.");
+            return;
+        }
+        if (categoryId && (!resource || categoryChanged) && !categories.options.some(option => String(option.id) === categoryId)) {
+            setMessage("Please select an available category.");
+            return;
+        }
+
         setIsSubmitting(true);
         try {
             const response = await fetch(
@@ -56,8 +72,8 @@ export default function ResourcesForm({
                         Authorization: `Bearer ${token}`,
                     },
                     body: JSON.stringify({
+                        ...(resource && !categoryChanged ? {} : { category_id: categoryId === "" ? null : Number(categoryId) }),
                         title,
-                        category,
                         description,
                         link,
                     }),
@@ -65,6 +81,8 @@ export default function ResourcesForm({
             );
 
             if (!response.ok) {
+                const failure = await response.json().catch(() => null);
+                if (failure?.message || failure?.error) throw new Error(failure.message || failure.error);
                 throw new Error(
                     resource
                         ? "Failed to update resource"
@@ -89,7 +107,8 @@ export default function ResourcesForm({
 
             if (!resource) {
                 setTitle("");
-                setCategory("");
+                setCategoryId("");
+                setCategoryChanged(false);
                 setDescription("");
                 setLink("");
             }
@@ -98,7 +117,7 @@ export default function ResourcesForm({
             setMessageType("error");
 
             setMessage(
-                resource
+                error instanceof Error ? error.message : resource
                     ? "Unable to update resource."
                     : "Unable to submit resource."
             );
@@ -137,22 +156,14 @@ export default function ResourcesForm({
                 />
             </div>
 
-            <div>
-                <label
-                    htmlFor="resource-category"
-                    className="block text-sm font-medium mb-1"
-                >
-                    Category
-                </label>
-                <Input
-                    id="resource-category"
-                    type="text"
-                    placeholder="Category"
-                    value={category}
-                    onChange={(event) => setCategory(event.target.value)}
-                    required
-                />
-            </div>
+            <CategoryField
+                id="resource-category"
+                value={categoryId}
+                onChange={value => { setCategoryId(value); setCategoryChanged(true); }}
+                {...categories}
+                optional={false}
+                disabled={isSubmitting}
+            />
 
             <div>
                 <label
@@ -190,6 +201,7 @@ export default function ResourcesForm({
 
             <Button
                 type="submit"
+                disabled={categories.loading || Boolean(categories.error) || !categoryId}
                 loading={isSubmitting}
                 loadingLabel="Saving..."
             >

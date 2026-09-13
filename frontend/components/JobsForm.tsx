@@ -3,6 +3,7 @@
 import Button from "@/components/ui/Button";
 import Input, { Textarea, Select } from "@/components/ui/Input";
 import Feedback from "@/components/ui/Feedback";
+import CategoryField, { useCategoryOptions } from "@/components/CategoryField";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Job } from "@/types/job";
@@ -19,6 +20,9 @@ export default function JobsForm({
     onSaved,
 }: JobsFormProps) {
     const { user, token } = useAuth();
+    const [categoryId, setCategoryId] = useState(String(job?.category_id ?? ""));
+    const [categoryChanged, setCategoryChanged] = useState(false);
+    const categories = useCategoryOptions("job");
 
     const [title, setTitle] = useState(job?.title ?? "");
     const [company, setCompany] = useState(job?.company ?? "");
@@ -44,6 +48,19 @@ export default function JobsForm({
             return;
         }
 
+        if (categories.loading || categories.error) {
+            setMessage("Wait for categories to load, or retry loading them.");
+            return;
+        }
+        if (!categoryId) {
+            setMessage("Please select a category.");
+            return;
+        }
+        if (categoryId && (!job || categoryChanged) && !categories.options.some(option => String(option.id) === categoryId)) {
+            setMessage("Please select an available category.");
+            return;
+        }
+
         setIsSubmitting(true);
         try {
             const response = await fetch(
@@ -57,6 +74,7 @@ export default function JobsForm({
                         Authorization: `Bearer ${token}`,
                     },
                     body: JSON.stringify({
+                        ...(job && !categoryChanged ? {} : { category_id: categoryId === "" ? null : Number(categoryId) }),
                         title,
                         company,
                         location,
@@ -67,6 +85,8 @@ export default function JobsForm({
             );
 
             if (!response.ok) {
+                const failure = await response.json().catch(() => null);
+                if (failure?.message || failure?.error) throw new Error(failure.message || failure.error);
                 throw new Error(
                     job
                         ? "Failed to update job"
@@ -90,6 +110,8 @@ export default function JobsForm({
             }
 
             if (!job) {
+                setCategoryId("");
+                setCategoryChanged(false);
                 setTitle("");
                 setCompany("");
                 setLocation("");
@@ -101,7 +123,7 @@ export default function JobsForm({
             setMessageType("error");
 
             setMessage(
-                job
+                error instanceof Error ? error.message : job
                     ? "Unable to update job."
                     : "Unable to submit job."
             );
@@ -211,8 +233,18 @@ export default function JobsForm({
                 />
             </div>
 
+            <CategoryField
+                id="job-category"
+                value={categoryId}
+                onChange={value => { setCategoryId(value); setCategoryChanged(true); }}
+                {...categories}
+                optional={false}
+                disabled={isSubmitting}
+            />
+
             <Button
                 type="submit"
+                disabled={categories.loading || Boolean(categories.error) || !categoryId}
                 loading={isSubmitting}
                 loadingLabel="Saving..."
             >

@@ -3,6 +3,7 @@
 import Button from "@/components/ui/Button";
 import Input, { Textarea } from "@/components/ui/Input";
 import Feedback from "@/components/ui/Feedback";
+import CategoryField, { useCategoryOptions } from "@/components/CategoryField";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Service } from "@/types/service";
@@ -19,9 +20,11 @@ export default function ServiceForm({
     onSaved,
 }: ServiceFormProps) {
     const { user, token } = useAuth();
+    const [categoryId, setCategoryId] = useState(String(service?.category_id ?? ""));
+    const [categoryChanged, setCategoryChanged] = useState(false);
+    const categories = useCategoryOptions("service");
 
     const [name, setName] = useState(service?.name ?? "");
-    const [category, setCategory] = useState(service?.category ?? "");
     const [description, setDescription] = useState(service?.description ?? "");
     const [location, setLocation] = useState(service?.location ?? "");
     const [phone, setPhone] = useState(service?.phone ?? "");
@@ -43,6 +46,19 @@ export default function ServiceForm({
             return;
         }
 
+        if (categories.loading || categories.error) {
+            setMessage("Wait for categories to load, or retry loading them.");
+            return;
+        }
+        if (!categoryId) {
+            setMessage("Please select a category.");
+            return;
+        }
+        if (categoryId && (!service || categoryChanged) && !categories.options.some(option => String(option.id) === categoryId)) {
+            setMessage("Please select an available category.");
+            return;
+        }
+
         setIsSubmitting(true);
         try {
             const response = await fetch(
@@ -56,8 +72,8 @@ export default function ServiceForm({
                         Authorization: `Bearer ${token}`,
                     },
                     body: JSON.stringify({
+                        ...(service && !categoryChanged ? {} : { category_id: categoryId === "" ? null : Number(categoryId) }),
                         name,
-                        category,
                         description,
                         location,
                         phone,
@@ -67,6 +83,8 @@ export default function ServiceForm({
             );
 
             if (!response.ok) {
+                const failure = await response.json().catch(() => null);
+                if (failure?.message || failure?.error) throw new Error(failure.message || failure.error);
                 throw new Error(
                     service
                         ? "Failed to update service"
@@ -88,7 +106,8 @@ export default function ServiceForm({
 
             if (!service) {
                 setName("");
-                setCategory("");
+                setCategoryId("");
+                setCategoryChanged(false);
                 setDescription("");
                 setLocation("");
                 setPhone("");
@@ -99,7 +118,7 @@ export default function ServiceForm({
             setMessageType("error");
 
             setMessage(
-                service
+                error instanceof Error ? error.message : service
                     ? "Unable to update service."
                     : "Unable to submit service."
             );
@@ -139,22 +158,14 @@ export default function ServiceForm({
                 />
             </div>
 
-            <div>
-                <label
-                    htmlFor="service-category"
-                    className="block text-sm font-medium mb-1"
-                >
-                    Category
-                </label>
-                <Input
-                    id="service-category"
-                    type="text"
-                    placeholder="Category"
-                    value={category}
-                    onChange={(event) => setCategory(event.target.value)}
-                    required
-                />
-            </div>
+            <CategoryField
+                id="service-category"
+                value={categoryId}
+                onChange={value => { setCategoryId(value); setCategoryChanged(true); }}
+                {...categories}
+                optional={false}
+                disabled={isSubmitting}
+            />
 
             <div>
                 <label
@@ -221,6 +232,7 @@ export default function ServiceForm({
 
             <Button
                 type="submit"
+                disabled={categories.loading || Boolean(categories.error) || !categoryId}
                 loading={isSubmitting}
                 loadingLabel="Saving..."
             >
