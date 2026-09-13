@@ -1,6 +1,5 @@
 import Card from "@/components/ui/Card";
 import { ExternalLink } from "lucide-react";
-import SaveButton from "@/components/SaveButton";
 
 type ResourcesCardProps = {
   id: string | number;
@@ -11,7 +10,6 @@ type ResourcesCardProps = {
 };
 
 export default function ResourcesCard({
-  id,
   title,
   category,
   description,
@@ -23,10 +21,6 @@ export default function ResourcesCard({
         <span className="text-sm text-primary font-medium min-w-0 break-words">
           {category}
         </span>
-        <SaveButton 
-          itemType="resource" 
-          itemId={id} 
-        />
       </div>
 
       <h2 className="heading-4 mt-2 break-words">

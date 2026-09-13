@@ -1,6 +1,5 @@
 import Card from "@/components/ui/Card";
 import { Users } from "lucide-react";
-import SaveButton from "./SaveButton";
 
 type CommunityGroupProps = {
     id: string | number;
@@ -9,7 +8,7 @@ type CommunityGroupProps = {
     description: string;
 };
 
-export default function CommunityGroupCard({ id, name, category }: CommunityGroupProps) {
+export default function CommunityGroupCard({ name, category }: CommunityGroupProps) {
     return (
         <Card hoverable className="h-full">
             <div className="flex items-start gap-3">
@@ -17,7 +16,6 @@ export default function CommunityGroupCard({ id, name, category }: CommunityGrou
                 <div className="min-w-0 flex-1">
                     <h2 className="break-words text-base font-semibold leading-snug">{name}</h2>
                     <p className="mt-1 break-words text-sm text-text-secondary">{category || "Community group"}</p>
-                    <div className="mt-3 flex justify-end"><SaveButton itemType="community_group" itemId={id} /></div>
                 </div>
             </div>
         </Card>

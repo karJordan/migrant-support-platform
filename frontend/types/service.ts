@@ -7,4 +7,5 @@ export type Service = {
     location: string;
     phone: string;
     website: string;
+    status: "pending" | "approved" | "rejected";
 };

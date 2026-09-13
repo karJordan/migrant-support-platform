@@ -1,6 +1,6 @@
 import Card from "@/components/ui/Card";
 import { MapPin, BriefcaseBusiness } from "lucide-react";
-import SaveButton from "@/components/SaveButton";
+import FavouriteButton from "@/components/FavouriteButton";
 
 type JobsCardProps = {
   id: string | number;
@@ -25,7 +25,7 @@ export default function JobsCard({
             <h2 className="heading-4 min-w-0 break-words">
                 {title}
             </h2>
-            <SaveButton itemType="job" itemId={id} />
+            <FavouriteButton itemId={id} />
             </div>
 
       <p className="font-medium mt-1">

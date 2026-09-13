@@ -4,5 +4,5 @@ export type CommunityGroup = {
     name: string;
     category: string;
     description: string;
-    status: string;
+    status: "pending" | "approved" | "rejected";
 };

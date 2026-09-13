@@ -6,4 +6,5 @@ export type Job = {
     location: string;
     employment_type: string;
     description: string;
+    status: "pending" | "approved" | "rejected";
 };

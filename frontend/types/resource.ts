@@ -5,5 +5,5 @@ export type Resource = {
     description: string;
     link: string;
     category: string;
-    status: string;
+    status: "pending" | "approved" | "rejected";
 };
