@@ -12,23 +12,6 @@ import ResourcesForm from "@/components/ResourcesForm";
 import CommunityGroupForm from "@/components/CommunityGroupForm";
 import CommunityEventForm from "@/components/CommunityEventForm";
 
-interface SavedItem {
-    listing_type: string;
-    listing_id: number;
-    title?: string;
-    name?: string;
-}
-
-interface SavedItemDetail {
-    id: number;
-    title?: string;
-    name?: string;
-    company?: string;
-    category?: string;
-    location?: string;
-    employment_type?: string;
-    description?: string;
-}
 //card to display services
 interface DashboardService {
     id: number;
@@ -86,11 +69,6 @@ const createPostOptions: {
 export default function UserDashboardPage() {
     const { user, isLoading } = useAuth();
     const router = useRouter();
-    const [savedItems, setSavedItems] = useState<SavedItem[]>([]);
-    const [savedCount, setSavedCount] = useState(0);
-    const [loadingSaved, setLoadingSaved] = useState(true);
-    const [itemDetails, setItemDetails] = useState<Record<string, SavedItemDetail>>({});
-    const [selectedItem, setSelectedItem] = useState<SavedItem | null>(null);
 
     const [showCreatePost, setShowCreatePost] = useState(false);
     const [createPostType, setCreatePostType] =
@@ -107,11 +85,6 @@ export default function UserDashboardPage() {
         }
     }, [isLoading, user, router]);
 
-    useEffect(() => {
-        if (user) {
-            fetchSavedItems();
-        }
-    }, [user]);
 
     useEffect(() => {
         fetchDashboardContent();
@@ -137,78 +110,6 @@ export default function UserDashboardPage() {
             console.error("Error loading dashboard content:", error);
         }
     }
-    async function fetchSavedItems() {
-        setLoadingSaved(true);
-        try {
-            const response = await fetch(`http://localhost:4000/api/saved/${user?.id}`);
-            const data = await response.json();
-            setSavedItems(data.slice(0, 5));
-            setSavedCount(data.length);
-            await fetchItemDetails(data.slice(0, 5));
-        } catch (error) {
-            console.error("Error fetching saved items:", error);
-        } finally {
-            setLoadingSaved(false);
-        }
-    }
-
-    async function fetchItemDetails(items: SavedItem[]) {
-        const details: Record<string, SavedItemDetail> = {};
-        for (const item of items) {
-            try {
-                if (item.listing_type === 'community_event') {
-                    const response = await fetch(`http://localhost:4000/api/community/events`);
-                    if (response.ok) {
-                        const allItems = await response.json();
-                        const found = allItems.find((i: SavedItemDetail) => i.id === item.listing_id);
-                        if (found) details[`${item.listing_type}-${item.listing_id}`] = found;
-                    }
-                } else if (item.listing_type === 'community_group') {
-                    const response = await fetch(`http://localhost:4000/api/community/groups`);
-                    if (response.ok) {
-                        const allItems = await response.json();
-                        const found = allItems.find((i: SavedItemDetail) => i.id === item.listing_id);
-                        if (found) details[`${item.listing_type}-${item.listing_id}`] = found;
-                    }
-                } else {
-                    const response = await fetch(`http://localhost:4000/api/${item.listing_type}s`);
-                    if (response.ok) {
-                        const allItems = await response.json();
-                        const found = allItems.find((i: SavedItemDetail) => i.id === item.listing_id);
-                        if (found) details[`${item.listing_type}-${item.listing_id}`] = found;
-                    }
-                }
-            } catch {
-                console.error(`Failed to fetch ${item.listing_type} #${item.listing_id}`);
-            }
-        }
-        setItemDetails(details);
-    }
-
-    const getItemTitle = (item: SavedItem) => {
-        const key = `${item.listing_type}-${item.listing_id}`;
-        const details = itemDetails[key];
-        if (details) {
-            return details.title || details.name || `${item.listing_type} #${item.listing_id}`;
-        }
-        return `${item.listing_type} #${item.listing_id}`;
-    };
-
-    const getItemDetails = (item: SavedItem) => {
-        const key = `${item.listing_type}-${item.listing_id}`;
-        return itemDetails[key] || null;
-    };
-
-    const getTypeLabel = (type: string) => {
-        const labels: Record<string, string> = {
-            service: "Service",
-            job: "Job",
-            community_event: "Event",
-            community_group: "Group",
-            resource: "Resource",
-        };
-        return labels[type] || type;
-    };
 
     if (isLoading || !user) return null;
 
@@ -592,63 +493,7 @@ export default function UserDashboardPage() {
                 </section>
             </div>
 
-            {selectedItem && (
-                <Modal onClose={() => setSelectedItem(null)}>
-                    {(() => {
-                        const details = getItemDetails(selectedItem);
-                        return (
-                            <>
-                                <h2 className="text-2xl font-semibold">
-                                    {details?.title || details?.name || getItemTitle(selectedItem)}
-                                </h2>
-
-                                <Link
-                                    href={
-                                        selectedItem.listing_type === "service"
-                                            ? "/services"
-                                            : selectedItem.listing_type === "job"
-                                                ? "/jobs"
-                                                : selectedItem.listing_type === "resource"
-                                                    ? "/resources"
-                                                    : "/community"
-                                    }
-                                    className="text-primary mt-2 capitalize inline-block hover:underline"
-                                >
-                                    {getTypeLabel(selectedItem.listing_type)}
-                                </Link>
-
-                                {details?.company && (
-                                    <p className="font-medium mt-2">
-                                        {details.company}
-                                    </p>
-                                )}
-
-                                {details?.category && (
-                                    <p className="mt-2">
-                                        Category: {details.category}
-                                    </p>
-                                )}
-
-                                {details?.location && (
-                                    <p className="mt-2">
-                                        Location: {details.location}
-                                    </p>
-                                )}
-
-                                {details?.employment_type && (
-                                    <p className="mt-2">
-                                        Employment Type: {details.employment_type}
-                                    </p>
-                                )}
-
-                                <p className="mt-4">
-                                    {details?.description || "No description available"}
-                                </p>
-                            </>
-                        );
-                    })()}
-                </Modal>
-            )}
+           
             {showCreatePost && (
                 <Modal onClose={closeCreatePost}>
                     {createPostType ? (
