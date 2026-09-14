@@ -3,7 +3,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bookmark, ChevronRight, LogOut, Mail, UserRound, Settings } from "lucide-react";
+import {
+    Bookmark,
+    ChevronRight,
+    LogOut,
+    Settings
+} from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
@@ -13,7 +18,14 @@ import Modal from "@/components/Modal";
 type SavedSummary = { userId: string; count?: number; error?: string };
 
 export default function ProfilePage() {
-    const { user, isLoading, logout } = useAuth();
+    const {
+        user,
+        token,
+        isLoading,
+        logout,
+        updateUser,
+    } = useAuth();
+
     const router = useRouter();
     const [summary, setSummary] = useState<SavedSummary | null>(null);
     const [retry, setRetry] = useState(0);
@@ -21,6 +33,25 @@ export default function ProfilePage() {
     const [showEditProfile, setShowEditProfile] = useState(false);
     const [editName, setEditName] = useState("");
     const [editEmail, setEditEmail] = useState("");
+
+    const [isEditingProfile, setIsEditingProfile] = useState(false);
+    const [editCountryOfOrigin, setEditCountryOfOrigin] = useState("");
+    const [editCurrentAddress, setEditCurrentAddress] = useState("");
+    const [editCurrentCity, setEditCurrentCity] = useState("");
+    const [editCurrentCountry, setEditCurrentCountry] = useState("");
+    const [editPhoneNumber, setEditPhoneNumber] = useState("");
+
+    useEffect(() => {
+        if (!user) return;
+
+        setEditName(user.name ?? "");
+        setEditEmail(user.email ?? "");
+        setEditCountryOfOrigin(user.country_of_origin ?? "");
+        setEditCurrentAddress(user.current_address ?? "");
+        setEditCurrentCity(user.current_city ?? "");
+        setEditCurrentCountry(user.current_country ?? "");
+        setEditPhoneNumber(user.phone_number ?? "");
+    }, [user]);
 
     const userId = user ? String(user.id) : null;
 
@@ -81,7 +112,10 @@ export default function ProfilePage() {
                 {/* Edit profile modal */}
                 <button
                     type="button"
-                    onClick={() => setShowEditProfile(true)}
+                    onClick={() => {
+                        setIsEditingProfile(false);
+                        setShowEditProfile(true);
+                    }}
                     aria-label="Edit profile"
                     className="
             absolute right-5 top-5
@@ -98,7 +132,20 @@ export default function ProfilePage() {
                 </button>
                 <div aria-hidden="true" className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-primary text-2xl font-bold text-white">{initials}</div>
                 <h1 id="profile-title" className="heading-3 mt-4 break-words">{user.name}</h1>
-                <p className="mt-1 text-sm text-text-secondary">Your MigrantHub profile</p>
+                <p className="mt-1 text-sm text-text-secondary">
+                    {user.country_of_origin || "Nationality not set"}
+                    {" · "}
+                    {user.current_city && user.current_country
+                        ? `${user.current_city}, ${user.current_country}`
+                        : "Location not set"}
+                    {" · "}
+                    {user.created_at
+                        ? `Joined ${new Date(user.created_at).toLocaleDateString("en-NZ", {
+                            month: "short",
+                            year: "numeric",
+                        })}`
+                        : ""}
+                </p>
                 <Link href="/saved" className="mt-5 inline-flex flex-col items-center rounded-control px-6 py-2 hover:bg-white/60">
                     <span className="text-2xl font-bold text-primary">{currentSummary?.count ?? "—"}</span>
                     <span className="text-sm text-text-secondary">Saved</span>
@@ -113,99 +160,305 @@ export default function ProfilePage() {
                         <Button variant="secondary" onClick={() => { setSummary(null); setRetry(value => value + 1); }}>Try again</Button>
                     </div>
                 )}
-                <Link href="/saved" className="flex min-h-16 items-center gap-3 rounded-card border border-border bg-white p-5 shadow-card hover:shadow-card-hover">
-                    <Bookmark aria-hidden="true" size={22} className="shrink-0 text-primary" />
-                    <span className="flex-1 font-medium">View saved listings</span>
-                    <ChevronRight aria-hidden="true" size={20} className="text-text-secondary" />
-                </Link>
                 <Button variant="secondary" className="w-full !border-red-200 !bg-red-50 !text-danger hover:!bg-red-100" onClick={() => { logout(); router.replace("/"); }}>
                     <LogOut aria-hidden="true" size={18} />Sign Out
                 </Button>
             </div>
-            {showEditProfile && (
-                <Modal onClose={() => setShowEditProfile(false)}>
-                    <h2 className="text-xl font-semibold text-text-primary">
-                        Edit profile
-                    </h2>
+           {showEditProfile && (
+    <Modal
+        onClose={() => {
+            setShowEditProfile(false);
+            setIsEditingProfile(false);
+        }}
+    >
+        {!isEditingProfile ? (
+            <>
+                <h2 className="text-xl font-semibold text-text-primary">
+                    Profile details
+                </h2>
 
-                    <p className="mt-1 text-sm text-text-secondary">
-                        Update your account information.
-                    </p>
+                <div className="mt-6 space-y-4">
+                    <div>
+                        <p className="text-sm text-text-secondary">
+                            Name
+                        </p>
+                        <p className="font-medium text-text-primary">
+                            {user.name}
+                        </p>
+                    </div>
 
-                    <form
-                        className="mt-6 space-y-5"
-                        onSubmit={(event) => {
-                            event.preventDefault();
+                    <div>
+                        <p className="text-sm text-text-secondary">
+                            Email
+                        </p>
+                        <p className="font-medium text-text-primary break-all">
+                            {user.email}
+                        </p>
+                    </div>
 
-                            // We will connect this to the backend update endpoint next.
-                            console.log({
-                                name: editName,
-                                email: editEmail,
-                            });
-                        }}
+                    <div>
+                        <p className="text-sm text-text-secondary">
+                            Country of origin
+                        </p>
+                        <p className="font-medium text-text-primary">
+                            {user.country_of_origin || "Not set"}
+                        </p>
+                    </div>
+
+                    <div>
+                        <p className="text-sm text-text-secondary">
+                            Current address
+                        </p>
+                        <p className="font-medium text-text-primary">
+                            {user.current_address || "Not set"}
+                        </p>
+                    </div>
+
+                    <div>
+                        <p className="text-sm text-text-secondary">
+                            Current city
+                        </p>
+                        <p className="font-medium text-text-primary">
+                            {user.current_city || "Not set"}
+                        </p>
+                    </div>
+
+                    <div>
+                        <p className="text-sm text-text-secondary">
+                            Current country
+                        </p>
+                        <p className="font-medium text-text-primary">
+                            {user.current_country || "Not set"}
+                        </p>
+                    </div>
+
+                    <div>
+                        <p className="text-sm text-text-secondary">
+                            Phone number
+                        </p>
+                        <p className="font-medium text-text-primary">
+                            {user.phone_number || "Not set"}
+                        </p>
+                    </div>
+                </div>
+
+                <div className="mt-6 flex justify-end">
+                    <Button
+                        type="button"
+                        onClick={() => setIsEditingProfile(true)}
                     >
-                        <div>
-                            <label
-                                htmlFor="profile-name"
-                                className="mb-1 block text-sm font-medium text-text-primary"
-                            >
-                                Name
-                            </label>
+                        Edit
+                    </Button>
+                </div>
+            </>
+        ) : (
+            <>
+                <h2 className="text-xl font-semibold text-text-primary">
+                    Edit profile
+                </h2>
 
-                            <input
-                                id="profile-name"
-                                type="text"
-                                value={editName}
-                                onChange={(event) => setEditName(event.target.value)}
-                                className="
-                        w-full rounded-control border border-border
-                        bg-white px-4 py-3
-                        text-text-primary
-                        focus:border-primary
-                        focus:outline-none
-                    "
-                            />
-                        </div>
+                <p className="mt-1 text-sm text-text-secondary">
+                    Update your account information.
+                </p>
 
-                        <div>
-                            <label
-                                htmlFor="profile-email"
-                                className="mb-1 block text-sm font-medium text-text-primary"
-                            >
-                                Email
-                            </label>
+                <form
+                    className="mt-6 space-y-5"
+                    onSubmit={async (event) => {
+                        event.preventDefault();
 
-                            <input
-                                id="profile-email"
-                                type="email"
-                                value={editEmail}
-                                onChange={(event) => setEditEmail(event.target.value)}
-                                className="
-                        w-full rounded-control border border-border
-                        bg-white px-4 py-3
-                        text-text-primary
-                        focus:border-primary
-                        focus:outline-none
-                    "
-                            />
-                        </div>
+                        try {
+                            const response = await fetch(
+                                `http://localhost:4000/api/users/${user.id}`,
+                                {
+                                    method: "PATCH",
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                        Authorization: `Bearer ${token}`,
+                                    },
+                                    body: JSON.stringify({
+                                        name: editName,
+                                        email: editEmail,
+                                        country_of_origin: editCountryOfOrigin,
+                                        current_address: editCurrentAddress,
+                                        current_city: editCurrentCity,
+                                        current_country: editCurrentCountry,
+                                        phone_number: editPhoneNumber,
+                                    }),
+                                }
+                            );
 
-                        <div className="flex justify-end gap-3 pt-2">
-                            <Button
-                                type="button"
-                                variant="secondary"
-                                onClick={() => setShowEditProfile(false)}
-                            >
-                                Cancel
-                            </Button>
+                            const data = await response.json();
 
-                            <Button type="submit">
-                                Save changes
-                            </Button>
-                        </div>
-                    </form>
-                </Modal>
-            )}
+                            if (!response.ok) {
+                                throw new Error(
+                                    data.message || "Profile update failed"
+                                );
+                            }
+
+                            updateUser(data.user);
+
+                            setIsEditingProfile(false);
+                        } catch (error) {
+                            console.error(
+                                "Error updating profile:",
+                                error
+                            );
+                        }
+                    }}
+                >
+                    <div>
+                        <label
+                            htmlFor="profile-name"
+                            className="mb-1 block text-sm font-medium"
+                        >
+                            Name
+                        </label>
+
+                        <input
+                            id="profile-name"
+                            type="text"
+                            value={editName}
+                            onChange={(event) =>
+                                setEditName(event.target.value)
+                            }
+                            className="w-full rounded-control border border-border bg-white px-4 py-3 focus:border-primary focus:outline-none"
+                        />
+                    </div>
+
+                    <div>
+                        <label
+                            htmlFor="profile-email"
+                            className="mb-1 block text-sm font-medium"
+                        >
+                            Email
+                        </label>
+
+                        <input
+                            id="profile-email"
+                            type="email"
+                            value={editEmail}
+                            onChange={(event) =>
+                                setEditEmail(event.target.value)
+                            }
+                            className="w-full rounded-control border border-border bg-white px-4 py-3 focus:border-primary focus:outline-none"
+                        />
+                    </div>
+
+                    <div>
+                        <label
+                            htmlFor="country-origin"
+                            className="mb-1 block text-sm font-medium"
+                        >
+                            Country of origin
+                        </label>
+
+                        <input
+                            id="country-origin"
+                            type="text"
+                            value={editCountryOfOrigin}
+                            onChange={(event) =>
+                                setEditCountryOfOrigin(event.target.value)
+                            }
+                            className="w-full rounded-control border border-border bg-white px-4 py-3 focus:border-primary focus:outline-none"
+                        />
+                    </div>
+
+                    <div>
+                        <label
+                            htmlFor="current-address"
+                            className="mb-1 block text-sm font-medium"
+                        >
+                            Current address
+                        </label>
+
+                        <input
+                            id="current-address"
+                            type="text"
+                            value={editCurrentAddress}
+                            onChange={(event) =>
+                                setEditCurrentAddress(event.target.value)
+                            }
+                            className="w-full rounded-control border border-border bg-white px-4 py-3 focus:border-primary focus:outline-none"
+                        />
+                    </div>
+
+                    <div>
+                        <label
+                            htmlFor="current-city"
+                            className="mb-1 block text-sm font-medium"
+                        >
+                            Current city
+                        </label>
+
+                        <input
+                            id="current-city"
+                            type="text"
+                            value={editCurrentCity}
+                            onChange={(event) =>
+                                setEditCurrentCity(event.target.value)
+                            }
+                            className="w-full rounded-control border border-border bg-white px-4 py-3 focus:border-primary focus:outline-none"
+                        />
+                    </div>
+
+                    <div>
+                        <label
+                            htmlFor="current-country"
+                            className="mb-1 block text-sm font-medium"
+                        >
+                            Current country
+                        </label>
+
+                        <input
+                            id="current-country"
+                            type="text"
+                            value={editCurrentCountry}
+                            onChange={(event) =>
+                                setEditCurrentCountry(event.target.value)
+                            }
+                            className="w-full rounded-control border border-border bg-white px-4 py-3 focus:border-primary focus:outline-none"
+                        />
+                    </div>
+
+                    <div>
+                        <label
+                            htmlFor="phone-number"
+                            className="mb-1 block text-sm font-medium"
+                        >
+                            Phone number
+                        </label>
+
+                        <input
+                            id="phone-number"
+                            type="tel"
+                            value={editPhoneNumber}
+                            onChange={(event) =>
+                                setEditPhoneNumber(event.target.value)
+                            }
+                            className="w-full rounded-control border border-border bg-white px-4 py-3 focus:border-primary focus:outline-none"
+                        />
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-2">
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() =>
+                                setIsEditingProfile(false)
+                            }
+                        >
+                            Cancel
+                        </Button>
+
+                        <Button type="submit">
+                            Save changes
+                        </Button>
+                    </div>
+                </form>
+            </>
+        )}
+    </Modal>
+)}
         </div>
     );
 }

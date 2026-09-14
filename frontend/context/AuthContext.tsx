@@ -7,6 +7,12 @@ interface User {
     name: string;
     email: string;
     role: string;
+    country_of_origin?: string | null;
+    current_address?: string | null;
+    current_city?: string | null;
+    current_country?: string | null;
+    phone_number?: string | null;
+    created_at?: string;
 }
 
 interface AuthContextType {
@@ -14,12 +20,13 @@ interface AuthContextType {
     token: string | null;
     login: (token: string, user: User) => void;
     logout: () => void;
+    updateUser: (user: User) => void;
     isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider ({children}: {children: ReactNode}) {
+export function AuthProvider({ children }: { children: ReactNode }) {
     const [token, setToken] = useState<string | null>(null);
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -49,8 +56,22 @@ export function AuthProvider ({children}: {children: ReactNode}) {
         localStorage.removeItem("user");
     }
 
+    function updateUser(updatedUser: User) {
+        setUser(updatedUser);
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+    }
+
     return (
-        <AuthContext.Provider value={{ user, token, login, logout, isLoading }}>
+        <AuthContext.Provider
+            value={{
+                user,
+                token,
+                login,
+                logout,
+                updateUser,
+                isLoading,
+            }}
+        >
             {children}
         </AuthContext.Provider>
     );

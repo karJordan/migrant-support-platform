@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
 import Link from "next/link";
 import Modal from "@/components/Modal";
-import { Plus, BriefcaseBusiness, BookOpen, Users, Search } from "lucide-react";
+import { Plus, BriefcaseBusiness, BookOpen, Users, Search, UserRound } from "lucide-react";
 import ServiceForm from "@/components/ServiceForm";
 import JobsForm from "@/components/JobsForm";
 import ResourcesForm from "@/components/ResourcesForm";
@@ -333,17 +333,41 @@ export default function UserDashboardPage() {
                         Quick Access
                     </h2>
 
-                    <div className="flex justify-center gap-4 sm:gap-6">
+                    <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 sm:gap-4">
+                        <Link
+                            href="/profile"
+                            className="
+        hidden md:flex
+        group w-full flex-col items-center justify-center
+        rounded-card border border-border bg-white
+        px-2 py-4 text-center shadow-card
+        transition
+        hover:-translate-y-1 hover:shadow-card-hover
+        hover:border-primary/30
+    "
+                        >
+                            <div
+                                className="
+            mb-3 flex h-12 w-12 items-center justify-center
+            rounded-xl bg-blue-100 text-blue-600
+        "
+                            >
+                                <UserRound size={24} aria-hidden="true" />
+                            </div>
+
+                            <span className="text-sm font-medium text-text-primary">
+                                Profile
+                            </span>
+                        </Link>
                         <Link
                             href="/resources"
                             className="
-                group flex w-28 flex-col items-center justify-center
+                group flex w-full flex-col items-center justify-center
                 rounded-card border border-border bg-white
                 px-3 py-5 text-center shadow-card
                 transition
                 hover:-translate-y-1 hover:shadow-card-hover
                 hover:border-primary/30
-                sm:w-36
             "
                         >
                             <div
@@ -363,14 +387,13 @@ export default function UserDashboardPage() {
                         <Link
                             href="/jobs"
                             className="
-                group flex w-28 flex-col items-center justify-center
+                group flex w-full flex-col items-center justify-center
                 rounded-card border border-border bg-white
                 px-3 py-5 text-center shadow-card
                 transition
                 hover:-translate-y-1 hover:shadow-card-hover
                 hover:border-primary/30
-                sm:w-36
-            "
+                            "
                         >
                             <div
                                 className="
@@ -389,13 +412,12 @@ export default function UserDashboardPage() {
                         <Link
                             href="/community"
                             className="
-                group flex w-28 flex-col items-center justify-center
+                group flex w-full flex-col items-center justify-center
                 rounded-card border border-border bg-white
                 px-3 py-5 text-center shadow-card
                 transition
                 hover:-translate-y-1 hover:shadow-card-hover
                 hover:border-primary/30
-                sm:w-36
             "
                         >
                             <div
@@ -411,6 +433,7 @@ export default function UserDashboardPage() {
                                 Community
                             </span>
                         </Link>
+
                     </div>
                 </section>
 

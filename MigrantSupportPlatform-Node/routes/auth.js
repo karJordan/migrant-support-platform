@@ -28,7 +28,21 @@ router.post('/register', async (req, res) => {
         const user = result.rows[0];
         const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-        res.status(201).json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+        res.status(201).json({
+            token,
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                country_of_origin: user.country_of_origin,
+                current_address: user.current_address,
+                current_city: user.current_city,
+                current_country: user.current_country,
+                phone_number: user.phone_number,
+                created_at: user.created_at
+            }
+        });
     } catch (error) {
         console.error(error.message);
         res.status(500).json({ message: 'Server error' });
@@ -53,7 +67,21 @@ router.post('/login', async (req, res) => {
 
         const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-        res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
+        res.json({
+            token,
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                country_of_origin: user.country_of_origin,
+                current_address: user.current_address,
+                current_city: user.current_city,
+                current_country: user.current_country,
+                phone_number: user.phone_number,
+                created_at: user.created_at
+            }
+        });
     } catch (error) {
         console.error(error.message);
         res.status(500).json({ message: 'Server error' });
