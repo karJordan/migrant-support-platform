@@ -7,7 +7,7 @@ import ResourcesForm from "@/components/ResourcesForm";
 import { useAuth } from "@/context/AuthContext";
 import { Resource } from "@/types/resource";
 import FilterChipRow from "@/components/FilterChipRow";
-
+import SearchBar from "@/components/SearchBar";
 
 
 export default function ResourcePage() {
@@ -55,12 +55,13 @@ export default function ResourcePage() {
 
     return (
         <div className="w-full max-w-5xl mx-auto px-6 py-10">
-            <h1 className="text-4xl font-semibold">Find Resources</h1>
-
-            <p className="text-neutral mt-2">
+            <h1 className="text-2xl font-bold sm:text-3xl">
+                Resources
+            </h1>
+            <p className="hidden sm:block text-sm text-text-secondary mt-2 mb-6">
                 Browse resources for migrants in New Zealand.
             </p>
-
+            <SearchBar type="resource" placeholder="Search resources..." />
             <FilterChipRow
                 options={categories}
                 selectedOption={selectedCategory}
@@ -91,6 +92,7 @@ export default function ResourcePage() {
                             {filteredResources.map((resource) => (
                                 <div
                                     key={resource.id}
+                                    id={`card-resource-${resource.id}`}
                                     role="button"
                                     tabIndex={0}
                                     onClick={() => {

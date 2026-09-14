@@ -7,6 +7,7 @@ import ServiceForm from "@/components/ServiceForm";
 import { useAuth } from "@/context/AuthContext";
 import { Service } from "@/types/service";
 import FilterChipRow from "@/components/FilterChipRow";
+import SearchBar from "@/components/SearchBar";
 
 export default function ServicesPage() {
     const [services, setServices] = useState<Service[]>([]);
@@ -57,11 +58,10 @@ export default function ServicesPage() {
             <h1 className="text-2xl font-bold sm:text-3xl">
                 Services
             </h1>
-
-            <p className="hidden sm:block text-neutral mt-2">
+            <p className="hidden sm:block text-sm text-text-secondary mt-2 mb-6">
                 Find services and support available in your community.
             </p>
-
+            <SearchBar type="service" placeholder="Search services..." />
             <FilterChipRow
                 options={categories}
                 selectedOption={selectedCategory}
@@ -92,6 +92,7 @@ export default function ServicesPage() {
                             {filteredServices.map((service) => (
                                 <div
                                     key={service.id}
+                                    id={`card-service-${service.id}`}
                                     role="button"
                                     tabIndex={0}
                                     aria-label={`View details for ${service.name}`}

@@ -7,6 +7,7 @@ import JobsCard from "@/components/JobsCard";
 import { useAuth } from "@/context/AuthContext";
 import { Job } from "@/types/job";
 import FilterChipRow from "@/components/FilterChipRow";
+import SearchBar from "@/components/SearchBar";
 
 
 
@@ -58,10 +59,10 @@ export default function JobsPage() {
             <h1 className="text-2xl font-bold sm:text-3xl">
                 Find Jobs
             </h1>
-
-            <p className="hidden sm:block text-neutral mt-2">
+            <p className="hidden sm:block text-sm text-text-secondary mt-2 mb-6">
                 Browse job opportunities for migrants in New Zealand.
             </p>
+            <SearchBar type="job" placeholder="Search jobs..." />
             <FilterChipRow
                 options={employmentTypes}
                 selectedOption={selectedEmploymentType}
@@ -92,6 +93,7 @@ export default function JobsPage() {
                             {filteredJobs.map((job) => (
                                 <div
                                     key={job.id}
+                                    id={`card-job-${job.id}`}
                                     role="button"
                                     tabIndex={0}
                                     onClick={() => {

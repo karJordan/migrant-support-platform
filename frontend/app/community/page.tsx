@@ -10,6 +10,7 @@ import CommunityEventForm from "@/components/CommunityEventForm";
 import { useAuth } from "@/context/AuthContext";
 import { CommunityGroup } from "@/types/group";
 import { CommunityEvent } from "@/types/event";
+import SearchBar from "@/components/SearchBar";
 
 
 export default function CommunityPage() {
@@ -98,7 +99,8 @@ export default function CommunityPage() {
             <p className="hidden sm:block text-sm text-text-secondary mt-2 mb-6">
                 Browse community events and groups for migrants in New Zealand.
             </p>
-            <div>
+            <SearchBar type="community" placeholder="Search community events and groups..." />
+            <div className="mt-6">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <h2 className="text-lg font-semibold">Upcoming Events</h2>
 
@@ -130,6 +132,7 @@ export default function CommunityPage() {
                                 {sortedEvents.map((e) => (
                                     <div
                                         key={e.id}
+                                        id={`card-event-${e.id}`}
                                         role="button"
                                         tabIndex={0}
                                         aria-label={`View details for ${e.title}`}
@@ -183,6 +186,7 @@ export default function CommunityPage() {
                                 {group.map((g) => (
                                     <div
                                         key={g.id}
+                                        id={`card-event-${g.id}`}
                                         role="button"
                                         tabIndex={0}
                                         aria-label={`View details for ${g.name}`}
