@@ -4,7 +4,7 @@ const pool = require('../db');
 
 // GET
 router.get('/', async (req, res) => {
-    const { query } = req.query;
+    const { query, type } = req.query;
 
     if (!query || query.length < 2) {
         return res.status(400).json({ error: 'Search query must be at least 2 characters' });
@@ -16,127 +16,137 @@ router.get('/', async (req, res) => {
         const lowerQuery = query.toLowerCase();
 
         // Search in services
-        const services = await pool.query(`
-            SELECT
-                listing.id,
-                listing.name as title,
-                listing.description,
-                listing.category_id,
-                c.name AS category,
-                listing.location,
-                'service' as type,
-                '/services/' || listing.id as href
-            FROM services AS listing
-            LEFT JOIN categories AS c ON listing.category_id = c.id
-            WHERE listing.status = 'approved'
-AND (
-    listing.name ILIKE $1
-    OR listing.description ILIKE $1
-    OR c.name ILIKE $1
-    OR listing.location ILIKE $1
-)
-        `, [searchTerm]);
-        results.push(...services.rows);
+        if (!type || type === 'service') {
+            const services = await pool.query(`
+                SELECT
+                    listing.id,
+                    listing.name as title,
+                    listing.description,
+                    listing.category_id,
+                    c.name AS category,
+                    listing.location,
+                    'service' as type,
+                    '/services/' || listing.id as href
+                FROM services AS listing
+                LEFT JOIN categories AS c ON listing.category_id = c.id
+                WHERE listing.status = 'approved'
+                AND (
+                    listing.name ILIKE $1
+                    OR listing.description ILIKE $1
+                    OR c.name ILIKE $1
+                    OR listing.location ILIKE $1
+                )
+            `, [searchTerm]);
+            results.push(...services.rows);
+        }
 
         // Search in jobs
-        const jobs = await pool.query(`
-            SELECT
-                listing.id,
-                listing.title,
-                listing.description,
-                listing.company,
-                listing.category_id,
-                c.name AS category,
-                listing.location,
-                'job' as type,
-                '/jobs/' || listing.id as href
-            FROM jobs AS listing
-            LEFT JOIN categories AS c ON listing.category_id = c.id
-            WHERE listing.status = 'approved'
-AND (
-    listing.title ILIKE $1
-    OR listing.description ILIKE $1
-    OR listing.employment_type ILIKE $1
-    OR listing.location ILIKE $1
-    OR listing.company ILIKE $1
-    OR c.name ILIKE $1
-)
-        `, [searchTerm]);
-        results.push(...jobs.rows);
+        if (!type || type === 'job') {
+            const jobs = await pool.query(`
+                SELECT
+                    listing.id,
+                    listing.title,
+                    listing.description,
+                    listing.company,
+                    listing.category_id,
+                    c.name AS category,
+                    listing.location,
+                    'job' as type,
+                    '/jobs/' || listing.id as href
+                FROM jobs AS listing
+                LEFT JOIN categories AS c ON listing.category_id = c.id
+                WHERE listing.status = 'approved'
+                AND (
+                    listing.title ILIKE $1
+                    OR listing.description ILIKE $1
+                    OR listing.employment_type ILIKE $1
+                    OR listing.location ILIKE $1
+                    OR listing.company ILIKE $1
+                    OR c.name ILIKE $1
+                )
+            `, [searchTerm]);
+            results.push(...jobs.rows);
+        }
 
         // Search in resources
-        const resources = await pool.query(`
-            SELECT
-                listing.id,
-                listing.title,
-                listing.description,
-                listing.category_id,
-                c.name AS category,
-                NULL as location,
-                'resource' as type,
-                '/resources/' || listing.id as href
-            FROM resources AS listing
-            LEFT JOIN categories AS c ON listing.category_id = c.id
-            WHERE listing.status = 'approved'
-AND (
-    listing.title ILIKE $1
-    OR listing.description ILIKE $1
-    OR c.name ILIKE $1
-)
-        `, [searchTerm]);
-        results.push(...resources.rows);
+        if (!type || type === 'resource') {
+            const resources = await pool.query(`
+                SELECT
+                    listing.id,
+                    listing.title,
+                    listing.description,
+                    listing.category_id,
+                    c.name AS category,
+                    NULL as location,
+                    'resource' as type,
+                    '/resources/' || listing.id as href
+                FROM resources AS listing
+                LEFT JOIN categories AS c ON listing.category_id = c.id
+                WHERE listing.status = 'approved'
+                AND (
+                    listing.title ILIKE $1
+                    OR listing.description ILIKE $1
+                    OR c.name ILIKE $1
+                )
+            `, [searchTerm]);
+            results.push(...resources.rows);
+        }
 
         // Search in community events
-        const events = await pool.query(`
-            SELECT
-                listing.id,
-                listing.title,
-                listing.description,
-                listing.category_id,
-                c.name AS category,
-                listing.location,
-                'community_event' as type,
-                '/events/' || listing.id as href
-            FROM community_events AS listing
-            LEFT JOIN categories AS c ON listing.category_id = c.id
-           WHERE listing.status = 'approved'
-AND (
-    listing.title ILIKE $1
-    OR listing.description ILIKE $1
-    OR listing.location ILIKE $1
-    OR c.name ILIKE $1
-)
-        `, [searchTerm]);
-        results.push(...events.rows);
+        if (!type || type === 'community_event' || type === 'community') {
+            const events = await pool.query(`
+                SELECT
+                    listing.id,
+                    listing.title,
+                    listing.description,
+                    listing.category_id,
+                    c.name AS category,
+                    listing.location,
+                    'community_event' as type,
+                    '/events/' || listing.id as href
+                FROM community_events AS listing
+                LEFT JOIN categories AS c ON listing.category_id = c.id
+                WHERE listing.status = 'approved'
+                AND (
+                    listing.title ILIKE $1
+                    OR listing.description ILIKE $1
+                    OR listing.location ILIKE $1
+                    OR c.name ILIKE $1
+                )
+            `, [searchTerm]);
+            results.push(...events.rows);
+        }
 
         // Search in community groups
-        const groups = await pool.query(`
-            SELECT
-                listing.id,
-                listing.name as title,
-                listing.description,
-                listing.category_id,
-                c.name AS category,
-                NULL as location,
-                'community_group' as type,
-                '/groups/' || listing.id as href
-            FROM community_groups AS listing
-            LEFT JOIN categories AS c ON listing.category_id = c.id
-            WHERE listing.status = 'approved'
-AND (
-    listing.name ILIKE $1
-    OR listing.description ILIKE $1
-    OR c.name ILIKE $1
-)
-        `, [searchTerm]);
-        results.push(...groups.rows);
+        if (!type || type === 'community_group' || type === 'community') {
+            const groups = await pool.query(`
+                SELECT
+                    listing.id,
+                    listing.name as title,
+                    listing.description,
+                    listing.category_id,
+                    c.name AS category,
+                    NULL as location,
+                    'community_group' as type,
+                    '/groups/' || listing.id as href
+                FROM community_groups AS listing
+                LEFT JOIN categories AS c ON listing.category_id = c.id
+                WHERE listing.status = 'approved'
+                AND (
+                    listing.name ILIKE $1
+                    OR listing.description ILIKE $1
+                    OR c.name ILIKE $1
+                )
+            `, [searchTerm]);
+            results.push(...groups.rows);
+        }
 
         // ============================================
         // 2. SPECIAL CASES (Add extra results)
         // ============================================
 
         // Job cases
-        if (lowerQuery === 'job' || lowerQuery === 'jobs') {
+        if ((!type || type === 'job') && (lowerQuery === 'job' || lowerQuery === 'jobs')) {
             const allJobs = await pool.query(`
                 SELECT
                     listing.id,
@@ -158,7 +168,7 @@ AND (
         }
 
         // Service cases
-        if (lowerQuery === 'service' || lowerQuery === 'services') {
+        if ((!type || type === 'service') && (lowerQuery === 'service' || lowerQuery === 'services')) {
             const allServices = await pool.query(`
                 SELECT
                     listing.id,
@@ -179,7 +189,7 @@ AND (
         }
 
         // Resource cases
-        if (lowerQuery === 'resource' || lowerQuery === 'resources') {
+        if ((!type || type === 'resource') && (lowerQuery === 'resource' || lowerQuery === 'resources')) {
             const allResources = await pool.query(`
                 SELECT
                     listing.id,
@@ -200,7 +210,7 @@ AND (
         }
 
         // Event cases
-        if (lowerQuery === 'event' || lowerQuery === 'events') {
+        if ((!type || type === 'community_event' || type === 'community') && (lowerQuery === 'event' || lowerQuery === 'events')) {
             const allEvents = await pool.query(`
                 SELECT
                     listing.id,
@@ -221,7 +231,7 @@ AND (
         }
 
         //  Group cases
-        if (lowerQuery === 'group' || lowerQuery === 'groups') {
+        if ((!type || type === 'community_group' || type === 'community') && (lowerQuery === 'group' || lowerQuery === 'groups')) {
             const allGroups = await pool.query(`
                 SELECT
                     listing.id,
@@ -242,7 +252,7 @@ AND (
         }
 
         // Community cases (both events and groups)
-        if (lowerQuery === 'community') {
+        if ((!type || type === 'community') && lowerQuery === 'community') {
             const allEvents = await pool.query(`
                 SELECT
                     listing.id,
@@ -280,6 +290,10 @@ AND (
             results.push(...allGroups.rows);
         }
 
+        const uniqueResults = Array.from(
+            new Map(results.map(r => [`${r.type}-${r.id}`, r])).values()
+        );
+
         // sort by relevance: exact matches first
         const searchLower = query.toLowerCase();
         results.sort((a, b) => {
@@ -291,7 +305,7 @@ AND (
             return (typeOrder[a.type] || 4) - (typeOrder[b.type] || 4); // Then by type
         });
 
-        res.json(results);
+        res.json(uniqueResults);
 
     } catch (error) {
         console.error('Search Error:', error);

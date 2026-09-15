@@ -3,17 +3,17 @@
 import { Select } from "@/components/ui/Input";
 import CommunityGroupCard from "@/components/CommunityGroupCard";
 import CommunityEventCard from "@/components/CommunityEventCard";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Modal from "@/components/Modal";
 import CommunityGroupForm from "@/components/CommunityGroupForm";
 import CommunityEventForm from "@/components/CommunityEventForm";
 import { useAuth } from "@/context/AuthContext";
 import { CommunityGroup } from "@/types/group";
 import { CommunityEvent } from "@/types/event";
+import SearchBar from "@/components/SearchBar";
 
-
-export default function CommunityPage() {
-
+function CommunityContent() {
     const [event, setEvent] = useState<CommunityEvent[]>([]);
     const [group, setGroup] = useState<CommunityGroup[]>([]);
     const [eventsLoading, setEventsLoading] = useState(true);
@@ -37,7 +37,6 @@ export default function CommunityPage() {
         };
         const first = dateValue(a);
         const second = dateValue(b);
-        // Undated events stay last in either date order.
         if (Number.isNaN(first)) return Number.isNaN(second) ? a.id - b.id : 1;
         if (Number.isNaN(second)) return -1;
         return (eventSort === "latest" ? second - first : first - second) || a.id - b.id;
@@ -49,13 +48,9 @@ export default function CommunityPage() {
             try {
                 const res = await fetch("http://localhost:4000/api/community/events", {
                     method: "GET",
-                    headers: {
-                        "Content-Type": "application/json"
-                    }
+                    headers: { "Content-Type": "application/json" }
                 });
-
                 if (!res.ok) throw new Error("Failed to fetch events");
-
                 const data = await res.json();
                 setEvent(data);
             } catch {
@@ -70,13 +65,9 @@ export default function CommunityPage() {
             try {
                 const res = await fetch("http://localhost:4000/api/community/groups", {
                     method: "GET",
-                    headers: {
-                        "Content-Type": "application/json"
-                    }
+                    headers: { "Content-Type": "application/json" }
                 });
-
                 if (!res.ok) throw new Error("Failed to fetch groups");
-
                 const data = await res.json();
                 setGroup(data);
             } catch {
@@ -89,6 +80,20 @@ export default function CommunityPage() {
         fetchGroups();
     }, []);
 
+    const searchParams = useSearchParams();
+
+    useEffect(() => {
+        const highlight = searchParams.get("highlight");
+        if (highlight && (event.length > 0 || group.length > 0)) {
+            const element = document.getElementById(`card-${highlight}`);
+            if (element) {
+                element.scrollIntoView({ behavior: "smooth", block: "center" });
+                element.classList.add("ring-2", "ring-primary");
+                setTimeout(() => element.classList.remove("ring-2", "ring-primary"), 2000);
+            }
+        }
+    }, [searchParams, event, group]);
+
     return (
         <div className="w-full max-w-5xl mx-auto px-4 py-6 sm:px-6 sm:py-10">
             <h1 className="text-2xl font-bold sm:text-3xl">
@@ -98,10 +103,10 @@ export default function CommunityPage() {
             <p className="hidden sm:block text-sm text-text-secondary mt-2 mb-6">
                 Browse community events and groups for migrants in New Zealand.
             </p>
-            <div>
+            <SearchBar type="community" placeholder="Search community events and groups..." />
+            <div className="mt-6">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <h2 className="text-lg font-semibold">Upcoming Events</h2>
-
                 </div>
                 <div className="mt-4 mb-4 max-w-xs">
                     <label htmlFor="event-sort" className="mb-1 block text-sm font-medium">Sort events</label>
@@ -113,7 +118,6 @@ export default function CommunityPage() {
                 </div>
 
                 {eventsLoading && (
-
                     <p className="mt-8 text-neutral">Loading communities...</p>
                 )}
 
@@ -130,6 +134,7 @@ export default function CommunityPage() {
                                 {sortedEvents.map((e) => (
                                     <div
                                         key={e.id}
+                                        id={`card-community_event-${e.id}`}
                                         role="button"
                                         tabIndex={0}
                                         aria-label={`View details for ${e.title}`}
@@ -183,6 +188,7 @@ export default function CommunityPage() {
                                 {group.map((g) => (
                                     <div
                                         key={g.id}
+                                        id={`card-community_group-${g.id}`}
                                         role="button"
                                         tabIndex={0}
                                         aria-label={`View details for ${g.name}`}
@@ -227,41 +233,26 @@ export default function CommunityPage() {
                             onSaved={(updatedEvent) => {
                                 setEvent((currentEvents) =>
                                     currentEvents.map((event) =>
-                                        event.id === updatedEvent.id
-                                            ? updatedEvent
-                                            : event
+                                        event.id === updatedEvent.id ? updatedEvent : event
                                     )
                                 );
-
                                 setSelectedEvent(updatedEvent);
                                 setIsEditingEvent(false);
                             }}
                         />
                     ) : (
                         <>
-                            <h2 className="text-2xl font-semibold">
-                                {selectedEvent.title}
-                            </h2>
-
-                            <p className="text-primary mt-2">
-                                {selectedEvent.location}
-                            </p>
-
+                            <h2 className="text-2xl font-semibold">{selectedEvent.title}</h2>
+                            <p className="text-primary mt-2">{selectedEvent.location}</p>
                             <p className="mt-2">
-                                {new Date(
-                                    selectedEvent.event_date
-                                ).toLocaleDateString("en-GB", {
+                                {new Date(selectedEvent.event_date).toLocaleDateString("en-GB", {
                                     day: "numeric",
                                     month: "long",
                                     year: "numeric",
                                 })}{" "}
                                 at {selectedEvent.event_time}
                             </p>
-
-                            <p className="mt-4">
-                                {selectedEvent.description}
-                            </p>
-
+                            <p className="mt-4">{selectedEvent.description}</p>
                             {user?.role === "admin" && (
                                 <button
                                     onClick={() => setIsEditingEvent(true)}
@@ -288,30 +279,18 @@ export default function CommunityPage() {
                             onSaved={(updatedGroup) => {
                                 setGroup((currentGroups) =>
                                     currentGroups.map((group) =>
-                                        group.id === updatedGroup.id
-                                            ? updatedGroup
-                                            : group
+                                        group.id === updatedGroup.id ? updatedGroup : group
                                     )
                                 );
-
                                 setSelectedGroup(updatedGroup);
                                 setIsEditingGroup(false);
                             }}
                         />
                     ) : (
                         <>
-                            <h2 className="text-2xl font-semibold">
-                                {selectedGroup.name}
-                            </h2>
-
-                            <p className="text-primary mt-2">
-                                {selectedGroup.category}
-                            </p>
-
-                            <p className="mt-4">
-                                {selectedGroup.description}
-                            </p>
-
+                            <h2 className="text-2xl font-semibold">{selectedGroup.name}</h2>
+                            <p className="text-primary mt-2">{selectedGroup.category}</p>
+                            <p className="mt-4">{selectedGroup.description}</p>
                             {user?.role === "admin" && (
                                 <button
                                     onClick={() => setIsEditingGroup(true)}
@@ -325,5 +304,13 @@ export default function CommunityPage() {
                 </Modal>
             )}
         </div>
+    );
+}
+
+export default function CommunityPage() {
+    return (
+        <Suspense fallback={<div className="text-center py-12">Loading...</div>}>
+            <CommunityContent />
+        </Suspense>
     );
 }
