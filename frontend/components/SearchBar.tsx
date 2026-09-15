@@ -24,7 +24,7 @@ export default function SearchBar({ type, placeholder = "Search..." }: SearchBar
   const [results, setResults] = useState<SearchResult[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  //const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
