@@ -1,16 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import ResourcesCard from "@/components/ResourcesCard";
 import Modal from "@/components/Modal";
 import ResourcesForm from "@/components/ResourcesForm";
 import { useAuth } from "@/context/AuthContext";
 import { Resource } from "@/types/resource";
 import FilterChipRow from "@/components/FilterChipRow";
+import SearchBar from "@/components/SearchBar";
 
-
-
-export default function ResourcePage() {
+function ResourceContent() {
     const [resources, setResources] = useState<Resource[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -24,11 +24,7 @@ export default function ResourcePage() {
         async function fetchResources() {
             try {
                 const res = await fetch("http://localhost:4000/api/resources");
-
-                if (!res.ok) {
-                    throw new Error("Failed to fetch resources");
-                }
-
+                if (!res.ok) throw new Error("Failed to fetch resources");
                 const data = await res.json();
                 setResources(data);
             } catch {
@@ -37,7 +33,6 @@ export default function ResourcePage() {
                 setLoading(false);
             }
         }
-
         fetchResources();
     }, []);
 
@@ -49,19 +44,31 @@ export default function ResourcePage() {
     const filteredResources =
         selectedCategory === "All"
             ? resources
-            : resources.filter(
-                (resource) => resource.category === selectedCategory
-            );
+            : resources.filter((resource) => resource.category === selectedCategory);
+
+    const searchParams = useSearchParams();
+
+    useEffect(() => {
+        const highlight = searchParams.get("highlight");
+        if (highlight && filteredResources.length > 0) {
+            const element = document.getElementById(`card-${highlight}`);
+            if (element) {
+                element.scrollIntoView({ behavior: "smooth", block: "center" });
+                element.classList.add("ring-2", "ring-primary");
+                setTimeout(() => element.classList.remove("ring-2", "ring-primary"), 2000);
+            }
+        }
+    }, [searchParams, filteredResources]);
 
     return (
         <div className="w-full max-w-5xl mx-auto px-6 py-10">
-           <h1 className="text-2xl font-bold sm:text-3xl">
+            <h1 className="text-2xl font-bold sm:text-3xl">
                 Resources
             </h1>
-            <p className="hidden sm:block text-neutral mt-2">
+            <p className="hidden sm:block text-sm text-text-secondary mt-2 mb-6">
                 Browse resources for migrants in New Zealand.
             </p>
-
+            <SearchBar type="resource" placeholder="Search resources..." />
             <FilterChipRow
                 options={categories}
                 selectedOption={selectedCategory}
@@ -69,29 +76,19 @@ export default function ResourcePage() {
                 ariaLabel="Filter resources by category"
             />
 
-            {loading && (
-                <p className="mt-8 text-neutral">
-                    Loading resources...
-                </p>
-            )}
-
-            {error && (
-                <p className="mt-8">
-                    {error}
-                </p>
-            )}
+            {loading && <p className="mt-8 text-neutral">Loading resources...</p>}
+            {error && <p className="mt-8">{error}</p>}
 
             {!loading && !error && (
                 <>
                     {filteredResources.length === 0 ? (
-                        <p className="mt-8 text-neutral">
-                            No resources found.
-                        </p>
+                        <p className="mt-8 text-neutral">No resources found.</p>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                             {filteredResources.map((resource) => (
                                 <div
                                     key={resource.id}
+                                    id={`card-resource-${resource.id}`}
                                     role="button"
                                     tabIndex={0}
                                     onClick={() => {
@@ -136,30 +133,19 @@ export default function ResourcePage() {
                             onSaved={(updatedResource) => {
                                 setResources((currentResources) =>
                                     currentResources.map((resource) =>
-                                        resource.id === updatedResource.id
-                                            ? updatedResource
-                                            : resource
+                                        resource.id === updatedResource.id ? updatedResource : resource
                                     )
                                 );
-
                                 setSelectedResource(updatedResource);
                                 setIsEditing(false);
                             }}
                         />
                     ) : (
                         <>
-                            <h2 className="text-2xl font-semibold">
-                                {selectedResource.title}
-                            </h2>
-
-                            <p className="text-primary mt-2">
-                                {selectedResource.category}
-                            </p>
-
-                            <p className="mt-4">
-                                {selectedResource.description}
-                            </p>
-
+                            <h2 className="text-2xl font-semibold">{selectedResource.title}</h2>
+                            <p className="text-primary mt-2">{selectedResource.category}</p>
+                            <p className="mt-4">{selectedResource.description}</p>
+                            
                             <a
                                 href={selectedResource.link}
                                 target="_blank"
@@ -168,7 +154,7 @@ export default function ResourcePage() {
                             >
                                 Visit Resource
                             </a>
-
+                            
                             {user?.role === "admin" && (
                                 <button
                                     onClick={() => setIsEditing(true)}
@@ -182,5 +168,13 @@ export default function ResourcePage() {
                 </Modal>
             )}
         </div>
+    );
+}
+
+export default function ResourcePage() {
+    return (
+        <Suspense fallback={<div className="text-center py-12">Loading...</div>}>
+            <ResourceContent />
+        </Suspense>
     );
 }

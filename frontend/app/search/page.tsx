@@ -187,24 +187,19 @@ function SearchContent() {
                     <h2 className="text-2xl font-semibold">
                         {selectedResult.title}
                     </h2>
-
                     <Link
                         href={
                             selectedResult.type === "service"
-                                ? "/services"
+                                ? `/services?highlight=${selectedResult.type}-${selectedResult.id}`
                                 : selectedResult.type === "job"
-                                    ? "/jobs"
+                                    ? `/jobs?highlight=${selectedResult.type}-${selectedResult.id}`
                                     : selectedResult.type === "resource"
-                                        ? "/resources"
-                                        : "/community"
-                        }
-                        className="text-primary mt-2 capitalize inline-block hover:underline"
-                    >
-                        {selectedResult.type === "community_event"
-                            ? "Event"
-                            : selectedResult.type === "community_group"
-                                ? "Group"
-                                : selectedResult.type}
+                                        ? `/resources?highlight=${selectedResult.type}-${selectedResult.id}`
+                                        : `/community?highlight=${selectedResult.type}-${selectedResult.id}`
+                            }
+                        className="text-primary mt-2 inline-block hover:underline"
+                        >
+                         View full listing →
                     </Link>
 
                     {selectedResult.company && (
