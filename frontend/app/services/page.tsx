@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import ServiceCard from "@/components/ServicesCard";
 import Modal from "@/components/Modal";
 import ServiceForm from "@/components/ServiceForm";
@@ -9,7 +10,7 @@ import { Service } from "@/types/service";
 import FilterChipRow from "@/components/FilterChipRow";
 import SearchBar from "@/components/SearchBar";
 
-export default function ServicesPage() {
+function ServicesContent() {
     const [services, setServices] = useState<Service[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -23,11 +24,7 @@ export default function ServicesPage() {
         async function fetchServices() {
             try {
                 const response = await fetch("http://localhost:4000/api/services");
-
-                if (!response.ok) {
-                    throw new Error("Failed to fetch services");
-                }
-
+                if (!response.ok) throw new Error("Failed to fetch services");
                 const data = await response.json();
                 setServices(data);
             } catch (error) {
@@ -37,7 +34,6 @@ export default function ServicesPage() {
                 setLoading(false);
             }
         }
-
         fetchServices();
     }, []);
 
@@ -49,9 +45,21 @@ export default function ServicesPage() {
     const filteredServices =
         selectedCategory === "All"
             ? services
-            : services.filter(
-                (service) => service.category === selectedCategory
-            );
+            : services.filter((service) => service.category === selectedCategory);
+
+    const searchParams = useSearchParams();
+
+    useEffect(() => {
+        const highlight = searchParams.get("highlight");
+        if (highlight && filteredServices.length > 0) {
+            const element = document.getElementById(`card-${highlight}`);
+            if (element) {
+                element.scrollIntoView({ behavior: "smooth", block: "center" });
+                element.classList.add("ring-2", "ring-primary");
+                setTimeout(() => element.classList.remove("ring-2", "ring-primary"), 2000);
+            }
+        }
+    }, [searchParams, filteredServices]);
 
     return (
         <div className="w-full max-w-5xl mx-auto px-6 py-10">
@@ -69,24 +77,13 @@ export default function ServicesPage() {
                 ariaLabel="Filter services by category"
             />
 
-            {loading && (
-                <p className="mt-8 text-neutral">
-                    Loading services...
-                </p>
-            )}
-
-            {error && (
-                <p className="mt-8">
-                    {error}
-                </p>
-            )}
+            {loading && <p className="mt-8 text-neutral">Loading services...</p>}
+            {error && <p className="mt-8">{error}</p>}
 
             {!loading && !error && (
                 <>
                     {filteredServices.length === 0 ? (
-                        <p className="mt-8 text-neutral">
-                            No services found in this category.
-                        </p>
+                        <p className="mt-8 text-neutral">No services found in this category.</p>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
                             {filteredServices.map((service) => (
@@ -101,10 +98,7 @@ export default function ServicesPage() {
                                         setIsEditing(false);
                                     }}
                                     onKeyDown={(keyEvent) => {
-                                        if (
-                                            keyEvent.key === "Enter" ||
-                                            keyEvent.key === " "
-                                        ) {
+                                        if (keyEvent.key === "Enter" || keyEvent.key === " ") {
                                             keyEvent.preventDefault();
                                             setSelectedService(service);
                                             setIsEditing(false);
@@ -140,40 +134,22 @@ export default function ServicesPage() {
                             onSaved={(updatedService) => {
                                 setServices((currentServices) =>
                                     currentServices.map((service) =>
-                                        service.id === updatedService.id
-                                            ? updatedService
-                                            : service
+                                        service.id === updatedService.id ? updatedService : service
                                     )
                                 );
-
                                 setSelectedService(updatedService);
                                 setIsEditing(false);
                             }}
                         />
                     ) : (
                         <>
-                            <h2 className="text-2xl font-semibold">
-                                {selectedService.name}
-                            </h2>
-
-                            <p className="text-primary mt-2">
-                                {selectedService.category}
-                            </p>
-
-                            <p className="mt-4">
-                                {selectedService.description}
-                            </p>
-
-                            <p className="mt-4">
-                                Location: {selectedService.location}
-                            </p>
-
+                            <h2 className="text-2xl font-semibold">{selectedService.name}</h2>
+                            <p className="text-primary mt-2">{selectedService.category}</p>
+                            <p className="mt-4">{selectedService.description}</p>
+                            <p className="mt-4">Location: {selectedService.location}</p>
                             {selectedService.phone && (
-                                <p className="mt-2">
-                                    Phone: {selectedService.phone}
-                                </p>
+                                <p className="mt-2">Phone: {selectedService.phone}</p>
                             )}
-
                             {selectedService.website && (
                                 <p className="mt-2">
                                     Website:{" "}
@@ -187,7 +163,6 @@ export default function ServicesPage() {
                                     </a>
                                 </p>
                             )}
-
                             {user?.role === "admin" && (
                                 <button
                                     onClick={() => setIsEditing(true)}
@@ -201,5 +176,13 @@ export default function ServicesPage() {
                 </Modal>
             )}
         </div>
+    );
+}
+
+export default function ServicesPage() {
+    return (
+        <Suspense fallback={<div className="text-center py-12">Loading...</div>}>
+            <ServicesContent />
+        </Suspense>
     );
 }

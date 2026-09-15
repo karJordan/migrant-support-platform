@@ -39,7 +39,7 @@ router.get('/', async (req, res) => {
             `, [searchTerm]);
             results.push(...services.rows);
         }
-        
+
         // Search in jobs
         if (!type || type === 'job') {
             const jobs = await pool.query(`
@@ -290,6 +290,10 @@ router.get('/', async (req, res) => {
             results.push(...allGroups.rows);
         }
 
+        const uniqueResults = Array.from(
+            new Map(results.map(r => [`${r.type}-${r.id}`, r])).values()
+        );
+
         // sort by relevance: exact matches first
         const searchLower = query.toLowerCase();
         results.sort((a, b) => {
@@ -301,7 +305,7 @@ router.get('/', async (req, res) => {
             return (typeOrder[a.type] || 4) - (typeOrder[b.type] || 4); // Then by type
         });
 
-        res.json(results);
+        res.json(uniqueResults);
 
     } catch (error) {
         console.error('Search Error:', error);
