@@ -100,7 +100,7 @@ function CommunityContent() {
                 Community
             </h1>
 
-            <p className="hidden sm:block text-sm text-text-secondary mt-2 mb-6">
+            <p className="hidden sm:block text-neutral mt-2">
                 Browse community events and groups for migrants in New Zealand.
             </p>
             <SearchBar type="community" placeholder="Search community events and groups..." />

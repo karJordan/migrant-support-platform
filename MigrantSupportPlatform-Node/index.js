@@ -14,6 +14,8 @@ const categoriesRoutes = require('./routes/categories');
 const authenticateToken = require('./middleware/authMiddleware');
 const app = express();
 const PORT = process.env.PORT || 4000;
+const usersRoutes = require("./routes/users");
+
 
 app.use(cors({origin: 'http://localhost:3000'}));
 app.use(express.json());
@@ -26,6 +28,7 @@ app.use("/api/resources", resourcesRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/saved", savedRoutes);
 app.use("/api/categories", categoriesRoutes);
+app.use("/api/users", usersRoutes);
 
 app.get('/api/test', (req, res) => {
     res.json({ message: 'Node API is working!' });
