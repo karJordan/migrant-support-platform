@@ -43,28 +43,27 @@ test.describe('Register Flow', () => {
         }
       });
 
-    test('should successfully register a new user', async ({ page }) => {
-        const uniqueEmail = `testuser${Date.now()}@test.com`; // Unique email for each test run
-
+      test('should successfully register a new user', async ({ page }) => {
+        const uniqueEmail = `testuser${Date.now()}@test.com`;
+    
         await page.goto('/signup');
-
+    
         await page.fill('input[name="name"]', 'Test User');
         await page.fill('input[name="email"]', uniqueEmail);
         await page.fill('input[name="password"]', 'password123');
+    
         await test.step('Registration API accepts the new account', async () => {
             const responsePromise = page.waitForResponse(
                 response => new URL(response.url()).pathname === '/api/auth/register'
                     && response.request().method() === 'POST',
                 { timeout: 20_000 },
             );
-            const [response] = await Promise.all([
-                responsePromise,
-                page.click('button[type="submit"]'),
-            ]);
+            await page.click('button[type="submit"]');
+            const response = await responsePromise;
             // Do not attach the successful response body: it contains an auth token.
             expect(response.status(), 'Registration API should create the account').toBe(201);
         });
-
+    
         await test.step('Successful registration opens the login page', async () => {
             await expect(page).toHaveURL('/login', { timeout: 10000 });
         });
