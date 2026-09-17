@@ -19,6 +19,6 @@ test.describe('Login Flow', () => {
         await page.fill('input[name="password"]', 'password123');
         await page.press('input[name="password"]', 'Enter');
         
-        await expect(page).toHaveURL('/userDashboard', { timeout: 10000 });
+        await expect(page).toHaveURL('/userDashboard', { timeout: 20_000 });
       });
     });

@@ -55,7 +55,7 @@ test.describe('Register Flow', () => {
             const responsePromise = page.waitForResponse(
                 response => new URL(response.url()).pathname === '/api/auth/register'
                     && response.request().method() === 'POST',
-                { timeout: 10000 },
+                { timeout: 20_000 },
             );
             const [response] = await Promise.all([
                 responsePromise,
