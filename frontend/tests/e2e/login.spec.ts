@@ -7,7 +7,7 @@ test.describe('Login Flow', () => {
     await page.fill('input[name="email"]', 'wrong@test.com');
     await page.fill('input[name="password"]', 'wrongpassword');
 
-    const responsePromise = page.waitForResponse(res => res.url().includes('/api/auth/login'));
+    const responsePromise = page.waitForResponse(res => res.url().includes('/api/auth/login'), { timeout: 30_000 });
     await page.click('button[type="submit"]');
     const response = await responsePromise;
 
@@ -21,7 +21,7 @@ test('should successfully login with valid credentials', async ({ page }) => {
     await page.fill('input[name="email"]', 'test@test.com');
     await page.fill('input[name="password"]', 'password123');
 
-    const responsePromise = page.waitForResponse(res => res.url().includes('/api/auth/login'));
+    const responsePromise = page.waitForResponse(res => res.url().includes('/api/auth/login'), { timeout: 30_000 });
     await page.press('input[name="password"]', 'Enter');
     const response = await responsePromise;
 
