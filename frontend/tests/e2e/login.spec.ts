@@ -22,7 +22,7 @@ test('should successfully login with valid credentials', async ({ page }) => {
     await page.fill('input[name="password"]', 'password123');
 
     const responsePromise = page.waitForResponse(res => res.url().includes('/api/auth/login'), { timeout: 30_000 });
-    await page.press('input[name="password"]', 'Enter');
+    await page.click('button[type="submit"]');
     const response = await responsePromise;
 
     expect(response.status()).toBe(200);
