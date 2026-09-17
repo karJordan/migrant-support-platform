@@ -11,14 +11,34 @@ test.describe('Login Flow', () => {
         await expect(page.locator('text=Invalid username or password')).toBeVisible();
     });
 
+    test('should show error for invalid credentials', async ({ page }) => {
+      await page.goto('/login');
+  
+      await page.fill('input[name="email"]', 'wrong@test.com');
+      await page.fill('input[name="password"]', 'wrongpassword');
+  
+      const [response] = await Promise.all([
+          page.waitForResponse(res => res.url().includes('/api/auth/login')),
+          page.click('button[type="submit"]'),
+      ]);
+  
+      expect(response.status()).toBe(401);
+      await expect(page.locator('text=Invalid username or password')).toBeVisible({ timeout: 10_000 });
+  });
+
     test('should successfully login with valid credentials', async ({ page }) => {
-        await page.goto('/login');
-        
-        // Fill valid credentials (use test user created by seed)
-        await page.fill('input[name="email"]', 'test@test.com');
-        await page.fill('input[name="password"]', 'password123');
-        await page.press('input[name="password"]', 'Enter');
-        
-        await expect(page).toHaveURL('/userDashboard', { timeout: 20_000 });
-      });
-    });
+      await page.goto('/login');
+
+      await page.fill('input[name="email"]', 'test@test.com');
+      await page.fill('input[name="password"]', 'password123');
+
+      const [response] = await Promise.all([
+          page.waitForResponse(res => res.url().includes('/api/auth/login')),
+          page.press('input[name="password"]', 'Enter'),
+      ]);
+
+      expect(response.status()).toBe(200);
+      await expect(page).toHaveURL('/userDashboard', { timeout: 20_000 });
+  });
+  
+});
