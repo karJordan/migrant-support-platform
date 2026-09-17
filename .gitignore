@@ -372,3 +372,5 @@ MigrantSupportPlatform-Node/.env
 # next.js
 /.next/
 /out/
+playwright-report/
+test-results/

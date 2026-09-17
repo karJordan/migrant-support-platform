@@ -6,6 +6,10 @@ export default defineConfig({
     forbidOnly: !!process.env.CI, // Fail build if test.only is left in code on CI
     retries: process.env.CI ? 2 : 0, // Retry failed tests on CI environment
     workers: process.env.CI ? 1 : undefined,
+
+    timeout: 60_000,
+    expect: {timeout: 15_000},
+
     reporter: [
         ['html'],
         ['list'],
@@ -14,19 +18,16 @@ export default defineConfig({
         baseURL: 'http://localhost:3000', // Base URL for all tests
         trace: 'on-first-retry', // Collect trace on first retry
         screenshot: 'only-on-failure', // Capture screenshot only on test failure
+        actionTimeout: 15_000,
+        navigationTimeout: 30_000,
     },
 
     projects: [
         { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
         { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-        ...(process.platform === 'darwin' ? [] : [
         { name: 'webkit', use: { ...devices['Desktop Safari'] } },
-        ]),
-        // ------- skip mobile tests until we have a mobile-friendly UI ----------
-       // { name: 'mobile-chrome', use: { ...devices['Pixel 5'] } },
-       // ...(process.platform === 'darwin' ? [] : [
-       // { name: 'mobile-safari', use: { ...devices['iPhone 12'] } },
-       // ]),
+        { name: 'mobile-chrome', use: { ...devices['Pixel 5'] } },
+        { name: 'mobile-safari', use: { ...devices['iPhone 12'] } },
     ],
 
     webServer: process.env.CI? undefined :{
