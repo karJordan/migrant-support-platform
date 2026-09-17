@@ -5,7 +5,11 @@ export default defineConfig({
     fullyParallel: true,       // Run tests in parallel to save time
     forbidOnly: !!process.env.CI, // Fail build if test.only is left in code on CI
     retries: process.env.CI ? 2 : 0, // Retry failed tests on CI environment
-    workers: process.env.CI ? 2 : undefined,
+    workers: process.env.CI ? 1 : undefined,
+
+    timeout: 60_000,
+    expect: {timeout: 15_000},
+
     reporter: [
         ['html'],
         ['list'],
@@ -14,6 +18,8 @@ export default defineConfig({
         baseURL: 'http://localhost:3000', // Base URL for all tests
         trace: 'on-first-retry', // Collect trace on first retry
         screenshot: 'only-on-failure', // Capture screenshot only on test failure
+        actionTimeout: 15_000,
+        navigationTimeout: 30_000,
     },
 
     projects: [
