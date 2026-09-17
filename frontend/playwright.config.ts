@@ -22,11 +22,10 @@ export default defineConfig({
         ...(process.platform === 'darwin' ? [] : [
         { name: 'webkit', use: { ...devices['Desktop Safari'] } },
         ]),
-        // ------- skip mobile tests until we have a mobile-friendly UI ----------
-       // { name: 'mobile-chrome', use: { ...devices['Pixel 5'] } },
-       // ...(process.platform === 'darwin' ? [] : [
-       // { name: 'mobile-safari', use: { ...devices['iPhone 12'] } },
-       // ]),
+        { name: 'mobile-chrome', use: { ...devices['Pixel 5'] } },
+        ...(process.platform === 'darwin' ? [] : [
+        { name: 'mobile-safari', use: { ...devices['iPhone 12'] } },
+        ]),
     ],
 
     webServer: process.env.CI? undefined :{
