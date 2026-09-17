@@ -5,7 +5,7 @@ export default defineConfig({
     fullyParallel: true,       // Run tests in parallel to save time
     forbidOnly: !!process.env.CI, // Fail build if test.only is left in code on CI
     retries: process.env.CI ? 2 : 0, // Retry failed tests on CI environment
-    workers: process.env.CI ? 1 : undefined,
+    workers: process.env.CI ? 2 : undefined,
     reporter: [
         ['html'],
         ['list'],
@@ -19,13 +19,9 @@ export default defineConfig({
     projects: [
         { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
         { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-        ...(process.platform === 'darwin' ? [] : [
         { name: 'webkit', use: { ...devices['Desktop Safari'] } },
-        ]),
         { name: 'mobile-chrome', use: { ...devices['Pixel 5'] } },
-        ...(process.platform === 'darwin' ? [] : [
         { name: 'mobile-safari', use: { ...devices['iPhone 12'] } },
-        ]),
     ],
 
     webServer: process.env.CI? undefined :{

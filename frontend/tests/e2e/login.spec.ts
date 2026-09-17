@@ -17,7 +17,7 @@ test.describe('Login Flow', () => {
         // Fill valid credentials (use test user created by seed)
         await page.fill('input[name="email"]', 'test@test.com');
         await page.fill('input[name="password"]', 'password123');
-        await page.click('button[type="submit"]');
+        await page.press('input[name="password"]', 'Enter');
         
         await expect(page).toHaveURL('/userDashboard', { timeout: 10000 });
       });
