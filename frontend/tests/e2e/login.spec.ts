@@ -2,16 +2,6 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Login Flow', () => {
     test('should show error for invalid credentials', async ({ page }) => {
-        await page.goto('/login');
-
-        await page.fill('input[name="email"]', 'wrong@test.com');
-        await page.fill('input[name="password"]', 'wrongpassword');
-        await page.click('button[type="submit"]');
-
-        await expect(page.locator('text=Invalid username or password')).toBeVisible();
-    });
-
-    test('should show error for invalid credentials', async ({ page }) => {
       await page.goto('/login');
   
       await page.fill('input[name="email"]', 'wrong@test.com');
@@ -40,5 +30,5 @@ test.describe('Login Flow', () => {
       expect(response.status()).toBe(200);
       await expect(page).toHaveURL('/userDashboard', { timeout: 20_000 });
   });
-  
+
 });
