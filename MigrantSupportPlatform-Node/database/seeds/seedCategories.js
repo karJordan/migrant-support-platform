@@ -22,6 +22,9 @@ async function seedCategories() {
             { name: 'Accommodation', applies_to: ['resource', 'service'] },
             { name: 'Employment', applies_to: ['resource', 'service'] },
             { name: 'Volunteering', applies_to: ['resource', 'service'] },
+            { name: 'Language', applies_to: ['resource', 'service'] },
+            { name: 'Food', applies_to: ['resource', 'service'] },
+            { name: 'Grocery', applies_to: ['resource', 'service', 'job'] },
             { name: 'Other', applies_to: ['job', 'service', 'community', 'resource'] }
         ];
 
