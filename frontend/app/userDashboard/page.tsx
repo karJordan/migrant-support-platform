@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
 import Link from "next/link";
 import Modal from "@/components/Modal";
-import { Plus, BriefcaseBusiness, BookOpen, Users, Search, UserRound } from "lucide-react";
+import { Bell, Plus, BriefcaseBusiness, BookOpen, Users, Search, UserRound } from "lucide-react";
 import ServiceForm from "@/components/ServiceForm";
 import JobsForm from "@/components/JobsForm";
 import ResourcesForm from "@/components/ResourcesForm";
@@ -169,14 +169,31 @@ export default function UserDashboardPage() {
             {/*Full width container*/}
             <section className="w-full bg-[#EEF4FF]">
                 <div className="mx-auto max-w-4xl px-6 py-8">
-                    <div className="mb-5">
-                        <p className="text-lg text-text-secondary mb-1">
-                            Hello 👋
-                        </p>
+                    <div className="mb-5 flex items-start justify-between gap-4">
+                        <div>
+                            <p className="mb-1 text-lg text-text-secondary">
+                                Hello 👋
+                            </p>
 
-                        <h1 className="text-2xl font-semibold text-text-primary">
-                            {user.name}
-                        </h1>
+                            <h1 className="text-2xl font-semibold text-text-primary">
+                                {user.name}
+                            </h1>
+                        </div>
+
+                        <button
+                            type="button"
+                            disabled
+                            aria-label="Notifications coming soon"
+                            title="Notifications coming soon"
+                            className="
+            flex h-11 w-11 shrink-0 items-center justify-center
+            rounded-full bg-white text-text-secondary
+            shadow-card
+            disabled:cursor-not-allowed disabled:opacity-70
+        "
+                        >
+                            <Bell size={22} aria-hidden="true" />
+                        </button>
                     </div>
                     {/* Search */}
                     <form
@@ -493,7 +510,7 @@ export default function UserDashboardPage() {
                 </section>
             </div>
 
-           
+
             {showCreatePost && (
                 <Modal onClose={closeCreatePost}>
                     {createPostType ? (
