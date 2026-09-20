@@ -74,6 +74,19 @@ jobs:
           PGDATABASE: testdb
           PGPORT: 5432
 
+      - name: Seed database
+        run: |
+          npm run seed
+          npm run seed:users
+        working-directory: ./MigrantSupportPlatform-Node
+        env:
+          DATABASE_URL: postgres://testuser:testpassword@localhost:5432/testdb
+          PGHOST: localhost
+          PGUSER: testuser
+          PGPASSWORD: testpassword
+          PGDATABASE: testdb
+          PGPORT: 5432
+
       - name: Debug - Check tables
         run: |
           PGPASSWORD=testpassword psql -h localhost -U testuser -d testdb -c "\dt"
