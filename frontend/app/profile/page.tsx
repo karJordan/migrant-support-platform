@@ -13,7 +13,35 @@ import Button from "@/components/ui/Button";
 import Feedback from "@/components/ui/Feedback";
 import Modal from "@/components/Modal";
 
-type SavedSummary = { userId: string; count?: number; error?: string };
+type ProfileSummary = {
+    userId: string;
+    saved: number;
+    applications: number;
+    groups: number;
+    error?: string;
+};
+
+type JobApplication = {
+    application_id: number;
+    application_status: string;
+    applied_at: string;
+    job_id: number;
+    title: string;
+    company: string;
+    location?: string | null;
+    employment_type?: string | null;
+};
+
+type JoinedGroup = {
+    membership_id: number;
+    joined_at: string;
+    group_id: number;
+    name: string;
+    description?: string | null;
+    category?: string | null;
+};
+
+type SummaryModal = "applications" | "groups" | null;
 
 export default function ProfilePage() {
     const {
@@ -25,8 +53,13 @@ export default function ProfilePage() {
     } = useAuth();
 
     const router = useRouter();
-    const [summary, setSummary] = useState<SavedSummary | null>(null);
+    const [summary, setSummary] = useState<ProfileSummary | null>(null);
     const [retry, setRetry] = useState(0);
+    const [summaryModal, setSummaryModal] = useState<SummaryModal>(null);
+    const [applications, setApplications] = useState<JobApplication[]>([]);
+    const [joinedGroups, setJoinedGroups] = useState<JoinedGroup[]>([]);
+    const [summaryDetailsLoading, setSummaryDetailsLoading] = useState(false);
+    const [summaryDetailsError, setSummaryDetailsError] = useState("");
 
     const [showEditProfile, setShowEditProfile] = useState(false);
     const [editName, setEditName] = useState("");
@@ -55,26 +88,134 @@ export default function ProfilePage() {
 
 
     useEffect(() => {
-        if (!userId) return;
+        if (!userId || !token) {
+            return;
+        }
+
+        const currentUserId = userId;
         const controller = new AbortController();
-        async function loadSavedCount() {
+
+        async function loadProfileSummary() {
             try {
-                const response = await fetch(`http://localhost:4000/api/saved/${encodeURIComponent(userId!)}`, {
-                    signal: controller.signal,
-                });
-                if (!response.ok) throw new Error("Saved listings request failed");
-                const items: unknown = await response.json();
-                if (!Array.isArray(items)) throw new Error("Unexpected saved listings response");
-                if (!controller.signal.aborted) setSummary({ userId: userId!, count: items.length });
+                const response = await fetch(
+                    "http://localhost:4000/api/users/me/summary",
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                        signal: controller.signal,
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error("Profile summary request failed");
+                }
+
+                const data: {
+                    saved: number;
+                    applications: number;
+                    groups: number;
+                } = await response.json();
+
+                if (!controller.signal.aborted) {
+                    setSummary({
+                        userId: currentUserId,
+                        saved: Number(data.saved),
+                        applications: Number(data.applications),
+                        groups: Number(data.groups),
+                    });
+                }
             } catch {
                 if (!controller.signal.aborted) {
-                    setSummary({ userId: userId!, error: "We couldn’t load your saved listings. Please try again." });
+                    setSummary({
+                        userId: currentUserId,
+                        saved: 0,
+                        applications: 0,
+                        groups: 0,
+                        error: "We couldn’t load your profile summary. Please try again.",
+                    });
                 }
             }
         }
-        void loadSavedCount();
+
+        void loadProfileSummary();
+
         return () => controller.abort();
-    }, [userId, retry]);
+    }, [userId, token, retry]);
+
+    async function openApplicationsModal() {
+        if (!token) return;
+
+        setSummaryModal("applications");
+        setSummaryDetailsLoading(true);
+        setSummaryDetailsError("");
+
+        try {
+            const response = await fetch(
+                "http://localhost:4000/api/jobs/applications/me",
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error("Applications request failed");
+            }
+
+            const data: unknown = await response.json();
+
+            if (!Array.isArray(data)) {
+                throw new Error("Unexpected applications response");
+            }
+
+            setApplications(data as JobApplication[]);
+        } catch {
+            setSummaryDetailsError(
+                "We couldn’t load your applications. Please try again."
+            );
+        } finally {
+            setSummaryDetailsLoading(false);
+        }
+    }
+
+    async function openGroupsModal() {
+        if (!token) return;
+
+        setSummaryModal("groups");
+        setSummaryDetailsLoading(true);
+        setSummaryDetailsError("");
+
+        try {
+            const response = await fetch(
+                "http://localhost:4000/api/community/groups/joined",
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error("Joined groups request failed");
+            }
+
+            const data: unknown = await response.json();
+
+            if (!Array.isArray(data)) {
+                throw new Error("Unexpected joined groups response");
+            }
+
+            setJoinedGroups(data as JoinedGroup[]);
+        } catch {
+            setSummaryDetailsError(
+                "We couldn’t load your joined groups. Please try again."
+            );
+        } finally {
+            setSummaryDetailsLoading(false);
+        }
+    }
 
     if (isLoading) {
         return <div className="mx-auto max-w-xl px-4 py-10"><Feedback variant="loading">Loading your profile...</Feedback></div>;
@@ -144,14 +285,74 @@ export default function ProfilePage() {
                         })}`
                         : ""}
                 </p>
-                <Link href="/saved" className="mt-5 inline-flex flex-col items-center rounded-control px-6 py-2 hover:bg-white/60">
-                    <span className="text-2xl font-bold text-primary">{currentSummary?.count ?? "—"}</span>
-                    <span className="text-sm text-text-secondary">Saved</span>
-                </Link>
+                <div className="mx-auto mt-5 grid max-w-md grid-cols-3">
+                    <Link
+                        href="/saved"
+                        className="
+            flex flex-col items-center
+            rounded-control px-3 py-2
+            hover:bg-white/60
+        "
+                    >
+                        <span className="text-2xl font-bold text-primary">
+                            {currentSummary && !currentSummary.error
+                                ? currentSummary.saved
+                                : "—"}
+                        </span>
+
+                        <span className="text-sm text-text-secondary">
+                            Saved
+                        </span>
+                    </Link>
+
+                    <button
+                        type="button"
+                        onClick={() => void openApplicationsModal()}
+                        className="
+            flex flex-col items-center
+            rounded-control px-3 py-2
+            hover:bg-white/60
+        "
+                    >
+                        <span className="text-2xl font-bold text-primary">
+                            {currentSummary && !currentSummary.error
+                                ? currentSummary.applications
+                                : "—"}
+                        </span>
+
+                        <span className="text-sm text-text-secondary">
+                            Applications
+                        </span>
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => void openGroupsModal()}
+                        className="
+            flex flex-col items-center
+            rounded-control px-3 py-2
+            hover:bg-white/60
+        "
+                    >
+                        <span className="text-2xl font-bold text-primary">
+                            {currentSummary && !currentSummary.error
+                                ? currentSummary.groups
+                                : "—"}
+                        </span>
+
+                        <span className="text-sm text-text-secondary">
+                            Groups
+                        </span>
+                    </button>
+                </div>
             </section>
 
             <div className="space-y-5 px-4 pt-6 sm:px-6">
-                {!currentSummary && <Feedback variant="loading">Loading your saved-listing count...</Feedback>}
+                {!currentSummary && (
+                    <Feedback variant="loading">
+                        Loading your profile summary...
+                    </Feedback>
+                )}
                 {currentSummary?.error && (
                     <div className="space-y-2">
                         <Feedback variant="error">{currentSummary.error}</Feedback>
@@ -162,301 +363,413 @@ export default function ProfilePage() {
                     <LogOut aria-hidden="true" size={18} />Sign Out
                 </Button>
             </div>
-           {showEditProfile && (
-    <Modal
-        onClose={() => {
-            setShowEditProfile(false);
-            setIsEditingProfile(false);
-        }}
-    >
-        {!isEditingProfile ? (
-            <>
-                <h2 className="text-xl font-semibold text-text-primary">
-                    Profile details
-                </h2>
-
-                <div className="mt-6 space-y-4">
-                    <div>
-                        <p className="text-sm text-text-secondary">
-                            Name
-                        </p>
-                        <p className="font-medium text-text-primary">
-                            {user.name}
-                        </p>
-                    </div>
-
-                    <div>
-                        <p className="text-sm text-text-secondary">
-                            Email
-                        </p>
-                        <p className="font-medium text-text-primary break-all">
-                            {user.email}
-                        </p>
-                    </div>
-
-                    <div>
-                        <p className="text-sm text-text-secondary">
-                            Country of origin
-                        </p>
-                        <p className="font-medium text-text-primary">
-                            {user.country_of_origin || "Not set"}
-                        </p>
-                    </div>
-
-                    <div>
-                        <p className="text-sm text-text-secondary">
-                            Current address
-                        </p>
-                        <p className="font-medium text-text-primary">
-                            {user.current_address || "Not set"}
-                        </p>
-                    </div>
-
-                    <div>
-                        <p className="text-sm text-text-secondary">
-                            Current city
-                        </p>
-                        <p className="font-medium text-text-primary">
-                            {user.current_city || "Not set"}
-                        </p>
-                    </div>
-
-                    <div>
-                        <p className="text-sm text-text-secondary">
-                            Current country
-                        </p>
-                        <p className="font-medium text-text-primary">
-                            {user.current_country || "Not set"}
-                        </p>
-                    </div>
-
-                    <div>
-                        <p className="text-sm text-text-secondary">
-                            Phone number
-                        </p>
-                        <p className="font-medium text-text-primary">
-                            {user.phone_number || "Not set"}
-                        </p>
-                    </div>
-                </div>
-
-                <div className="mt-6 flex justify-end">
-                    <Button
-                        type="button"
-                        onClick={() => setIsEditingProfile(true)}
-                    >
-                        Edit
-                    </Button>
-                </div>
-            </>
-        ) : (
-            <>
-                <h2 className="text-xl font-semibold text-text-primary">
-                    Edit profile
-                </h2>
-
-                <p className="mt-1 text-sm text-text-secondary">
-                    Update your account information.
-                </p>
-
-                <form
-                    className="mt-6 space-y-5"
-                    onSubmit={async (event) => {
-                        event.preventDefault();
-
-                        try {
-                            const response = await fetch(
-                                `http://localhost:4000/api/users/${user.id}`,
-                                {
-                                    method: "PATCH",
-                                    headers: {
-                                        "Content-Type": "application/json",
-                                        Authorization: `Bearer ${token}`,
-                                    },
-                                    body: JSON.stringify({
-                                        name: editName,
-                                        email: editEmail,
-                                        country_of_origin: editCountryOfOrigin,
-                                        current_address: editCurrentAddress,
-                                        current_city: editCurrentCity,
-                                        current_country: editCurrentCountry,
-                                        phone_number: editPhoneNumber,
-                                    }),
-                                }
-                            );
-
-                            const data = await response.json();
-
-                            if (!response.ok) {
-                                throw new Error(
-                                    data.message || "Profile update failed"
-                                );
-                            }
-
-                            updateUser(data.user);
-
-                            setIsEditingProfile(false);
-                        } catch (error) {
-                            console.error(
-                                "Error updating profile:",
-                                error
-                            );
-                        }
+            {showEditProfile && (
+                <Modal
+                    onClose={() => {
+                        setShowEditProfile(false);
+                        setIsEditingProfile(false);
                     }}
                 >
-                    <div>
-                        <label
-                            htmlFor="profile-name"
-                            className="mb-1 block text-sm font-medium"
-                        >
-                            Name
-                        </label>
+                    {!isEditingProfile ? (
+                        <>
+                            <h2 className="text-xl font-semibold text-text-primary">
+                                Profile details
+                            </h2>
 
-                        <input
-                            id="profile-name"
-                            type="text"
-                            value={editName}
-                            onChange={(event) =>
-                                setEditName(event.target.value)
-                            }
-                            className="w-full rounded-control border border-border bg-white px-4 py-3 focus:border-primary focus:outline-none"
-                        />
-                    </div>
+                            <div className="mt-6 space-y-4">
+                                <div>
+                                    <p className="text-sm text-text-secondary">
+                                        Name
+                                    </p>
+                                    <p className="font-medium text-text-primary">
+                                        {user.name}
+                                    </p>
+                                </div>
 
-                    <div>
-                        <label
-                            htmlFor="profile-email"
-                            className="mb-1 block text-sm font-medium"
-                        >
-                            Email
-                        </label>
+                                <div>
+                                    <p className="text-sm text-text-secondary">
+                                        Email
+                                    </p>
+                                    <p className="font-medium text-text-primary break-all">
+                                        {user.email}
+                                    </p>
+                                </div>
 
-                        <input
-                            id="profile-email"
-                            type="email"
-                            value={editEmail}
-                            onChange={(event) =>
-                                setEditEmail(event.target.value)
-                            }
-                            className="w-full rounded-control border border-border bg-white px-4 py-3 focus:border-primary focus:outline-none"
-                        />
-                    </div>
+                                <div>
+                                    <p className="text-sm text-text-secondary">
+                                        Country of origin
+                                    </p>
+                                    <p className="font-medium text-text-primary">
+                                        {user.country_of_origin || "Not set"}
+                                    </p>
+                                </div>
 
-                    <div>
-                        <label
-                            htmlFor="country-origin"
-                            className="mb-1 block text-sm font-medium"
-                        >
-                            Country of origin
-                        </label>
+                                <div>
+                                    <p className="text-sm text-text-secondary">
+                                        Current address
+                                    </p>
+                                    <p className="font-medium text-text-primary">
+                                        {user.current_address || "Not set"}
+                                    </p>
+                                </div>
 
-                        <input
-                            id="country-origin"
-                            type="text"
-                            value={editCountryOfOrigin}
-                            onChange={(event) =>
-                                setEditCountryOfOrigin(event.target.value)
-                            }
-                            className="w-full rounded-control border border-border bg-white px-4 py-3 focus:border-primary focus:outline-none"
-                        />
-                    </div>
+                                <div>
+                                    <p className="text-sm text-text-secondary">
+                                        Current city
+                                    </p>
+                                    <p className="font-medium text-text-primary">
+                                        {user.current_city || "Not set"}
+                                    </p>
+                                </div>
 
-                    <div>
-                        <label
-                            htmlFor="current-address"
-                            className="mb-1 block text-sm font-medium"
-                        >
-                            Current address
-                        </label>
+                                <div>
+                                    <p className="text-sm text-text-secondary">
+                                        Current country
+                                    </p>
+                                    <p className="font-medium text-text-primary">
+                                        {user.current_country || "Not set"}
+                                    </p>
+                                </div>
 
-                        <input
-                            id="current-address"
-                            type="text"
-                            value={editCurrentAddress}
-                            onChange={(event) =>
-                                setEditCurrentAddress(event.target.value)
-                            }
-                            className="w-full rounded-control border border-border bg-white px-4 py-3 focus:border-primary focus:outline-none"
-                        />
-                    </div>
+                                <div>
+                                    <p className="text-sm text-text-secondary">
+                                        Phone number
+                                    </p>
+                                    <p className="font-medium text-text-primary">
+                                        {user.phone_number || "Not set"}
+                                    </p>
+                                </div>
+                            </div>
 
-                    <div>
-                        <label
-                            htmlFor="current-city"
-                            className="mb-1 block text-sm font-medium"
-                        >
-                            Current city
-                        </label>
+                            <div className="mt-6 flex justify-end">
+                                <Button
+                                    type="button"
+                                    onClick={() => setIsEditingProfile(true)}
+                                >
+                                    Edit
+                                </Button>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <h2 className="text-xl font-semibold text-text-primary">
+                                Edit profile
+                            </h2>
 
-                        <input
-                            id="current-city"
-                            type="text"
-                            value={editCurrentCity}
-                            onChange={(event) =>
-                                setEditCurrentCity(event.target.value)
-                            }
-                            className="w-full rounded-control border border-border bg-white px-4 py-3 focus:border-primary focus:outline-none"
-                        />
-                    </div>
+                            <p className="mt-1 text-sm text-text-secondary">
+                                Update your account information.
+                            </p>
 
-                    <div>
-                        <label
-                            htmlFor="current-country"
-                            className="mb-1 block text-sm font-medium"
-                        >
-                            Current country
-                        </label>
+                            <form
+                                className="mt-6 space-y-5"
+                                onSubmit={async (event) => {
+                                    event.preventDefault();
 
-                        <input
-                            id="current-country"
-                            type="text"
-                            value={editCurrentCountry}
-                            onChange={(event) =>
-                                setEditCurrentCountry(event.target.value)
-                            }
-                            className="w-full rounded-control border border-border bg-white px-4 py-3 focus:border-primary focus:outline-none"
-                        />
-                    </div>
+                                    try {
+                                        const response = await fetch(
+                                            `http://localhost:4000/api/users/${user.id}`,
+                                            {
+                                                method: "PATCH",
+                                                headers: {
+                                                    "Content-Type": "application/json",
+                                                    Authorization: `Bearer ${token}`,
+                                                },
+                                                body: JSON.stringify({
+                                                    name: editName,
+                                                    email: editEmail,
+                                                    country_of_origin: editCountryOfOrigin,
+                                                    current_address: editCurrentAddress,
+                                                    current_city: editCurrentCity,
+                                                    current_country: editCurrentCountry,
+                                                    phone_number: editPhoneNumber,
+                                                }),
+                                            }
+                                        );
 
-                    <div>
-                        <label
-                            htmlFor="phone-number"
-                            className="mb-1 block text-sm font-medium"
-                        >
-                            Phone number
-                        </label>
+                                        const data = await response.json();
 
-                        <input
-                            id="phone-number"
-                            type="tel"
-                            value={editPhoneNumber}
-                            onChange={(event) =>
-                                setEditPhoneNumber(event.target.value)
-                            }
-                            className="w-full rounded-control border border-border bg-white px-4 py-3 focus:border-primary focus:outline-none"
-                        />
-                    </div>
+                                        if (!response.ok) {
+                                            throw new Error(
+                                                data.message || "Profile update failed"
+                                            );
+                                        }
 
-                    <div className="flex justify-end gap-3 pt-2">
-                        <Button
-                            type="button"
-                            variant="secondary"
-                            onClick={() =>
-                                setIsEditingProfile(false)
-                            }
-                        >
-                            Cancel
-                        </Button>
+                                        updateUser(data.user);
 
-                        <Button type="submit">
-                            Save changes
-                        </Button>
-                    </div>
-                </form>
-            </>
-        )}
-    </Modal>
-)}
+                                        setIsEditingProfile(false);
+                                    } catch (error) {
+                                        console.error(
+                                            "Error updating profile:",
+                                            error
+                                        );
+                                    }
+                                }}
+                            >
+                                <div>
+                                    <label
+                                        htmlFor="profile-name"
+                                        className="mb-1 block text-sm font-medium"
+                                    >
+                                        Name
+                                    </label>
+
+                                    <input
+                                        id="profile-name"
+                                        type="text"
+                                        value={editName}
+                                        onChange={(event) =>
+                                            setEditName(event.target.value)
+                                        }
+                                        className="w-full rounded-control border border-border bg-white px-4 py-3 focus:border-primary focus:outline-none"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label
+                                        htmlFor="profile-email"
+                                        className="mb-1 block text-sm font-medium"
+                                    >
+                                        Email
+                                    </label>
+
+                                    <input
+                                        id="profile-email"
+                                        type="email"
+                                        value={editEmail}
+                                        onChange={(event) =>
+                                            setEditEmail(event.target.value)
+                                        }
+                                        className="w-full rounded-control border border-border bg-white px-4 py-3 focus:border-primary focus:outline-none"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label
+                                        htmlFor="country-origin"
+                                        className="mb-1 block text-sm font-medium"
+                                    >
+                                        Country of origin
+                                    </label>
+
+                                    <input
+                                        id="country-origin"
+                                        type="text"
+                                        value={editCountryOfOrigin}
+                                        onChange={(event) =>
+                                            setEditCountryOfOrigin(event.target.value)
+                                        }
+                                        className="w-full rounded-control border border-border bg-white px-4 py-3 focus:border-primary focus:outline-none"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label
+                                        htmlFor="current-address"
+                                        className="mb-1 block text-sm font-medium"
+                                    >
+                                        Current address
+                                    </label>
+
+                                    <input
+                                        id="current-address"
+                                        type="text"
+                                        value={editCurrentAddress}
+                                        onChange={(event) =>
+                                            setEditCurrentAddress(event.target.value)
+                                        }
+                                        className="w-full rounded-control border border-border bg-white px-4 py-3 focus:border-primary focus:outline-none"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label
+                                        htmlFor="current-city"
+                                        className="mb-1 block text-sm font-medium"
+                                    >
+                                        Current city
+                                    </label>
+
+                                    <input
+                                        id="current-city"
+                                        type="text"
+                                        value={editCurrentCity}
+                                        onChange={(event) =>
+                                            setEditCurrentCity(event.target.value)
+                                        }
+                                        className="w-full rounded-control border border-border bg-white px-4 py-3 focus:border-primary focus:outline-none"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label
+                                        htmlFor="current-country"
+                                        className="mb-1 block text-sm font-medium"
+                                    >
+                                        Current country
+                                    </label>
+
+                                    <input
+                                        id="current-country"
+                                        type="text"
+                                        value={editCurrentCountry}
+                                        onChange={(event) =>
+                                            setEditCurrentCountry(event.target.value)
+                                        }
+                                        className="w-full rounded-control border border-border bg-white px-4 py-3 focus:border-primary focus:outline-none"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label
+                                        htmlFor="phone-number"
+                                        className="mb-1 block text-sm font-medium"
+                                    >
+                                        Phone number
+                                    </label>
+
+                                    <input
+                                        id="phone-number"
+                                        type="tel"
+                                        value={editPhoneNumber}
+                                        onChange={(event) =>
+                                            setEditPhoneNumber(event.target.value)
+                                        }
+                                        className="w-full rounded-control border border-border bg-white px-4 py-3 focus:border-primary focus:outline-none"
+                                    />
+                                </div>
+
+                                <div className="flex justify-end gap-3 pt-2">
+                                    <Button
+                                        type="button"
+                                        variant="secondary"
+                                        onClick={() =>
+                                            setIsEditingProfile(false)
+                                        }
+                                    >
+                                        Cancel
+                                    </Button>
+
+                                    <Button type="submit">
+                                        Save changes
+                                    </Button>
+                                </div>
+                            </form>
+                        </>
+                    )}
+                </Modal>
+            )}
+            {summaryModal && (
+                <Modal
+                    onClose={() => {
+                        setSummaryModal(null);
+                        setSummaryDetailsError("");
+                    }}
+                >
+                    <h2 className="text-xl font-semibold text-text-primary">
+                        {summaryModal === "applications"
+                            ? "Your applications"
+                            : "Your groups"}
+                    </h2>
+
+                    {summaryDetailsLoading && (
+                        <div className="mt-6">
+                            <Feedback variant="loading">
+                                {summaryModal === "applications"
+                                    ? "Loading your applications..."
+                                    : "Loading your groups..."}
+                            </Feedback>
+                        </div>
+                    )}
+
+                    {!summaryDetailsLoading && summaryDetailsError && (
+                        <div className="mt-6">
+                            <Feedback variant="error">
+                                {summaryDetailsError}
+                            </Feedback>
+                        </div>
+                    )}
+
+                    {!summaryDetailsLoading &&
+                        !summaryDetailsError &&
+                        summaryModal === "applications" && (
+                            <div className="mt-6 space-y-3">
+                                {applications.length === 0 ? (
+                                    <p className="text-text-secondary">
+                                        You haven’t applied for any jobs yet.
+                                    </p>
+                                ) : (
+                                    applications.map((application) => (
+                                        <div
+                                            key={application.application_id}
+                                            className="rounded-card border border-border bg-white p-4"
+                                        >
+                                            <div className="flex items-start justify-between gap-3">
+                                                <div>
+                                                    <h3 className="font-semibold text-text-primary">
+                                                        {application.title}
+                                                    </h3>
+                                                    <p className="mt-1 text-sm text-text-secondary">
+                                                        {application.company}
+                                                    </p>
+                                                </div>
+                                                <span className="rounded-full bg-primary-light px-3 py-1 text-xs font-medium capitalize text-primary">
+                                                    {application.application_status}
+                                                </span>
+                                            </div>
+
+                                            {(application.location ||
+                                                application.employment_type) && (
+                                                <p className="mt-3 text-sm text-text-secondary">
+                                                    {[
+                                                        application.location,
+                                                        application.employment_type,
+                                                    ]
+                                                        .filter(Boolean)
+                                                        .join(" · ")}
+                                                </p>
+                                            )}
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        )}
+
+                    {!summaryDetailsLoading &&
+                        !summaryDetailsError &&
+                        summaryModal === "groups" && (
+                            <div className="mt-6 space-y-3">
+                                {joinedGroups.length === 0 ? (
+                                    <p className="text-text-secondary">
+                                        You haven’t joined any groups yet.
+                                    </p>
+                                ) : (
+                                    joinedGroups.map((joinedGroup) => (
+                                        <div
+                                            key={joinedGroup.membership_id}
+                                            className="rounded-card border border-border bg-white p-4"
+                                        >
+                                            <h3 className="font-semibold text-text-primary">
+                                                {joinedGroup.name}
+                                            </h3>
+
+                                            {joinedGroup.category && (
+                                                <p className="mt-1 text-sm font-medium text-primary">
+                                                    {joinedGroup.category}
+                                                </p>
+                                            )}
+
+                                            {joinedGroup.description && (
+                                                <p className="mt-3 text-sm text-text-secondary">
+                                                    {joinedGroup.description}
+                                                </p>
+                                            )}
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        )}
+                </Modal>
+            )}
         </div>
     );
 }
