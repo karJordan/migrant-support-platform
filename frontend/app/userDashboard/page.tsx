@@ -5,7 +5,17 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
 import Link from "next/link";
 import Modal from "@/components/Modal";
-import { Bell, Plus, BriefcaseBusiness, BookOpen, Users, Search, UserRound } from "lucide-react";
+import {
+    Bell,
+    Plus,
+    BriefcaseBusiness,
+    BookOpen,
+    Users,
+    Search,
+    UserRound,
+    Circle,
+    CircleCheck
+} from "lucide-react";
 import ServiceForm from "@/components/ServiceForm";
 import JobsForm from "@/components/JobsForm";
 import ResourcesForm from "@/components/ResourcesForm";
@@ -66,9 +76,19 @@ const createPostOptions: {
         },
     ];
 
+const settlementTasks = [
+    "Create account",
+    "Complete profile",
+    "Find a service",
+    "Open a bank account",
+    "Apply for IRD number",
+];
+
 export default function UserDashboardPage() {
-    const { user, isLoading } = useAuth();
+    const { user, token, isLoading } = useAuth();
     const router = useRouter();
+
+    const [savedCount, setSavedCount] = useState(0);
 
     const [showCreatePost, setShowCreatePost] = useState(false);
     const [createPostType, setCreatePostType] =
@@ -78,6 +98,17 @@ export default function UserDashboardPage() {
     const [recommendedJobs, setRecommendedJobs] = useState<DashboardJob[]>([]);
 
     const [searchQuery, setSearchQuery] = useState("");
+
+    const [completedSettlementTasks, setCompletedSettlementTasks] =
+        useState<string[]>([]);
+
+    const [showSettlementChecklist, setShowSettlementChecklist] = useState(false);
+
+    const [pendingChecklistTask, setPendingChecklistTask] =
+        useState<string | null>(null);
+
+    const [pendingChecklistAction, setPendingChecklistAction] =
+        useState<"check" | "uncheck" | null>(null);
 
     useEffect(() => {
         if (!isLoading && !user) {
@@ -89,6 +120,46 @@ export default function UserDashboardPage() {
     useEffect(() => {
         fetchDashboardContent();
     }, []);
+
+    useEffect(() => {
+        if (!token) return;
+
+        async function fetchSavedCount() {
+            try {
+                const response = await fetch(
+                    "http://localhost:4000/api/users/me/summary",
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error("Failed to load saved count");
+                }
+
+                const data = await response.json();
+                setSavedCount(Number(data.saved));
+            } catch (error) {
+                console.error("Error loading saved count:", error);
+            }
+        }
+
+        void fetchSavedCount();
+    }, [token]);
+
+    useEffect(() => {
+        if (!user) return;
+
+        const savedChecklist = localStorage.getItem(
+            `settlement-checklist-${user.id}`
+        );
+
+        if (savedChecklist) {
+            setCompletedSettlementTasks(JSON.parse(savedChecklist));
+        }
+    }, [user]);
 
     async function fetchDashboardContent() {
         try {
@@ -164,6 +235,49 @@ export default function UserDashboardPage() {
                 return null;
         }
     }
+
+    function requestChecklistChange(task: string) {
+        const isCompleted = completedSettlementTasks.includes(task);
+
+        setPendingChecklistTask(task);
+        setPendingChecklistAction(isCompleted ? "uncheck" : "check");
+    }
+
+    function confirmChecklistChange() {
+        if (!user || !pendingChecklistTask || !pendingChecklistAction) {
+            return;
+        }
+
+        setCompletedSettlementTasks((currentTasks) => {
+            const updatedTasks =
+                pendingChecklistAction === "check"
+                    ? [...currentTasks, pendingChecklistTask]
+                    : currentTasks.filter(
+                        (task) => task !== pendingChecklistTask
+                    );
+
+            localStorage.setItem(
+                `settlement-checklist-${user.id}`,
+                JSON.stringify(updatedTasks)
+            );
+
+            return updatedTasks;
+        });
+
+        setPendingChecklistTask(null);
+        setPendingChecklistAction(null);
+    }
+
+    const completedCount = completedSettlementTasks.length;
+
+    const settlementProgress = Math.round(
+        (completedCount / settlementTasks.length) * 100
+    );
+
+    const nextSettlementTask = settlementTasks.find(
+        (task) => !completedSettlementTasks.includes(task)
+    );
+
     return (
         <div>
             {/*Full width container*/}
@@ -367,17 +481,67 @@ export default function UserDashboardPage() {
                     <Plus size={18} aria-hidden="true" />
                     Create a post
                 </button>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-3 md:grid-cols-4 gap-4">
 
                     <div className="border border-neutral/20 rounded-xl p-4">
                         <p className="text-2xl font-semibold text-primary">0</p>
                         <p className="text-sm text-neutral">My Posts</p>
                     </div>
+
                     <div className="border border-neutral/20 rounded-xl p-4">
                         <p className="text-2xl font-semibold text-primary">0</p>
                         <p className="text-sm text-neutral">Messages</p>
                     </div>
+
+                    <Link
+                        href="/saved"
+                        className="border border-neutral/20 rounded-xl p-4"
+                    >
+                        <p className="text-2xl font-semibold text-primary">
+                            {savedCount}
+                        </p>
+                        <p className="text-sm text-neutral">Saved Posts</p>
+                    </Link>
+
                 </div>
+                {/*Settlement Progress */}
+                <button
+                    type="button"
+                    onClick={() => setShowSettlementChecklist(true)}
+                    className="
+        mt-8 w-full rounded-card border border-border
+        bg-white p-5 text-left shadow-card
+        transition
+        hover:border-primary/30
+        hover:shadow-card-hover
+    "
+                >
+                    <div className="flex items-center justify-between">
+                        <h2 className="font-semibold text-text-primary">
+                            Settlement Progress
+                        </h2>
+
+                        <span className="font-semibold text-primary">
+                            {settlementProgress}%
+                        </span>
+                    </div>
+
+                    <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-primary-light">
+                        <div
+                            className="h-full rounded-full bg-primary transition-all"
+                            style={{
+                                width: `${settlementProgress}%`,
+                            }}
+                        />
+                    </div>
+
+                    <p className="mt-3 text-sm text-text-secondary">
+                        {completedCount} of {settlementTasks.length} steps completed
+                        {nextSettlementTask
+                            ? ` · Next: ${nextSettlementTask}`
+                            : " · Settlement checklist complete"}
+                    </p>
+                </button>
 
                 {/* Nearby Services */}
                 <section className="mt-8">
@@ -559,6 +723,103 @@ export default function UserDashboardPage() {
                             </div>
                         </>
                     )}
+                </Modal>
+            )}
+            {showSettlementChecklist && (
+                <Modal onClose={() => setShowSettlementChecklist(false)}>
+                    <h2 className="text-xl font-semibold text-text-primary">
+                        Settlement Checklist
+                    </h2>
+
+                    <div className="mt-5 space-y-3">
+                        {settlementTasks.map((task) => {
+                            const completed =
+                                completedSettlementTasks.includes(task);
+
+                            return (
+                                <button
+                                    key={task}
+                                    type="button"
+                                    onClick={() =>
+                                        requestChecklistChange(task)
+                                    }
+                                    className="
+                            flex w-full items-center gap-3
+                            rounded-control px-2 py-2
+                            text-left
+                            hover:bg-primary-light
+                        "
+                                >
+                                    {completed ? (
+                                        <CircleCheck
+                                            size={21}
+                                            className="shrink-0 text-primary"
+                                            aria-hidden="true"
+                                        />
+                                    ) : (
+                                        <Circle
+                                            size={21}
+                                            className="shrink-0 text-text-secondary"
+                                            aria-hidden="true"
+                                        />
+                                    )}
+
+                                    <span
+                                        className={
+                                            completed
+                                                ? "text-text-secondary line-through"
+                                                : "text-text-primary"
+                                        }
+                                    >
+                                        {task}
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </Modal>
+            )}
+            {pendingChecklistTask && pendingChecklistAction && (
+                <Modal
+                    onClose={() => {
+                        setPendingChecklistTask(null);
+                        setPendingChecklistAction(null);
+                    }}
+                >
+                    <h2 className="text-xl font-semibold text-text-primary">
+                        {pendingChecklistAction === "check"
+                            ? "Complete this task?"
+                            : "Mark task as incomplete?"}
+                    </h2>
+
+                    <p className="mt-3 text-text-secondary">
+                        {pendingChecklistAction === "check"
+                            ? `Are you sure you want to mark "${pendingChecklistTask}" as completed?`
+                            : `Are you sure you want to uncheck "${pendingChecklistTask}"?`}
+                    </p>
+
+                    <div className="mt-6 flex justify-end gap-3">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setPendingChecklistTask(null);
+                                setPendingChecklistAction(null);
+                            }}
+                            className="rounded-control border border-border px-4 py-2"
+                        >
+                            Cancel
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={confirmChecklistChange}
+                            className="rounded-control bg-primary px-4 py-2 text-white"
+                        >
+                            {pendingChecklistAction === "check"
+                                ? "Mark complete"
+                                : "Mark incomplete"}
+                        </button>
+                    </div>
                 </Modal>
             )}
         </div>

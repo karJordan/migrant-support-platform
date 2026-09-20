@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import Link from "next/link";
 import Modal from "@/components/Modal";
+import { useRouter } from "next/navigation";
 
 interface SavedItem {
     listing_type: string;
@@ -39,6 +40,7 @@ export default function SavedPage() {
     const [activeFilter, setActiveFilter] = useState("all");
     const [itemDetails, setItemDetails] = useState<Record<string, SavedItemDetail>>({});
     const [selectedItem, setSelectedItem] = useState<SavedItem | null>(null);
+    const router = useRouter();
 
     useEffect(() => {
         if (user) {
@@ -127,9 +129,13 @@ export default function SavedPage() {
 
     return (
         <div className="max-w-4xl mx-auto px-6 py-10">
-            <Link href="/userDashboard" className="text-neutral hover:text-primary mb-6 inline-block">
-                ← Back to Dashboard
-            </Link>
+            <button
+                type="button"
+                onClick={() => router.back()}
+                className="text-text-secondary hover:text-primary"
+            >
+                ← Back
+            </button>
 
             <h1 className="text-2xl font-semibold mb-6">All Saved Listings</h1>
 
@@ -138,11 +144,10 @@ export default function SavedPage() {
                     <button
                         key={filter.id}
                         onClick={() => setActiveFilter(filter.id)}
-                        className={`px-4 py-2 rounded-full text-sm transition-colors ${
-                            activeFilter === filter.id
+                        className={`px-4 py-2 rounded-full text-sm transition-colors ${activeFilter === filter.id
                                 ? "bg-primary text-white"
                                 : "bg-gray-100 text-neutral-600 hover:bg-gray-200"
-                        }`}
+                            }`}
                     >
                         {filter.label}
                     </button>

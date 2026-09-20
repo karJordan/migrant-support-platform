@@ -5,7 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
     LogOut,
-    Settings
+    Settings,
+    Circle,
+    CircleCheck
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import Card from "@/components/ui/Card";
@@ -30,6 +32,7 @@ type JobApplication = {
     company: string;
     location?: string | null;
     employment_type?: string | null;
+    description?: string | null;
 };
 
 type JoinedGroup = {
@@ -42,6 +45,14 @@ type JoinedGroup = {
 };
 
 type SummaryModal = "applications" | "groups" | null;
+
+const settlementTasks = [
+    "Create account",
+    "Complete profile",
+    "Find a service",
+    "Open a bank account",
+    "Apply for IRD number",
+];
 
 export default function ProfilePage() {
     const {
@@ -56,8 +67,28 @@ export default function ProfilePage() {
     const [summary, setSummary] = useState<ProfileSummary | null>(null);
     const [retry, setRetry] = useState(0);
     const [summaryModal, setSummaryModal] = useState<SummaryModal>(null);
+
+    const [completedTasks, setCompletedTasks] = useState<string[]>([]);
+
+    const [pendingChecklistTask, setPendingChecklistTask] = useState<string | null>(null);
+    const [pendingChecklistAction, setPendingChecklistAction] =
+        useState<"check" | "uncheck" | null>(null);
+
     const [applications, setApplications] = useState<JobApplication[]>([]);
+    const [selectedApplication, setSelectedApplication] =
+        useState<JobApplication | null>(null);
+
+    const [withdrawLoading, setWithdrawLoading] = useState(false);
+    const [withdrawMessage, setWithdrawMessage] = useState("");
+
     const [joinedGroups, setJoinedGroups] = useState<JoinedGroup[]>([]);
+
+    const [selectedGroup, setSelectedGroup] =
+        useState<JoinedGroup | null>(null);
+
+    const [leaveGroupLoading, setLeaveGroupLoading] = useState(false);
+    const [leaveGroupMessage, setLeaveGroupMessage] = useState("");
+
     const [summaryDetailsLoading, setSummaryDetailsLoading] = useState(false);
     const [summaryDetailsError, setSummaryDetailsError] = useState("");
 
@@ -71,6 +102,7 @@ export default function ProfilePage() {
     const [editCurrentCity, setEditCurrentCity] = useState("");
     const [editCurrentCountry, setEditCurrentCountry] = useState("");
     const [editPhoneNumber, setEditPhoneNumber] = useState("");
+
 
     useEffect(() => {
         if (!user) return;
@@ -143,6 +175,18 @@ export default function ProfilePage() {
         return () => controller.abort();
     }, [userId, token, retry]);
 
+    useEffect(() => {
+        if (!user) return;
+
+        const savedChecklist = localStorage.getItem(
+            `settlement-checklist-${user.id}`
+        );
+
+        if (savedChecklist) {
+            setCompletedTasks(JSON.parse(savedChecklist));
+        }
+    }, [user]);
+
     async function openApplicationsModal() {
         if (!token) return;
 
@@ -177,6 +221,61 @@ export default function ProfilePage() {
             );
         } finally {
             setSummaryDetailsLoading(false);
+        }
+    }
+
+    async function withdrawApplication(jobId: number) {
+        if (!token) return;
+
+        setWithdrawLoading(true);
+        setWithdrawMessage("");
+
+        try {
+            const response = await fetch(
+                `http://localhost:4000/api/jobs/${jobId}/apply`,
+                {
+                    method: "DELETE",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            const data: { message?: string } = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.message || "Could not withdraw application"
+                );
+            }
+
+            setApplications((currentApplications) =>
+                currentApplications.filter(
+                    (application) => application.job_id !== jobId
+                )
+            );
+
+            setSummary((currentSummary) =>
+                currentSummary
+                    ? {
+                        ...currentSummary,
+                        applications: Math.max(
+                            0,
+                            currentSummary.applications - 1
+                        ),
+                    }
+                    : currentSummary
+            );
+
+            setSelectedApplication(null);
+        } catch (error) {
+            setWithdrawMessage(
+                error instanceof Error
+                    ? error.message
+                    : "Could not withdraw application"
+            );
+        } finally {
+            setWithdrawLoading(false);
         }
     }
 
@@ -217,6 +316,61 @@ export default function ProfilePage() {
         }
     }
 
+    async function leaveGroup(groupId: number) {
+        if (!token) return;
+
+        setLeaveGroupLoading(true);
+        setLeaveGroupMessage("");
+
+        try {
+            const response = await fetch(
+                `http://localhost:4000/api/community/groups/${groupId}/join`,
+                {
+                    method: "DELETE",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            const data: { message?: string } = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.message || "Could not leave group"
+                );
+            }
+
+            setJoinedGroups((currentGroups) =>
+                currentGroups.filter(
+                    (group) => group.group_id !== groupId
+                )
+            );
+
+            setSummary((currentSummary) =>
+                currentSummary
+                    ? {
+                        ...currentSummary,
+                        groups: Math.max(
+                            0,
+                            currentSummary.groups - 1
+                        ),
+                    }
+                    : currentSummary
+            );
+
+            setSelectedGroup(null);
+        } catch (error) {
+            setLeaveGroupMessage(
+                error instanceof Error
+                    ? error.message
+                    : "Could not leave group"
+            );
+        } finally {
+            setLeaveGroupLoading(false);
+        }
+    }
+
     if (isLoading) {
         return <div className="mx-auto max-w-xl px-4 py-10"><Feedback variant="loading">Loading your profile...</Feedback></div>;
     }
@@ -236,6 +390,39 @@ export default function ProfilePage() {
 
     const initials = user.name.trim().split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0]).join("").toUpperCase() || "?";
     const currentSummary = summary?.userId === userId ? summary : null;
+
+
+    function requestChecklistChange(task: string) {
+        const isCompleted = completedTasks.includes(task);
+
+        setPendingChecklistTask(task);
+        setPendingChecklistAction(isCompleted ? "uncheck" : "check");
+    }
+
+    function confirmChecklistChange() {
+        if (!user || !pendingChecklistTask || !pendingChecklistAction) {
+            return;
+        }
+
+        setCompletedTasks((currentTasks) => {
+            const updatedTasks =
+                pendingChecklistAction === "check"
+                    ? [...currentTasks, pendingChecklistTask]
+                    : currentTasks.filter(
+                        (item) => item !== pendingChecklistTask
+                    );
+
+            localStorage.setItem(
+                `settlement-checklist-${user.id}`,
+                JSON.stringify(updatedTasks)
+            );
+
+            return updatedTasks;
+        });
+
+        setPendingChecklistTask(null);
+        setPendingChecklistAction(null);
+    }
 
     return (
         <div className="mx-auto w-full max-w-2xl pb-8">
@@ -344,6 +531,53 @@ export default function ProfilePage() {
                             Groups
                         </span>
                     </button>
+                </div>
+            </section>
+            <section className="mx-4 mt-6 rounded-card border border-border bg-white p-5 shadow-card sm:mx-6">
+                <h2 className="text-lg font-semibold text-text-primary">
+                    Settlement Checklist
+                </h2>
+
+                <div className="mt-4 space-y-3">
+                    {settlementTasks.map((task) => {
+                        const completed = completedTasks.includes(task);
+
+                        return (
+                            <button
+                                key={task}
+                                type="button"
+                                onClick={() => requestChecklistChange(task)}
+                                className="
+                        flex w-full items-center gap-3
+                        text-left
+                    "
+                            >
+                                {completed ? (
+                                    <CircleCheck
+                                        size={21}
+                                        className="shrink-0 text-primary"
+                                        aria-hidden="true"
+                                    />
+                                ) : (
+                                    <Circle
+                                        size={21}
+                                        className="shrink-0 text-text-secondary"
+                                        aria-hidden="true"
+                                    />
+                                )}
+
+                                <span
+                                    className={
+                                        completed
+                                            ? "text-text-secondary line-through"
+                                            : "text-text-primary"
+                                    }
+                                >
+                                    {task}
+                                </span>
+                            </button>
+                        );
+                    })}
                 </div>
             </section>
 
@@ -661,15 +895,29 @@ export default function ProfilePage() {
             {summaryModal && (
                 <Modal
                     onClose={() => {
+                        if (selectedApplication) {
+                            setSelectedApplication(null);
+                            setWithdrawMessage("");
+                            return;
+                        }
+
+                        if (selectedGroup) {
+                            setSelectedGroup(null);
+                            setLeaveGroupMessage("");
+                            return;
+                        }
+
                         setSummaryModal(null);
                         setSummaryDetailsError("");
                     }}
                 >
-                    <h2 className="text-xl font-semibold text-text-primary">
-                        {summaryModal === "applications"
-                            ? "Your applications"
-                            : "Your groups"}
-                    </h2>
+                    {!selectedApplication && !selectedGroup && (
+                        <h2 className="text-xl font-semibold text-text-primary">
+                            {summaryModal === "applications"
+                                ? "Your applications"
+                                : "Your groups"}
+                        </h2>
+                    )}
 
                     {summaryDetailsLoading && (
                         <div className="mt-6">
@@ -691,7 +939,66 @@ export default function ProfilePage() {
 
                     {!summaryDetailsLoading &&
                         !summaryDetailsError &&
-                        summaryModal === "applications" && (
+                        summaryModal === "applications" &&
+                        (selectedApplication ? (
+                            <div className="mt-2">
+                                <h2 className="text-2xl font-semibold">
+                                    {selectedApplication.title}
+                                </h2>
+
+                                <p className="mt-1 font-medium">
+                                    {selectedApplication.company}
+                                </p>
+
+                                {selectedApplication.description && (
+                                    <p className="mt-2 text-neutral">
+                                        {selectedApplication.description}
+                                    </p>
+                                )}
+
+                                <div className="mt-4 text-neutral">
+                                    Location:{" "}
+                                    {selectedApplication.location || "Not specified"}
+                                </div>
+
+                                <div className="mt-2 text-neutral">
+                                    Employment Type:{" "}
+                                    {selectedApplication.employment_type || "Not specified"}
+                                </div>
+
+                                <div className="mt-6">
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            void withdrawApplication(
+                                                selectedApplication.job_id
+                                            )
+                                        }
+                                        disabled={withdrawLoading}
+                                        className="
+                        rounded-control border border-primary
+                        bg-white px-6 py-3 font-medium text-primary
+                        transition-colors hover:bg-primary-light
+                        disabled:cursor-not-allowed
+                        disabled:opacity-60
+                    "
+                                    >
+                                        {withdrawLoading
+                                            ? "Withdrawing..."
+                                            : "Withdraw application"}
+                                    </button>
+
+                                    {withdrawMessage && (
+                                        <p
+                                            role="status"
+                                            className="mt-3 text-sm text-text-secondary"
+                                        >
+                                            {withdrawMessage}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        ) : (
                             <div className="mt-6 space-y-3">
                                 {applications.length === 0 ? (
                                     <p className="text-text-secondary">
@@ -699,19 +1006,32 @@ export default function ProfilePage() {
                                     </p>
                                 ) : (
                                     applications.map((application) => (
-                                        <div
+                                        <button
                                             key={application.application_id}
-                                            className="rounded-card border border-border bg-white p-4"
+                                            type="button"
+                                            onClick={() => {
+                                                setSelectedApplication(application);
+                                                setWithdrawMessage("");
+                                            }}
+                                            className="
+                            w-full rounded-card border border-border
+                            bg-white p-4 text-left
+                            transition
+                            hover:border-primary hover:shadow-card
+                            focus:outline-none focus:ring-2 focus:ring-primary
+                        "
                                         >
                                             <div className="flex items-start justify-between gap-3">
                                                 <div>
                                                     <h3 className="font-semibold text-text-primary">
                                                         {application.title}
                                                     </h3>
+
                                                     <p className="mt-1 text-sm text-text-secondary">
                                                         {application.company}
                                                     </p>
                                                 </div>
+
                                                 <span className="rounded-full bg-primary-light px-3 py-1 text-xs font-medium capitalize text-primary">
                                                     {application.application_status}
                                                 </span>
@@ -719,24 +1039,72 @@ export default function ProfilePage() {
 
                                             {(application.location ||
                                                 application.employment_type) && (
-                                                <p className="mt-3 text-sm text-text-secondary">
-                                                    {[
-                                                        application.location,
-                                                        application.employment_type,
-                                                    ]
-                                                        .filter(Boolean)
-                                                        .join(" · ")}
-                                                </p>
-                                            )}
-                                        </div>
+                                                    <p className="mt-3 text-sm text-text-secondary">
+                                                        {[
+                                                            application.location,
+                                                            application.employment_type,
+                                                        ]
+                                                            .filter(Boolean)
+                                                            .join(" · ")}
+                                                    </p>
+                                                )}
+                                        </button>
                                     ))
                                 )}
                             </div>
-                        )}
+                        ))}
 
                     {!summaryDetailsLoading &&
                         !summaryDetailsError &&
-                        summaryModal === "groups" && (
+                        summaryModal === "groups" &&
+                        (selectedGroup ? (
+                            <div className="mt-2">
+                                <h2 className="text-2xl font-semibold">
+                                    {selectedGroup.name}
+                                </h2>
+
+                                {selectedGroup.category && (
+                                    <p className="mt-2 text-primary">
+                                        {selectedGroup.category}
+                                    </p>
+                                )}
+
+                                {selectedGroup.description && (
+                                    <p className="mt-4">
+                                        {selectedGroup.description}
+                                    </p>
+                                )}
+
+                                <div className="mt-6">
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            void leaveGroup(selectedGroup.group_id)
+                                        }
+                                        disabled={leaveGroupLoading}
+                                        className="
+                        rounded-control border border-primary
+                        bg-white px-6 py-3 font-medium text-primary
+                        transition-colors hover:bg-primary-light
+                        disabled:cursor-not-allowed disabled:opacity-60
+                    "
+                                    >
+                                        {leaveGroupLoading
+                                            ? "Leaving..."
+                                            : "Leave group"}
+                                    </button>
+
+                                    {leaveGroupMessage && (
+                                        <p
+                                            role="status"
+                                            className="mt-3 text-sm text-text-secondary"
+                                        >
+                                            {leaveGroupMessage}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        ) : (
                             <div className="mt-6 space-y-3">
                                 {joinedGroups.length === 0 ? (
                                     <p className="text-text-secondary">
@@ -744,9 +1112,20 @@ export default function ProfilePage() {
                                     </p>
                                 ) : (
                                     joinedGroups.map((joinedGroup) => (
-                                        <div
+                                        <button
                                             key={joinedGroup.membership_id}
-                                            className="rounded-card border border-border bg-white p-4"
+                                            type="button"
+                                            onClick={() => {
+                                                setSelectedGroup(joinedGroup);
+                                                setLeaveGroupMessage("");
+                                            }}
+                                            className="
+                            w-full rounded-card border border-border
+                            bg-white p-4 text-left
+                            transition
+                            hover:border-primary hover:shadow-card
+                            focus:outline-none focus:ring-2 focus:ring-primary
+                        "
                                         >
                                             <h3 className="font-semibold text-text-primary">
                                                 {joinedGroup.name}
@@ -763,11 +1142,53 @@ export default function ProfilePage() {
                                                     {joinedGroup.description}
                                                 </p>
                                             )}
-                                        </div>
+                                        </button>
                                     ))
                                 )}
                             </div>
-                        )}
+                        ))}
+                </Modal>
+            )}
+            {pendingChecklistTask && pendingChecklistAction && (
+                <Modal
+                    onClose={() => {
+                        setPendingChecklistTask(null);
+                        setPendingChecklistAction(null);
+                    }}
+                >
+                    <h2 className="text-xl font-semibold text-text-primary">
+                        {pendingChecklistAction === "check"
+                            ? "Complete this task?"
+                            : "Mark task as incomplete?"}
+                    </h2>
+
+                    <p className="mt-3 text-text-secondary">
+                        {pendingChecklistAction === "check"
+                            ? `Are you sure you want to mark "${pendingChecklistTask}" as completed?`
+                            : `Are you sure you want to uncheck "${pendingChecklistTask}"?`}
+                    </p>
+
+                    <div className="mt-6 flex justify-end gap-3">
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => {
+                                setPendingChecklistTask(null);
+                                setPendingChecklistAction(null);
+                            }}
+                        >
+                            Cancel
+                        </Button>
+
+                        <Button
+                            type="button"
+                            onClick={confirmChecklistChange}
+                        >
+                            {pendingChecklistAction === "check"
+                                ? "Mark complete"
+                                : "Mark incomplete"}
+                        </Button>
+                    </div>
                 </Modal>
             )}
         </div>
