@@ -30,3 +30,20 @@ ALTER TABLE community_groups
 
 ALTER TABLE resources
     ADD COLUMN IF NOT EXISTS created_by INTEGER REFERENCES users(id);
+   
+-- Down Migration
+
+ALTER TABLE jobs
+    DROP CONSTRAINT IF EXISTS jobs_title_company_unique;
+
+ALTER TABLE services
+    DROP CONSTRAINT IF EXISTS services_name_unique;
+
+ALTER TABLE community_events
+    DROP CONSTRAINT IF EXISTS community_events_title_date_unique;
+
+ALTER TABLE community_groups
+    DROP CONSTRAINT IF EXISTS community_groups_name_unique;
+
+ALTER TABLE resources
+    DROP CONSTRAINT IF EXISTS resources_title_unique;
