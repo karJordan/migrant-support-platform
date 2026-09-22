@@ -1,3 +1,5 @@
+-- Up Migration
+
 -- jobs
 ALTER TABLE jobs
     ADD CONSTRAINT jobs_title_company_unique UNIQUE (title, company);
