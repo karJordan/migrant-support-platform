@@ -17,7 +17,12 @@ function JobsContent() {
     const [selectedEmploymentType, setSelectedEmploymentType] = useState("All");
     const [selectedJob, setSelectedJob] = useState<Job | null>(null);
     const [isEditing, setIsEditing] = useState(false);
-    const { user } = useAuth();
+    const [appliedJobIds, setAppliedJobIds] = useState<Set<number>>(
+        new Set()
+    );
+    const [applicationLoading, setApplicationLoading] = useState(false);
+    const [applicationMessage, setApplicationMessage] = useState("");
+    const { user, token } = useAuth();
 
     useEffect(() => {
         async function fetchJobs() {
@@ -34,6 +39,58 @@ function JobsContent() {
         }
         fetchJobs();
     }, []);
+
+    // Fetch the user's job applications if they are logged in
+    useEffect(() => {
+        if (!token) {
+            setAppliedJobIds(new Set());
+            return;
+        }
+
+        const controller = new AbortController();
+
+        async function fetchApplications() {
+            try {
+                const response = await fetch(
+                    "http://localhost:4000/api/jobs/applications/me",
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                        signal: controller.signal,
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error("Failed to fetch applications");
+                }
+
+                const applications: { job_id: number }[] =
+                    await response.json();
+
+                if (!controller.signal.aborted) {
+                    setAppliedJobIds(
+                        new Set(
+                            applications.map((application) =>
+                                Number(application.job_id)
+                            )
+                        )
+                    );
+                }
+            } catch (error) {
+                if (!controller.signal.aborted) {
+                    console.error(
+                        "Could not load job applications:",
+                        error
+                    );
+                }
+            }
+        }
+
+        void fetchApplications();
+
+        return () => controller.abort();
+    }, [token]);
 
     const employmentTypes = [
         "All",
@@ -58,6 +115,104 @@ function JobsContent() {
             }
         }
     }, [searchParams, filteredJobs]);
+
+    // Function to handle job application
+    async function applyForJob(jobId: number) {
+        if (!token) {
+            setApplicationMessage(
+                "You must be logged in to apply for a job."
+            );
+            return;
+        }
+
+        setApplicationLoading(true);
+        setApplicationMessage("");
+
+        try {
+            const response = await fetch(
+                `http://localhost:4000/api/jobs/${jobId}/apply`,
+                {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            const data: { message?: string } = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.message || "Could not submit application"
+                );
+            }
+
+            setAppliedJobIds((currentIds) => {
+                const updatedIds = new Set(currentIds);
+                updatedIds.add(jobId);
+                return updatedIds;
+            });
+
+            setApplicationMessage(
+                data.message || "Application submitted successfully."
+            );
+        } catch (error) {
+            setApplicationMessage(
+                error instanceof Error
+                    ? error.message
+                    : "Could not submit application"
+            );
+        } finally {
+            setApplicationLoading(false);
+        }
+    }
+    // Function to handle withdrawing a job application
+    async function withdrawApplication(jobId: number) {
+        if (!token) {
+            return;
+        }
+
+        setApplicationLoading(true);
+        setApplicationMessage("");
+
+        try {
+            const response = await fetch(
+                `http://localhost:4000/api/jobs/${jobId}/apply`,
+                {
+                    method: "DELETE",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            const data: { message?: string } = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.message || "Could not withdraw application"
+                );
+            }
+
+            setAppliedJobIds((currentIds) => {
+                const updatedIds = new Set(currentIds);
+                updatedIds.delete(jobId);
+                return updatedIds;
+            });
+
+            setApplicationMessage(
+                data.message || "Application withdrawn successfully."
+            );
+        } catch (error) {
+            setApplicationMessage(
+                error instanceof Error
+                    ? error.message
+                    : "Could not withdraw application"
+            );
+        } finally {
+            setApplicationLoading(false);
+        }
+    }
 
     return (
         <div className="w-full max-w-5xl mx-auto px-6 py-10">
@@ -90,9 +245,11 @@ function JobsContent() {
                                     id={`card-job-${job.id}`}
                                     role="button"
                                     tabIndex={0}
+                                    // Handle both click and keyboard events for accessibility
                                     onClick={() => {
                                         setSelectedJob(job);
                                         setIsEditing(false);
+                                        setApplicationMessage("");
                                     }}
                                     aria-label={`View details for ${job.title}`}
                                     onKeyDown={(keyEvent) => {
@@ -100,6 +257,7 @@ function JobsContent() {
                                             keyEvent.preventDefault();
                                             setSelectedJob(job);
                                             setIsEditing(false);
+                                            setApplicationMessage("");
                                         }
                                     }}
                                     className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
@@ -151,6 +309,57 @@ function JobsContent() {
                             <div className="flex items-center gap-2 mt-2 text-neutral">
                                 <span>Employment Type: {selectedJob.employment_type}</span>
                             </div>
+                            {/* Display the apply/withdraw button only for non-admin users */}
+                            {user && user.role !== "admin" && (
+                                <div className="mt-6">
+                                    {appliedJobIds.has(Number(selectedJob.id)) ? (
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                withdrawApplication(Number(selectedJob.id))
+                                            }
+                                            disabled={applicationLoading}
+                                            className="
+                    rounded-control border border-primary
+                    bg-white px-6 py-3 font-medium text-primary
+                    transition-colors hover:bg-primary-light
+                    disabled:cursor-not-allowed disabled:opacity-60
+                "
+                                        >
+                                            {applicationLoading
+                                                ? "Withdrawing..."
+                                                : "Withdraw application"}
+                                        </button>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                applyForJob(Number(selectedJob.id))
+                                            }
+                                            disabled={applicationLoading}
+                                            className="
+                    rounded-control bg-primary
+                    px-6 py-3 font-medium text-white
+                    transition-colors hover:bg-primary-hover
+                    disabled:cursor-not-allowed disabled:opacity-60
+                "
+                                        >
+                                            {applicationLoading
+                                                ? "Applying..."
+                                                : "Apply"}
+                                        </button>
+                                    )}
+
+                                    {applicationMessage && (
+                                        <p
+                                            role="status"
+                                            className="mt-3 text-sm text-text-secondary"
+                                        >
+                                            {applicationMessage}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
                             {user?.role === "admin" && (
                                 <button
                                     onClick={() => setIsEditing(true)}

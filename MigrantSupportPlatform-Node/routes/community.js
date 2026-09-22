@@ -47,6 +47,134 @@ router.post('/groups', authenticateToken, validateCategory('community', { option
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
+
+// GET /api/community/groups/joined
+// Get all groups joined by the logged-in user
+router.get('/groups/joined', authenticateToken, async (req, res) => {
+    try {
+        const result = await pool.query(
+            `SELECT
+                group_memberships.id AS membership_id,
+                group_memberships.created_at AS joined_at,
+                community_groups.id AS group_id,
+                community_groups.name,
+                community_groups.description,
+                community_groups.category_id,
+                categories.name AS category
+             FROM group_memberships
+             JOIN community_groups
+               ON community_groups.id = group_memberships.group_id
+             LEFT JOIN categories
+               ON categories.id = community_groups.category_id
+             WHERE group_memberships.user_id = $1
+             ORDER BY group_memberships.created_at DESC`,
+            [req.user.id]
+        );
+
+        res.status(200).json(result.rows);
+    } catch (error) {
+        console.error('Error loading joined groups:', error.message);
+
+        res.status(500).json({
+            error: 'Internal Server Error'
+        });
+    }
+});
+
+// POST /api/community/groups/:id/join
+// Join an approved community group
+router.post('/groups/:id/join', authenticateToken, async (req, res) => {
+    const groupId = Number(req.params.id);
+
+    if (!Number.isInteger(groupId) || groupId <= 0) {
+        return res.status(400).json({
+            message: 'Invalid group ID'
+        });
+    }
+
+    try {
+        const groupResult = await pool.query(
+            `SELECT id
+             FROM community_groups
+             WHERE id = $1
+               AND status = 'approved'`,
+            [groupId]
+        );
+
+        if (groupResult.rows.length === 0) {
+            return res.status(404).json({
+                message: 'Approved community group not found'
+            });
+        }
+
+        const membershipResult = await pool.query(
+            `INSERT INTO group_memberships
+                (user_id, group_id)
+             VALUES ($1, $2)
+             RETURNING
+                id,
+                user_id,
+                group_id,
+                created_at`,
+            [req.user.id, groupId]
+        );
+
+        res.status(201).json({
+            message: 'Group joined successfully',
+            membership: membershipResult.rows[0]
+        });
+    } catch (error) {
+        if (error.code === '23505') {
+            return res.status(409).json({
+                message: 'You have already joined this group'
+            });
+        }
+
+        console.error('Error joining community group:', error.message);
+
+        res.status(500).json({
+            error: 'Internal Server Error'
+        });
+    }
+});
+
+// DELETE /api/community/groups/:id/join
+// Leave a community group
+router.delete('/groups/:id/join', authenticateToken, async (req, res) => {
+    const groupId = Number(req.params.id);
+
+    if (!Number.isInteger(groupId) || groupId <= 0) {
+        return res.status(400).json({
+            message: 'Invalid group ID'
+        });
+    }
+
+    try {
+        const result = await pool.query(
+            `DELETE FROM group_memberships
+             WHERE user_id = $1
+               AND group_id = $2
+             RETURNING id`,
+            [req.user.id, groupId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                message: 'Group membership not found'
+            });
+        }
+
+        res.status(200).json({
+            message: 'Group left successfully'
+        });
+    } catch (error) {
+        console.error('Error leaving community group:', error.message);
+
+        res.status(500).json({
+            error: 'Internal Server Error'
+        });
+    }
+});
 // PATCH /api/community/groups/:id - Update an existing community group
 router.patch('/groups/:id', authenticateToken, validateCategory('community', { optional: true }), async (req, res) => {
     if (req.user.role !== 'admin') {

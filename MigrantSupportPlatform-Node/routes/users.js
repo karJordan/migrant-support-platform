@@ -3,6 +3,38 @@ const router = express.Router();
 const pool = require("../db");
 const authenticateToken = require("../middleware/authMiddleware");
 
+// GET /api/users/me/summary
+router.get("/me/summary", authenticateToken, async (req, res) => {
+    try {
+        const result = await pool.query(
+            `SELECT
+                (
+                    SELECT COUNT(*)
+                    FROM saved_listings
+                    WHERE user_id = $1
+                )::int AS saved,
+                (
+                    SELECT COUNT(*)
+                    FROM job_applications
+                    WHERE user_id = $1
+                )::int AS applications,
+                (
+                    SELECT COUNT(*)
+                    FROM group_memberships
+                    WHERE user_id = $1
+                )::int AS groups`,
+            [req.user.id]
+        );
+
+        return res.status(200).json(result.rows[0]);
+    } catch (error) {
+        console.error("Error loading profile summary:", error);
+        return res.status(500).json({
+            error: "Internal Server Error",
+        });
+    }
+});
+
 // GET /api/users/:id
 // Get one user's profile
 router.get("/:id", authenticateToken, async (req, res) => {

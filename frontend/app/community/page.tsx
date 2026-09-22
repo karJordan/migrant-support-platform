@@ -27,7 +27,13 @@ function CommunityContent() {
     const [isEditingEvent, setIsEditingEvent] = useState(false);
     const [isEditingGroup, setIsEditingGroup] = useState(false);
 
-    const { user } = useAuth();
+    const [joinedGroupIds, setJoinedGroupIds] = useState<Set<number>>(
+        new Set()
+    );
+    const [membershipLoading, setMembershipLoading] = useState(false);
+    const [membershipMessage, setMembershipMessage] = useState("");
+
+    const { user, token } = useAuth();
     const [eventSort, setEventSort] = useState("soonest");
     const sortedEvents = [...event].sort((a, b) => {
         if (eventSort === "title") return a.title.localeCompare(b.title, "en-NZ");
@@ -80,6 +86,54 @@ function CommunityContent() {
         fetchGroups();
     }, []);
 
+    useEffect(() => {
+        if (!token) {
+            setJoinedGroupIds(new Set());
+            return;
+        }
+
+        const controller = new AbortController();
+
+        async function fetchJoinedGroups() {
+            try {
+                const response = await fetch(
+                    "http://localhost:4000/api/community/groups/joined",
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                        signal: controller.signal,
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error("Failed to fetch joined groups");
+                }
+
+                const joinedGroups: { group_id: number }[] =
+                    await response.json();
+
+                if (!controller.signal.aborted) {
+                    setJoinedGroupIds(
+                        new Set(
+                            joinedGroups.map((joinedGroup) =>
+                                Number(joinedGroup.group_id)
+                            )
+                        )
+                    );
+                }
+            } catch (error) {
+                if (!controller.signal.aborted) {
+                    console.error("Could not load joined groups:", error);
+                }
+            }
+        }
+
+        void fetchJoinedGroups();
+
+        return () => controller.abort();
+    }, [token]);
+
     const searchParams = useSearchParams();
 
     useEffect(() => {
@@ -94,6 +148,102 @@ function CommunityContent() {
         }
     }, [searchParams, event, group]);
 
+    async function joinGroup(groupId: number) {
+        if (!token) {
+            setMembershipMessage(
+                "You must be logged in to join a group."
+            );
+            return;
+        }
+
+        setMembershipLoading(true);
+        setMembershipMessage("");
+
+        try {
+            const response = await fetch(
+                `http://localhost:4000/api/community/groups/${groupId}/join`,
+                {
+                    method: "POST",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            const data: { message?: string } = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.message || "Could not join group"
+                );
+            }
+
+            setJoinedGroupIds((currentIds) => {
+                const updatedIds = new Set(currentIds);
+                updatedIds.add(groupId);
+                return updatedIds;
+            });
+
+            setMembershipMessage(
+                data.message || "Group joined successfully."
+            );
+        } catch (error) {
+            setMembershipMessage(
+                error instanceof Error
+                    ? error.message
+                    : "Could not join group"
+            );
+        } finally {
+            setMembershipLoading(false);
+        }
+    }
+
+    async function leaveGroup(groupId: number) {
+        if (!token) {
+            return;
+        }
+
+        setMembershipLoading(true);
+        setMembershipMessage("");
+
+        try {
+            const response = await fetch(
+                `http://localhost:4000/api/community/groups/${groupId}/join`,
+                {
+                    method: "DELETE",
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            const data: { message?: string } = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.message || "Could not leave group"
+                );
+            }
+
+            setJoinedGroupIds((currentIds) => {
+                const updatedIds = new Set(currentIds);
+                updatedIds.delete(groupId);
+                return updatedIds;
+            });
+
+            setMembershipMessage(
+                data.message || "Group left successfully."
+            );
+        } catch (error) {
+            setMembershipMessage(
+                error instanceof Error
+                    ? error.message
+                    : "Could not leave group"
+            );
+        } finally {
+            setMembershipLoading(false);
+        }
+    }
     return (
         <div className="w-full max-w-5xl mx-auto px-4 py-6 sm:px-6 sm:py-10">
             <h1 className="text-2xl font-bold sm:text-3xl">
@@ -194,6 +344,7 @@ function CommunityContent() {
                                         onClick={() => {
                                             setSelectedGroup(g);
                                             setIsEditingGroup(false);
+                                            setMembershipMessage("");
                                         }}
                                         onKeyDown={(keyEvent) => {
                                             if (keyEvent.target !== keyEvent.currentTarget) return;
@@ -201,6 +352,7 @@ function CommunityContent() {
                                                 keyEvent.preventDefault();
                                                 setSelectedGroup(g);
                                                 setIsEditingGroup(false);
+                                                setMembershipMessage("");
                                             }
                                         }}
                                         className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
@@ -223,6 +375,7 @@ function CommunityContent() {
                     onClose={() => {
                         setSelectedEvent(null);
                         setIsEditingEvent(false);
+                        setMembershipMessage("");
                     }}
                 >
                     {isEditingEvent ? (
@@ -287,13 +440,74 @@ function CommunityContent() {
                         />
                     ) : (
                         <>
-                            <h2 className="text-2xl font-semibold">{selectedGroup.name}</h2>
-                            <p className="text-primary mt-2">{selectedGroup.category}</p>
-                            <p className="mt-4">{selectedGroup.description}</p>
+                            <h2 className="text-2xl font-semibold">
+                                {selectedGroup.name}
+                            </h2>
+
+                            <p className="mt-2 text-primary">
+                                {selectedGroup.category}
+                            </p>
+
+                            <p className="mt-4">
+                                {selectedGroup.description}
+                            </p>
+
+                            {user && user.role !== "admin" && (
+                                <div className="mt-6">
+                                    {joinedGroupIds.has(Number(selectedGroup.id)) ? (
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                leaveGroup(Number(selectedGroup.id))
+                                            }
+                                            disabled={membershipLoading}
+                                            className="
+                        rounded-control border border-primary
+                        bg-white px-6 py-3 font-medium text-primary
+                        transition-colors hover:bg-primary-light
+                        disabled:cursor-not-allowed disabled:opacity-60
+                    "
+                                        >
+                                            {membershipLoading
+                                                ? "Leaving..."
+                                                : "Leave group"}
+                                        </button>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                joinGroup(Number(selectedGroup.id))
+                                            }
+                                            disabled={membershipLoading}
+                                            className="
+                        rounded-control bg-primary
+                        px-6 py-3 font-medium text-white
+                        transition-colors hover:bg-primary-hover
+                        disabled:cursor-not-allowed disabled:opacity-60
+                    "
+                                        >
+                                            {membershipLoading
+                                                ? "Joining..."
+                                                : "Join group"}
+                                        </button>
+                                    )}
+
+                                    {membershipMessage && (
+                                        <p
+                                            role="status"
+                                            className="mt-3 text-sm text-text-secondary"
+                                        >
+                                            {membershipMessage}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+
                             {user?.role === "admin" && (
                                 <button
+                                    type="button"
                                     onClick={() => setIsEditingGroup(true)}
-                                    className="bg-primary text-white px-6 py-3 rounded-lg mt-6"
+                                    className="mt-6 rounded-lg bg-primary px-6 py-3 text-white"
                                 >
                                     Edit
                                 </button>
