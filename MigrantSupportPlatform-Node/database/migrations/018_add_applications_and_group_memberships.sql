@@ -1,3 +1,8 @@
+-- Down Migration
+
+DROP TABLE IF EXISTS group_memberships;
+DROP TABLE IF EXISTS job_applications;
+
 CREATE TABLE IF NOT EXISTS job_applications (
     id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -15,7 +20,3 @@ CREATE TABLE IF NOT EXISTS group_memberships (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (user_id, group_id)
 );
--- Down Migration
-
-DROP TABLE IF EXISTS group_memberships;
-DROP TABLE IF EXISTS job_applications;
