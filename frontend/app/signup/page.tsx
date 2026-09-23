@@ -12,32 +12,49 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  async function handleSubmit (e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
     if (loading) return;
-    setError("");
+
+    setError(null);
     setLoading(true);
-  
-  try {
-    const response = await fetch("http://localhost:4000/api/auth/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ name, email, password }),
-    });
 
-    if (!response.ok) {
-      setError("Could not create your account. Please check your details and try again.");
-      return;
-    }
+    try {
+      const response = await fetch(
+        "http://localhost:4000/api/auth/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name,
+            email,
+            password,
+          }),
+        }
+      );
 
-    // Redirect to login after successful signup
-    router.push("/login");
-  } catch {
-    setError("Could not connect to server");
-  } finally {
-    setLoading(false);
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(
+          data.message ||
+          "Could not create your account. Please check your details and try again."
+        );
+        return;
+      }
+
+      // The backend creates the user, generates a 2FA code,
+      // stores the hashed code, and sends the real code by email.
+      // The returned userId tells the verification page which user
+      // is completing the login process.
+      router.push(`/verify-login?userId=${data.userId}`);
+    } catch {
+      setError("Could not connect to server");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -89,5 +106,5 @@ export default function SignUpPage() {
         </Link>
       </p>
     </div>
-    );
+  );
 }

@@ -2,24 +2,35 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useAuth } from "../../context/AuthContext";
 
-export default function VerifyLoginPage() {
+export default function ResetPasswordPage() {
+    // Form state
     const [code, setCode] = useState("");
+    const [newPassword, setNewPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+
+    // UI state
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { login } = useAuth();
 
-    const userId = searchParams.get("userId");
+    // The forgot-password page passes the user's email in the URL
+    const email = searchParams.get("email");
 
-    async function handleVerifyCode(e: React.FormEvent) {
+    async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
 
-        if (!userId) {
-            setError("Verification session is missing. Please log in again.");
+        if (!email) {
+            setError(
+                "Password reset session is missing. Please start again."
+            );
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            setError("Passwords do not match");
             return;
         }
 
@@ -27,16 +38,18 @@ export default function VerifyLoginPage() {
         setLoading(true);
 
         try {
+            // Send the reset code and new password to the backend
             const response = await fetch(
-                "http://localhost:4000/api/auth/verify-2fa",
+                "http://localhost:4000/api/auth/reset-password",
                 {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
-                        userId: Number(userId),
+                        email,
                         code,
+                        newPassword,
                     }),
                 }
             );
@@ -45,22 +58,18 @@ export default function VerifyLoginPage() {
 
             if (!response.ok) {
                 throw new Error(
-                    data.message || "Verification failed"
+                    data.message || "Password reset failed"
                 );
             }
 
-            login(data.token, data.user);
-
-            router.replace(
-                data.user.role === "admin"
-                    ? "/admin"
-                    : "/userDashboard"
-            );
+            // Password has been changed successfully,
+            // so send the user back to the login page.
+            router.replace("/login");
         } catch (err) {
             setError(
                 err instanceof Error
                     ? err.message
-                    : "Verification failed"
+                    : "Password reset failed"
             );
         } finally {
             setLoading(false);
@@ -70,15 +79,16 @@ export default function VerifyLoginPage() {
     return (
         <div className="w-full max-w-md mx-auto px-6 py-10">
             <h1 className="text-3xl font-semibold text-black mb-4">
-                Verify your login
+                Reset password
             </h1>
 
             <p className="text-sm text-neutral mb-6">
-                We sent a 6-digit verification code to your email address.
+                Enter the 6-digit code sent to your email and choose a
+                new password.
             </p>
 
             <form
-                onSubmit={handleVerifyCode}
+                onSubmit={handleSubmit}
                 className="flex flex-col gap-4"
             >
                 <input
@@ -86,7 +96,7 @@ export default function VerifyLoginPage() {
                     inputMode="numeric"
                     pattern="[0-9]*"
                     maxLength={6}
-                    placeholder="Verification Code"
+                    placeholder="Reset Code"
                     value={code}
                     onChange={(e) =>
                         setCode(
@@ -94,6 +104,30 @@ export default function VerifyLoginPage() {
                                 .replace(/\D/g, "")
                                 .slice(0, 6)
                         )
+                    }
+                    required
+                    className="border border-neutral/30 rounded-lg px-4 py-3 bg-white outline-none"
+                />
+
+                <input
+                    type="password"
+                    name="newPassword"
+                    placeholder="New Password"
+                    value={newPassword}
+                    onChange={(e) =>
+                        setNewPassword(e.target.value)
+                    }
+                    required
+                    className="border border-neutral/30 rounded-lg px-4 py-3 bg-white outline-none"
+                />
+
+                <input
+                    type="password"
+                    name="confirmPassword"
+                    placeholder="Confirm New Password"
+                    value={confirmPassword}
+                    onChange={(e) =>
+                        setConfirmPassword(e.target.value)
                     }
                     required
                     className="border border-neutral/30 rounded-lg px-4 py-3 bg-white outline-none"
@@ -110,20 +144,17 @@ export default function VerifyLoginPage() {
 
                 <button
                     type="submit"
-                    disabled={loading || code.length !== 6}
+                    disabled={
+                        loading ||
+                        code.length !== 6 ||
+                        !newPassword ||
+                        !confirmPassword
+                    }
                     className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    {loading ? "Verifying..." : "Verify Code"}
+                    {loading ? "Resetting..." : "Reset Password"}
                 </button>
             </form>
-
-            <button
-                type="button"
-                onClick={() => router.push("/login")}
-                className="mt-4 text-sm text-primary font-semibold"
-            >
-                Back to login
-            </button>
         </div>
     );
 }

@@ -3,7 +3,10 @@ const router = express.Router();
 const pool = require('../db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { sendVerificationCode } = require('../utils/mailer');
+const {
+    sendVerificationCode,
+    sendPasswordResetCode
+} = require('../utils/mailer');
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
@@ -179,6 +182,167 @@ router.post('/verify-2fa', async (req, res) => {
 
     } catch (error) {
         console.error(error.message);
+        res.status(500).json({
+            message: 'Server error'
+        });
+    }
+});
+
+// POST /api/auth/forgot-password
+router.post('/forgot-password', async (req, res) => {
+    const { email } = req.body;
+
+    if (!email) {
+        return res.status(400).json({
+            message: 'Email is required'
+        });
+    }
+
+    try {
+        const result = await pool.query(
+            'SELECT * FROM users WHERE email = $1',
+            [email]
+        );
+
+        const user = result.rows[0];
+
+        // Always return the same response so we do not reveal
+        // whether an email address exists in the database.
+        if (!user) {
+            return res.json({
+                message:
+                    'If an account exists for that email, a reset code has been sent.'
+            });
+        }
+
+        // Generate a 6-digit password reset code
+        const resetCode = Math.floor(
+            100000 + Math.random() * 900000
+        ).toString();
+
+        // Store only the hashed version of the reset code
+        const resetCodeHash = await bcrypt.hash(
+            resetCode,
+            10
+        );
+
+        // Reset code expires after 10 minutes
+        const expiresAt = new Date(
+            Date.now() + 10 * 60 * 1000
+        );
+
+        await pool.query(
+            `UPDATE users
+             SET password_reset_code_hash = $1,
+                 password_reset_expires_at = $2
+             WHERE id = $3`,
+            [
+                resetCodeHash,
+                expiresAt,
+                user.id
+            ]
+        );
+
+        // Email the real reset code to the user
+        await sendPasswordResetCode(
+            user.email,
+            resetCode
+        );
+
+        res.json({
+            message:
+                'If an account exists for that email, a reset code has been sent.'
+        });
+    } catch (error) {
+        console.error(error.message);
+
+        res.status(500).json({
+            message: 'Server error'
+        });
+    }
+});
+
+// POST /api/auth/reset-password
+router.post('/reset-password', async (req, res) => {
+    const {
+        email,
+        code,
+        newPassword
+    } = req.body;
+
+    if (!email || !code || !newPassword) {
+        return res.status(400).json({
+            message:
+                'Email, reset code, and new password are required'
+        });
+    }
+
+    try {
+        const result = await pool.query(
+            'SELECT * FROM users WHERE email = $1',
+            [email]
+        );
+
+        const user = result.rows[0];
+
+        if (
+            !user ||
+            !user.password_reset_code_hash ||
+            !user.password_reset_expires_at
+        ) {
+            return res.status(400).json({
+                message: 'Invalid password reset request'
+            });
+        }
+
+        // Check whether the reset code has expired
+        if (
+            new Date() >
+            new Date(user.password_reset_expires_at)
+        ) {
+            return res.status(400).json({
+                message: 'Password reset code has expired'
+            });
+        }
+
+        // Compare the submitted code with the stored hash
+        const validCode = await bcrypt.compare(
+            code.toString(),
+            user.password_reset_code_hash
+        );
+
+        if (!validCode) {
+            return res.status(400).json({
+                message: 'Invalid password reset code'
+            });
+        }
+
+        // Hash the user's new password
+        const hashedPassword = await bcrypt.hash(
+            newPassword,
+            10
+        );
+
+        // Update the password and clear the reset code
+        // so it cannot be reused.
+        await pool.query(
+            `UPDATE users
+             SET password = $1,
+                 password_reset_code_hash = NULL,
+                 password_reset_expires_at = NULL
+             WHERE id = $2`,
+            [
+                hashedPassword,
+                user.id
+            ]
+        );
+
+        res.json({
+            message: 'Password reset successful'
+        });
+    } catch (error) {
+        console.error(error.message);
+
         res.status(500).json({
             message: 'Server error'
         });

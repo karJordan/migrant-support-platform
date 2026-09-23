@@ -1,42 +1,36 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useAuth } from "../../context/AuthContext";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
-export default function VerifyLoginPage() {
-    const [code, setCode] = useState("");
+export default function ForgotPasswordPage() {
+    // Form state
+    const [email, setEmail] = useState("");
+
+    // UI state
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
 
     const router = useRouter();
-    const searchParams = useSearchParams();
-    const { login } = useAuth();
 
-    const userId = searchParams.get("userId");
-
-    async function handleVerifyCode(e: React.FormEvent) {
+    async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-
-        if (!userId) {
-            setError("Verification session is missing. Please log in again.");
-            return;
-        }
 
         setError(null);
         setLoading(true);
 
         try {
+            // Ask the backend to generate and email a reset code
             const response = await fetch(
-                "http://localhost:4000/api/auth/verify-2fa",
+                "http://localhost:4000/api/auth/forgot-password",
                 {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
-                        userId: Number(userId),
-                        code,
+                        email,
                     }),
                 }
             );
@@ -45,22 +39,20 @@ export default function VerifyLoginPage() {
 
             if (!response.ok) {
                 throw new Error(
-                    data.message || "Verification failed"
+                    data.message || "Could not start password reset"
                 );
             }
 
-            login(data.token, data.user);
-
-            router.replace(
-                data.user.role === "admin"
-                    ? "/admin"
-                    : "/userDashboard"
+            // Pass the email to the reset page so the user
+            // does not need to enter it again.
+            router.push(
+                `/reset-password?email=${encodeURIComponent(email)}`
             );
         } catch (err) {
             setError(
                 err instanceof Error
                     ? err.message
-                    : "Verification failed"
+                    : "Could not start password reset"
             );
         } finally {
             setLoading(false);
@@ -70,31 +62,24 @@ export default function VerifyLoginPage() {
     return (
         <div className="w-full max-w-md mx-auto px-6 py-10">
             <h1 className="text-3xl font-semibold text-black mb-4">
-                Verify your login
+                Forgot password
             </h1>
 
             <p className="text-sm text-neutral mb-6">
-                We sent a 6-digit verification code to your email address.
+                Enter your email address and we&apos;ll send you a
+                6-digit password reset code.
             </p>
 
             <form
-                onSubmit={handleVerifyCode}
+                onSubmit={handleSubmit}
                 className="flex flex-col gap-4"
             >
                 <input
-                    type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    maxLength={6}
-                    placeholder="Verification Code"
-                    value={code}
-                    onChange={(e) =>
-                        setCode(
-                            e.target.value
-                                .replace(/\D/g, "")
-                                .slice(0, 6)
-                        )
-                    }
+                    type="email"
+                    name="email"
+                    placeholder="Email Address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
                     className="border border-neutral/30 rounded-lg px-4 py-3 bg-white outline-none"
                 />
@@ -110,20 +95,22 @@ export default function VerifyLoginPage() {
 
                 <button
                     type="submit"
-                    disabled={loading || code.length !== 6}
+                    disabled={loading}
                     className="bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                    {loading ? "Verifying..." : "Verify Code"}
+                    {loading ? "Sending code..." : "Send Reset Code"}
                 </button>
             </form>
 
-            <button
-                type="button"
-                onClick={() => router.push("/login")}
-                className="mt-4 text-sm text-primary font-semibold"
-            >
-                Back to login
-            </button>
+            <p className="mt-4 text-sm text-neutral">
+                Remember your password?{" "}
+                <Link
+                    href="/login"
+                    className="text-primary font-semibold hover:underline"
+                >
+                    Log in
+                </Link>
+            </p>
         </div>
     );
 }
