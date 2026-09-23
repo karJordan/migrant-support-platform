@@ -18,3 +18,4 @@ sendVerificationCode(recipient, '123456')
         console.error('Failed to send test email:', error.message);
         process.exit(1);
     });
+    

@@ -3,6 +3,7 @@ const router = express.Router();
 const pool = require('../db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { sendVerificationCode } = require('../utils/mailer');
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
@@ -65,7 +66,86 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
-        const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        const twoFactorCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+        const twoFactorCodeHash = await bcrypt.hash(twoFactorCode, 10);
+
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+        await pool.query(
+            `UPDATE users
+     SET two_factor_code_hash = $1,
+         two_factor_expires_at = $2
+     WHERE id = $3`,
+            [twoFactorCodeHash, expiresAt, user.id]
+        );
+
+        await sendVerificationCode(user.email, twoFactorCode);
+
+        res.json({
+            requiresTwoFactor: true,
+            userId: user.id
+        });
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// POST /api/auth/verify-2fa
+router.post('/verify-2fa', async (req, res) => {
+    const { userId, code } = req.body;
+
+    if (!userId || !code) {
+        return res.status(400).json({
+            message: 'User ID and verification code are required'
+        });
+    }
+
+    try {
+        const result = await pool.query(
+            'SELECT * FROM users WHERE id = $1',
+            [userId]
+        );
+
+        const user = result.rows[0];
+
+        if (!user || !user.two_factor_code_hash || !user.two_factor_expires_at) {
+            return res.status(400).json({
+                message: 'Invalid verification request'
+            });
+        }
+
+        if (new Date() > new Date(user.two_factor_expires_at)) {
+            return res.status(400).json({
+                message: 'Verification code has expired'
+            });
+        }
+
+        const validCode = await bcrypt.compare(
+            code.toString(),
+            user.two_factor_code_hash
+        );
+
+        if (!validCode) {
+            return res.status(400).json({
+                message: 'Invalid verification code'
+            });
+        }
+
+        const token = jwt.sign(
+            { id: user.id, role: user.role },
+            process.env.JWT_SECRET,
+            { expiresIn: '1h' }
+        );
+
+        await pool.query(
+            `UPDATE users
+             SET two_factor_code_hash = NULL,
+                 two_factor_expires_at = NULL
+             WHERE id = $1`,
+            [user.id]
+        );
 
         res.json({
             token,
@@ -82,9 +162,12 @@ router.post('/login', async (req, res) => {
                 created_at: user.created_at
             }
         });
+
     } catch (error) {
         console.error(error.message);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({
+            message: 'Server error'
+        });
     }
 });
 
