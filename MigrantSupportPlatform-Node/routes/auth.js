@@ -262,6 +262,68 @@ router.post('/forgot-password', async (req, res) => {
     }
 });
 
+// POST /api/auth/verify-reset-code
+router.post('/verify-reset-code', async (req, res) => {
+    const { email, code } = req.body;
+
+    if (!email || !code) {
+        return res.status(400).json({
+            message: 'Email and reset code are required'
+        });
+    }
+
+    try {
+        const result = await pool.query(
+            'SELECT * FROM users WHERE email = $1',
+            [email]
+        );
+
+        const user = result.rows[0];
+
+        if (
+            !user ||
+            !user.password_reset_code_hash ||
+            !user.password_reset_expires_at
+        ) {
+            return res.status(400).json({
+                message: 'Invalid password reset request'
+            });
+        }
+
+        // Check whether the reset code has expired
+        if (
+            new Date() >
+            new Date(user.password_reset_expires_at)
+        ) {
+            return res.status(400).json({
+                message: 'Password reset code has expired'
+            });
+        }
+
+        // Compare the submitted code with the stored hash
+        const validCode = await bcrypt.compare(
+            code.toString(),
+            user.password_reset_code_hash
+        );
+
+        if (!validCode) {
+            return res.status(400).json({
+                message: 'Invalid password reset code'
+            });
+        }
+
+        res.json({
+            message: 'Reset code verified'
+        });
+    } catch (error) {
+        console.error(error.message);
+
+        res.status(500).json({
+            message: 'Server error'
+        });
+    }
+});
+
 // POST /api/auth/reset-password
 router.post('/reset-password', async (req, res) => {
     const {
