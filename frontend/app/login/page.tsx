@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 export default function LoginPage() {
@@ -14,6 +14,10 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false);
 
     const router = useRouter();
+    const searchParams = useSearchParams();
+
+    const passwordResetSuccessful =
+        searchParams.get("reset") === "success";
 
     // Handle the user's email/password login attempt
     async function handleSubmit(e: React.FormEvent) {
@@ -76,7 +80,12 @@ export default function LoginPage() {
             <h1 className="text-3xl font-semibold text-black mb-6">
                 Login
             </h1>
-
+            {/* Show a success message if the user has just reset their password */}
+            {passwordResetSuccessful && (
+                <p className="mb-4 text-sm text-green-600">
+                    Password reset successful. You can now log in with your new password.
+                </p>
+            )}
             {/* Standard email/password login form */}
             <form
                 onSubmit={handleSubmit}
@@ -102,6 +111,15 @@ export default function LoginPage() {
                     className="border border-neutral/30 rounded-lg px-4 py-3 bg-white outline-none"
                 />
 
+                {/* Link to the forgot password page */}
+                <div className="text-right">
+                    <Link
+                        href="/forgot-password"
+                        className="text-sm text-primary font-semibold hover:underline"
+                    >
+                        Forgot password?
+                    </Link>
+                </div>
                 {/* Show login errors returned by the backend */}
                 {error && (
                     <p

@@ -64,7 +64,7 @@ export default function ResetPasswordPage() {
 
             // Password has been changed successfully,
             // so send the user back to the login page.
-            router.replace("/login");
+            router.replace("/login?reset=success");
         } catch (err) {
             setError(
                 err instanceof Error
