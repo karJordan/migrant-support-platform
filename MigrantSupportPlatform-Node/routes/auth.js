@@ -27,22 +27,36 @@ router.post('/register', async (req, res) => {
         );
 
         const user = result.rows[0];
-        const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+        const twoFactorCode = Math.floor(
+            100000 + Math.random() * 900000
+        ).toString();
+
+        const twoFactorCodeHash = await bcrypt.hash(
+            twoFactorCode,
+            10
+        );
+
+        const expiresAt = new Date(
+            Date.now() + 10 * 60 * 1000
+        );
+
+        await pool.query(
+            `UPDATE users
+     SET two_factor_code_hash = $1,
+         two_factor_expires_at = $2
+     WHERE id = $3`,
+            [twoFactorCodeHash, expiresAt, user.id]
+        );
+
+        await sendVerificationCode(
+            user.email,
+            twoFactorCode
+        );
 
         res.status(201).json({
-            token,
-            user: {
-                id: user.id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-                country_of_origin: user.country_of_origin,
-                current_address: user.current_address,
-                current_city: user.current_city,
-                current_country: user.current_country,
-                phone_number: user.phone_number,
-                created_at: user.created_at
-            }
+            requiresTwoFactor: true,
+            userId: user.id
         });
     } catch (error) {
         console.error(error.message);
