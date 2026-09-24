@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-export default function LoginPage() {
+// The LoginContent component handles the login form and its logic.
+function LoginContent() {
     // Form field state
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -14,6 +15,7 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false);
 
     const router = useRouter();
+    // Get the query parameters from the URL to check if the user has just reset their password
     const searchParams = useSearchParams();
 
     const passwordResetSuccessful =
@@ -150,5 +152,19 @@ export default function LoginPage() {
                 </Link>
             </p>
         </div>
+    );
+}
+// The main LoginPage component wraps the LoginContent in a Suspense component to handle loading states.
+export default function LoginPage() {
+    return (
+        <Suspense fallback={
+            <div className="w-full max-w-md mx-auto px-6 py-10">
+                <p className="text-sm text-neutral">
+                    Loading...
+                </p>
+            </div>
+        }>
+            <LoginContent />
+        </Suspense>
     );
 }
