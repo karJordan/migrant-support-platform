@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
 
-export default function VerifyLoginPage() {
+// The VerifyLoginPageContent component handles the verification form and its logic.
+function VerifyLoginContent() {
     const [code, setCode] = useState("");
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -125,5 +126,22 @@ export default function VerifyLoginPage() {
                 Back to login
             </button>
         </div>
+    );
+}
+
+// The VerifyLoginPage component wraps the VerifyLoginPageContent with Suspense for loading state.
+export default function VerifyLoginPage() {
+    return (
+        <Suspense
+            fallback={
+                <div className="w-full max-w-md mx-auto px-6 py-10">
+                    <p className="text-sm text-neutral">
+                        Loading...
+                    </p>
+                </div>
+            }
+        >
+            <VerifyLoginContent />
+        </Suspense>
     );
 }
