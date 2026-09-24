@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function ResetPasswordPage() {
+// The ResetPasswordContent component handles the password reset form and its logic.
+function ResetPasswordContent() {
     // Form state
     const [code, setCode] = useState("");
     const [newPassword, setNewPassword] = useState("");
@@ -232,5 +233,21 @@ export default function ResetPasswordPage() {
                 </form>
             )}
         </div>
+    );
+}
+// The ResetPasswordPage component wraps the ResetPasswordContent in a Suspense component to handle loading states.
+export default function ResetPasswordPage() {
+    return (
+        <Suspense
+            fallback={
+                <div className="w-full max-w-md mx-auto px-6 py-10">
+                    <p className="text-sm text-neutral">
+                        Loading...
+                    </p>
+                </div>
+            }
+        >
+            <ResetPasswordContent />
+        </Suspense>
     );
 }
