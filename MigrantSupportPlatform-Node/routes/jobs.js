@@ -3,6 +3,8 @@ const router = express.Router();
 const pool = require('../db');
 const authenticateToken = require('../middleware/authMiddleware');
 const validateCategory = require('../middleware/validateCategory');
+const inputValidation = require('../middleware/inputValidation');
+const { jobSchema } = require('../validation/job.schemas');
 
 // GET /api/jobs - Get approved jobs
 router.get('/', async (req, res) => {
@@ -33,7 +35,7 @@ router.get('/', async (req, res) => {
 });
 
 // POST /api/jobs - Create a new job (requires login)
-router.post('/', authenticateToken, validateCategory('job'), async (req, res) => {
+router.post('/', authenticateToken, inputValidation(jobSchema), validateCategory('job'), async (req, res) => {
     const { title, company, location, employment_type, category_id, description } = req.body;
 
     if (!title || !company) {
@@ -186,7 +188,7 @@ router.delete('/:id/apply', authenticateToken, async (req, res) => {
 });
 
 // PATCH /api/jobs/:id - Update an existing job
-router.patch('/:id', authenticateToken, validateCategory('job'), async (req, res) => {
+router.patch('/:id', authenticateToken, inputValidation(jobSchema), validateCategory('job'), async (req, res) => {
     if (req.user.role !== 'admin') {
         return res.status(403).json({
             message: 'Admin access required'

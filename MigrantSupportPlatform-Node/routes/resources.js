@@ -3,6 +3,8 @@ const router = express.Router();
 const pool = require('../db');
 const authenticateToken = require('../middleware/authMiddleware');
 const validateCategory = require('../middleware/validateCategory');
+const inputValidation = require('../middleware/inputValidation');
+const { resourceSchema } = require('../validation/resource.schemas');
 
 // GET /api/resources - Get approved resources
 router.get('/', async (req, res) => {
@@ -31,7 +33,7 @@ router.get('/', async (req, res) => {
 });
 
 // POST /api/resources - Create a new resource (requires login)
-router.post('/', authenticateToken, validateCategory('resource'), async (req, res) => {
+router.post('/', authenticateToken, inputValidation(resourceSchema),validateCategory('resource'), async (req, res) => {
     const { title, description, link, category_id } = req.body;
 
     if (!title || !link) {
@@ -54,7 +56,7 @@ router.post('/', authenticateToken, validateCategory('resource'), async (req, re
     }
 });
 // PATCH /api/resources/:id - Update an existing resource
-router.patch('/:id', authenticateToken, validateCategory('resource'), async (req, res) => {
+router.patch('/:id', authenticateToken, inputValidation(resourceSchema), validateCategory('resource'), async (req, res) => {
     if (req.user.role !== 'admin') {
         return res.status(403).json({
             message: 'Admin access required'
