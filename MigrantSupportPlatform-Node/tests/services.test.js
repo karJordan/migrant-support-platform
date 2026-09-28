@@ -1,5 +1,6 @@
 const express = require('express');
 const request = require('supertest');
+const { validService } = require('./fixtures');
 
 jest.mock('../db', () => ({ query: jest.fn() }));
 jest.mock('../middleware/authMiddleware', () => (req, res, next) => {
@@ -12,6 +13,9 @@ const pool = require('../db');
 const app = express();
 app.use(express.json());
 app.use('/api/services', require('../routes/services'));
+
+// category_id is only here to satisfy the schema; the category lookup is mocked out
+const body = { ...validService, category_id: 1 };
 
 beforeEach(() => pool.query.mockReset());
 
@@ -41,10 +45,21 @@ describe('GET /api/services', () => {
 
 describe('POST /api/services', () => {
     test('requires name', async () => {
-        const res = await request(app).post('/api/services').send({});
+        const res = await request(app).post('/api/services').send({ ...body, name: '' });
 
         expect(res.status).toBe(400);
-        expect(res.body.message).toBe('Name is required');
+        expect(res.body.errors.name).toBeDefined();
+        expect(pool.query).not.toHaveBeenCalled();
+    });
+
+    test('rejects an invalid website and phone number', async () => {
+        const res = await request(app)
+            .post('/api/services')
+            .send({ ...body, website: 'javascript:alert(1)', phone: 'abc' });
+
+        expect(res.status).toBe(400);
+        expect(res.body.errors.website).toBeDefined();
+        expect(res.body.errors.phone).toBeDefined();
         expect(pool.query).not.toHaveBeenCalled();
     });
 
@@ -54,7 +69,7 @@ describe('POST /api/services', () => {
         const res = await request(app)
             .post('/api/services')
             .set('x-role', 'admin')
-            .send({ name: 'Clinic' });
+            .send(body);
 
         expect(res.status).toBe(201);
         expect(pool.query.mock.calls[0][1]).toContain('approved');
@@ -66,10 +81,22 @@ describe('POST /api/services', () => {
         const res = await request(app)
             .post('/api/services')
             .set('x-role', 'user')
-            .send({ name: 'Clinic' });
+            .send(body);
 
         expect(res.status).toBe(201);
         expect(pool.query.mock.calls[0][1]).toContain('pending');
+    });
+
+    test('ignores a status sent in the body', async () => {
+        pool.query.mockResolvedValueOnce({ rows: [{ id: 1, name: 'Clinic', status: 'pending' }] });
+
+        await request(app)
+            .post('/api/services')
+            .set('x-role', 'user')
+            .send({ ...body, status: 'approved' });
+
+        expect(pool.query.mock.calls[0][1]).toContain('pending');
+        expect(pool.query.mock.calls[0][1]).not.toContain('approved');
     });
 });
 
@@ -78,7 +105,7 @@ describe('PATCH /api/services/:id', () => {
         const res = await request(app)
             .patch('/api/services/1')
             .set('x-role', 'user')
-            .send({ name: 'Clinic' });
+            .send(body);
 
         expect(res.status).toBe(403);
         expect(pool.query).not.toHaveBeenCalled();
@@ -90,7 +117,7 @@ describe('PATCH /api/services/:id', () => {
         const res = await request(app)
             .patch('/api/services/1')
             .set('x-role', 'admin')
-            .send({ name: 'Updated Clinic' });
+            .send({ ...body, name: 'Updated Clinic' });
 
         expect(res.status).toBe(200);
         expect(res.body.name).toBe('Updated Clinic');
@@ -102,7 +129,7 @@ describe('PATCH /api/services/:id', () => {
         const res = await request(app)
             .patch('/api/services/999')
             .set('x-role', 'admin')
-            .send({ name: 'Clinic' });
+            .send(body);
 
         expect(res.status).toBe(404);
         expect(res.body.message).toBe('Service not found');
@@ -112,9 +139,10 @@ describe('PATCH /api/services/:id', () => {
         const res = await request(app)
             .patch('/api/services/1')
             .set('x-role', 'admin')
-            .send({});
+            .send({ ...body, name: '' });
 
         expect(res.status).toBe(400);
+        expect(res.body.errors.name).toBeDefined();
         expect(pool.query).not.toHaveBeenCalled();
     });
 });

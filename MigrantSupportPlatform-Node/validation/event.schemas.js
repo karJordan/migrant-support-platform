@@ -1,7 +1,7 @@
 // validation/event.schemas.js
 const { z } = require('zod');
 const { DATE_PATTERN, TIME_PATTERN } = require('./constants');
-const { categoryIdField, titleField, descriptionField, locationField } = require('./fields');
+const { optionalCategoryIdField, titleField, descriptionField, locationField } = require('./fields');
 
 // The regex accepts 2026-02-31, so also check it's a real calendar date
 const isRealDate = (value) => {
@@ -19,7 +19,7 @@ const eventDateField = z
     .refine(isRealDate, 'Enter a real date');
 
 const baseEventSchema = z.object({
-    category_id: categoryIdField,
+    category_id: optionalCategoryIdField,
     title: titleField,
     location: locationField,
     event_date: eventDateField,

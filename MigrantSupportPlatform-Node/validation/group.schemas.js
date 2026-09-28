@@ -1,8 +1,8 @@
 const { z } = require('zod');
-const { categoryIdField, titleField, descriptionField } = require('./fields');
+const { optionalCategoryIdField, titleField, descriptionField } = require('./fields');
 
 const communityGroupSchema = z.object({
-    category_id: categoryIdField,
+    category_id: optionalCategoryIdField,
     name: titleField,
     description: descriptionField,
 });

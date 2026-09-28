@@ -4,7 +4,7 @@ const pool = require('../db');
 const authenticateToken = require('../middleware/authMiddleware');
 const validateCategory = require('../middleware/validateCategory');
 const inputValidation = require('../middleware/inputValidation');
-const { jobSchema } = require('../validation/job.schemas');
+const { jobSchema, jobUpdateSchema } = require('../validation/job.schemas');
 
 // GET /api/jobs - Get approved jobs
 router.get('/', async (req, res) => {
@@ -188,7 +188,7 @@ router.delete('/:id/apply', authenticateToken, async (req, res) => {
 });
 
 // PATCH /api/jobs/:id - Update an existing job
-router.patch('/:id', authenticateToken, inputValidation(jobSchema), validateCategory('job'), async (req, res) => {
+router.patch('/:id', authenticateToken, inputValidation(jobUpdateSchema), validateCategory('job'), async (req, res) => {
     if (req.user.role !== 'admin') {
         return res.status(403).json({
             message: 'Admin access required'

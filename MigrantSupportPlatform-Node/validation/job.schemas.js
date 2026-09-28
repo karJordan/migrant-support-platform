@@ -12,4 +12,6 @@ const jobSchema = z.object({
     employment_type: z.enum(EMPLOYMENT_TYPES, { message: 'Select an employment type' }),
 });
 
-module.exports = { jobSchema };
+const jobUpdateSchema = jobSchema.extend({ category_id: categoryIdField.optional() });
+
+module.exports = { jobSchema, jobUpdateSchema };

@@ -8,4 +8,6 @@ const resourceSchema = z.object({
     link: urlField,
 });
 
-module.exports = { resourceSchema };
+const resourceUpdateSchema = resourceSchema.extend({ category_id: categoryIdField.optional() });
+
+module.exports = { resourceSchema, resourceUpdateSchema };

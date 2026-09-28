@@ -22,4 +22,6 @@ const serviceSchema = z.object({
     website: urlField,
 });
 
-module.exports = { serviceSchema };
+const serviceUpdateSchema = serviceSchema.extend({ category_id: categoryIdField.optional() });
+
+module.exports = { serviceSchema, serviceUpdateSchema };

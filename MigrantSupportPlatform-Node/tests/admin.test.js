@@ -68,7 +68,14 @@ describe('PATCH /api/admin/approve/:type/:id and /api/admin/reject/:type/:id', (
         const createRes = await request(app)
             .post('/api/jobs')
             .set('Authorization', `Bearer ${userToken}`)
-            .send({ title: 'Admin Test Job', company: 'Test Co', category_id: 1 });
+            .send({ 
+                title: 'Admin Test Job',
+                company: 'Test Co',
+                location: 'Test City',
+                employment_type: 'Full Time',
+                description: 'This is a test job for admin approval.',
+                category_id: 1
+             });
         jobId = createRes.body.id;
     });
 

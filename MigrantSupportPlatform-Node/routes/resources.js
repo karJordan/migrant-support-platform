@@ -4,7 +4,7 @@ const pool = require('../db');
 const authenticateToken = require('../middleware/authMiddleware');
 const validateCategory = require('../middleware/validateCategory');
 const inputValidation = require('../middleware/inputValidation');
-const { resourceSchema } = require('../validation/resource.schemas');
+const { resourceSchema, resourceUpdateSchema } = require('../validation/resource.schemas');
 
 // GET /api/resources - Get approved resources
 router.get('/', async (req, res) => {
@@ -56,7 +56,7 @@ router.post('/', authenticateToken, inputValidation(resourceSchema),validateCate
     }
 });
 // PATCH /api/resources/:id - Update an existing resource
-router.patch('/:id', authenticateToken, inputValidation(resourceSchema), validateCategory('resource'), async (req, res) => {
+router.patch('/:id', authenticateToken, inputValidation(resourceUpdateSchema), validateCategory('resource'), async (req, res) => {
     if (req.user.role !== 'admin') {
         return res.status(403).json({
             message: 'Admin access required'
