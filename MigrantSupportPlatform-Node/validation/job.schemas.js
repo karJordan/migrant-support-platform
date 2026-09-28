@@ -1,5 +1,5 @@
 const { z } = require('zod');
-const { RULES, EMPLOYMENT_TYPES } = require('./constants');
+const { EMPLOYMENT_TYPES } = require('./constants');
 const { categoryIdField, titleField, descriptionField, locationField, companyField } = require('./fields');
 
 // status and created_by are deliberately not here: the route sets them
