@@ -1,7 +1,6 @@
 const express = require('express');
 const request = require('supertest');
 const { validJob, validService, validResource, validGroup, validEvent } = require('./fixtures');
-const { z } = require('zod');
 
 jest.mock('../db', () => ({ query: jest.fn() }));
 jest.mock('../middleware/authMiddleware', () => (req, res, next) => {
@@ -22,18 +21,9 @@ const listings = [
     ['community/events', 'community', validEvent],
 ];
 
-const categoryIdField = z
-    .union([z.number().int(), z.string().regex(/^\d+$/)], { message: 'Select a category' })
-    .transform((value) => Number(value))
-    .pipe(
-        z.number()
-            .positive('Select a category')
-            .max(2147483647, 'Select a category')
-    );
-
     beforeEach(() => {
         pool.query.mockReset();
-        pool.query.mockResolvedValue({ rows: [] }); // default: not found → 400
+        pool.query.mockResolvedValue({ rows: [] }); 
     });
 
 // These tests exercise the actual HTTP handlers with a mocked database; no real data is touched.
