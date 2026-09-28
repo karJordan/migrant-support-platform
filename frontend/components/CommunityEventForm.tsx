@@ -7,6 +7,8 @@ import CategoryField, { useCategoryOptions } from "@/components/CategoryField";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { CommunityEvent } from "@/types/event";
+import FieldError from "./ui/FieldError";
+import { parseFieldErrors } from "@/utils/parseFieldErrors";
 
 type CommunityEventFormProps = {
     communityEvent?: CommunityEvent;
@@ -41,6 +43,10 @@ export default function CommunityEventForm({
     const [message, setMessage] = useState("");
     const [messageType, setMessageType] = useState<"success" | "error">("error");
     const [isSubmitting, setIsSubmitting] = useState(false);
+    
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+    const today = new Date().toLocaleDateString("en-CA", { timeZone: "Pacific/Auckland" });
 
     async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -48,6 +54,7 @@ export default function CommunityEventForm({
         if (isSubmitting) return;
         setMessageType("error");
         setMessage("");
+        setFieldErrors({});
 
         if (!token || !user) {
             setMessage("You must be logged in to submit an event.");
@@ -88,6 +95,13 @@ export default function CommunityEventForm({
 
             if (!response.ok) {
                 const failure = await response.json().catch(() => null);
+                const parsed = parseFieldErrors(failure);
+
+                if (parsed) {
+                    setFieldErrors(parsed);
+                    return;
+                }
+
                 if (failure?.message || failure?.error) throw new Error(failure.message || failure.error);
                 throw new Error(
                     communityEvent
@@ -164,6 +178,7 @@ export default function CommunityEventForm({
                     onChange={(event) => setTitle(event.target.value)}
                     required
                 />
+                <FieldError message={fieldErrors.title} />
             </div>
 
             <div>
@@ -181,6 +196,7 @@ export default function CommunityEventForm({
                     onChange={(event) => setLocation(event.target.value)}
                     required
                 />
+                <FieldError message={fieldErrors.location} />
             </div>
 
             <div>
@@ -197,6 +213,7 @@ export default function CommunityEventForm({
                     onChange={(event) => setEventDate(event.target.value)}
                     required
                 />
+                <FieldError message={fieldErrors.event_date} />
             </div>
 
             <div>
@@ -229,6 +246,7 @@ export default function CommunityEventForm({
                     onChange={(event) => setDescription(event.target.value)}
                     required
                 />
+                <FieldError message={fieldErrors.description} />
             </div>
 
             <CategoryField
@@ -239,6 +257,7 @@ export default function CommunityEventForm({
                 optional={true}
                 disabled={isSubmitting}
             />
+            <FieldError message={fieldErrors.category_id} />
 
             <Button
                 type="submit"

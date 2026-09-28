@@ -7,6 +7,8 @@ import CategoryField, { useCategoryOptions } from "@/components/CategoryField";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { CommunityGroup } from "@/types/group";
+import FieldError from "./ui/FieldError";
+import { parseFieldErrors } from "@/utils/parseFieldErrors";
 
 type CommunityGroupFormProps = {
     group?: CommunityGroup;
@@ -33,12 +35,15 @@ export default function CommunityGroupForm({
     const [messageType, setMessageType] = useState<"success" | "error">("error");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
     async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
         if (isSubmitting) return;
         setMessage("");
         setMessageType("error");
+        setFieldErrors({});
 
         if (!token || !user) {
             setMessage("You must be logged in to submit a community group.");
@@ -76,6 +81,13 @@ export default function CommunityGroupForm({
 
             if (!response.ok) {
                 const failure = await response.json().catch(() => null);
+                const parsed = parseFieldErrors(failure);
+
+                if (parsed) {
+                    setFieldErrors(parsed);
+                    return;
+                }
+
                 if (failure?.message || failure?.error) throw new Error(failure.message || failure.error);
                 throw new Error(
                     group
@@ -150,6 +162,7 @@ export default function CommunityGroupForm({
                     onChange={(event) => setName(event.target.value)}
                     required
                 />
+                <FieldError message={fieldErrors.name} />
             </div>
 
             <CategoryField
@@ -160,6 +173,7 @@ export default function CommunityGroupForm({
                 optional={true}
                 disabled={isSubmitting}
             />
+            <FieldError message={fieldErrors.category_id} />
 
             <div>
                 <label
@@ -175,6 +189,7 @@ export default function CommunityGroupForm({
                     onChange={(event) => setDescription(event.target.value)}
                     required
                 />
+                <FieldError message={fieldErrors.description} />
             </div>
 
             <Button

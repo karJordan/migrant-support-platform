@@ -10,14 +10,14 @@ const isHttpUrl = (value) => {
     }
 };
 
-// http(s) only, so javascript: links are rejected
+
 const urlField = z
     .string()
     .trim()
     .max(RULES.URL_MAX, `Must be under ${RULES.URL_MAX} characters`)
     .refine(isHttpUrl, 'Enter a valid http(s) link');
 
-// "" coerces to 0, which fails positive()
+
 const categoryIdField = z.coerce
     .number({ message: 'Select a category' })
     .int('Select a category')
@@ -38,7 +38,13 @@ const descriptionField = z
 const locationField = z
     .string()
     .trim()
-    .min(1, 'Location is required')
+    .min(RULES.LOCATION_MIN, `Must be at least ${RULES.LOCATION_MIN} characters`)
     .max(RULES.LOCATION_MAX, `Must be under ${RULES.LOCATION_MAX} characters`);
 
-module.exports = { urlField, categoryIdField, titleField, descriptionField, locationField };
+const companyField = z
+    .string()
+    .trim()
+    .min(RULES.COMPANY_MIN, `Must be at least ${RULES.COMPANY_MIN} characters`)
+    .max(RULES.COMPANY_MAX, `Must be under ${RULES.COMPANY_MAX} characters`);
+
+module.exports = { urlField, categoryIdField, titleField, descriptionField, locationField, companyField };
