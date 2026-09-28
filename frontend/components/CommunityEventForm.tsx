@@ -211,6 +211,7 @@ export default function CommunityEventForm({
                     type="date"
                     value={eventDate}
                     onChange={(event) => setEventDate(event.target.value)}
+                    min={communityEvent ? undefined : today}
                     required
                 />
                 <FieldError message={fieldErrors.event_date} />
