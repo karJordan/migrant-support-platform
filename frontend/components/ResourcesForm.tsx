@@ -7,6 +7,8 @@ import CategoryField, { useCategoryOptions } from "@/components/CategoryField";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Resource } from "@/types/resource";
+import FieldError from "./ui/FieldError";
+import { parseFieldErrors } from "@/utils/parseFieldErrors";
 
 type ResourcesFormProps = {
     resource?: Resource;
@@ -34,12 +36,15 @@ export default function ResourcesForm({
     const [messageType, setMessageType] = useState<"success" | "error">("error");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
     async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
         if (isSubmitting) return;
         setMessage("");
         setMessageType("error");
+        setFieldErrors({});
 
         if (!token || !user) {
             setMessage("You must be logged in to submit a resource.");
@@ -82,6 +87,13 @@ export default function ResourcesForm({
 
             if (!response.ok) {
                 const failure = await response.json().catch(() => null);
+                const parsed = parseFieldErrors(failure);
+
+                if (parsed) {
+                    setFieldErrors(parsed);
+                    return;
+                }
+
                 if (failure?.message || failure?.error) throw new Error(failure.message || failure.error);
                 throw new Error(
                     resource
@@ -154,6 +166,7 @@ export default function ResourcesForm({
                     onChange={(event) => setTitle(event.target.value)}
                     required
                 />
+                <FieldError message={fieldErrors.title} />
             </div>
 
             <CategoryField
@@ -164,6 +177,7 @@ export default function ResourcesForm({
                 optional={false}
                 disabled={isSubmitting}
             />
+            <FieldError message={fieldErrors.category_id} />
 
             <div>
                 <label
@@ -179,6 +193,7 @@ export default function ResourcesForm({
                     onChange={(event) => setDescription(event.target.value)}
                     required
                 />
+                <FieldError message={fieldErrors.description} />
             </div>
 
             <div>
@@ -197,6 +212,7 @@ export default function ResourcesForm({
                     onChange={(event) => setLink(event.target.value)}
                     required
                 />
+                <FieldError message={fieldErrors.link} />
             </div>
 
             <Button
