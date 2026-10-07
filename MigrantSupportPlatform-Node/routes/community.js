@@ -3,6 +3,9 @@ const router = express.Router();
 const pool = require('../db');
 const authenticateToken = require('../middleware/authMiddleware');
 const validateCategory = require('../middleware/validateCategory');
+const inputValidation = require('../middleware/inputValidation');
+const { communityGroupSchema } = require('../validation/group.schemas');
+const { communityEventSchema, communityEventUpdateSchema } = require('../validation/event.schemas');
 
 // GROUPS
 router.get('/groups', async (req, res) => {
@@ -28,7 +31,7 @@ router.get('/groups', async (req, res) => {
     }
 });
 
-router.post('/groups', authenticateToken, validateCategory('community', { optional: true }), async (req, res) => {
+router.post('/groups', authenticateToken, inputValidation(communityGroupSchema), validateCategory('community', { optional: true }), async (req, res) => {
     const { name, category_id, description } = req.body;
 
     if (!name) {
@@ -176,7 +179,7 @@ router.delete('/groups/:id/join', authenticateToken, async (req, res) => {
     }
 });
 // PATCH /api/community/groups/:id - Update an existing community group
-router.patch('/groups/:id', authenticateToken, validateCategory('community', { optional: true }), async (req, res) => {
+router.patch('/groups/:id', authenticateToken, inputValidation(communityGroupSchema), validateCategory('community', { optional: true }), async (req, res) => {
     if (req.user.role !== 'admin') {
         return res.status(403).json({
             message: 'Admin access required'
@@ -251,7 +254,7 @@ router.get('/events', async (req, res) => {
     }
 });
 
-router.post('/events', authenticateToken, validateCategory('community', { optional: true }), async (req, res) => {
+router.post('/events', authenticateToken, inputValidation(communityEventSchema), validateCategory('community', { optional: true }), async (req, res) => {
     const { title, category_id, location, event_date, event_time, description } = req.body;
 
     if (!title || !event_date || !event_time) {
@@ -271,7 +274,7 @@ router.post('/events', authenticateToken, validateCategory('community', { option
     }
 });
 // PATCH /api/community/events/:id - Update an existing community event
-router.patch('/events/:id', authenticateToken, validateCategory('community', { optional: true }), async (req, res) => {
+router.patch('/events/:id', authenticateToken, inputValidation(communityEventUpdateSchema), validateCategory('community', { optional: true }), async (req, res) => {
     if (req.user.role !== 'admin') {
         return res.status(403).json({
             message: 'Admin access required'
