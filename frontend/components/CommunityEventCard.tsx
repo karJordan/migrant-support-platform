@@ -1,5 +1,6 @@
 import Card from "@/components/ui/Card";
 import { CalendarDays, MapPin, Clock } from "lucide-react";
+import SaveButton from "@/components/SaveButton";
 
 type CommunityEventProps = {
     id: string | number;
@@ -26,7 +27,16 @@ export default function CommunityEventCard({ id, title, eventDate, eventTime, lo
                     <CalendarDays size={22} />
                 </div>
                 <div className="min-w-0">
-                    <h2 className="break-words text-base font-semibold leading-snug">{title}</h2>
+                    <div className="flex items-start justify-between gap-3">
+                        <h2 className="break-words text-base font-semibold leading-snug">
+                            {title}
+                        </h2>
+
+                        <SaveButton
+                            itemId={id}
+                            listingType="community_event"
+                        />
+                    </div>
                     <p className="mt-1 text-sm font-medium text-primary">{formattedDate}</p>
                     {eventTime && <p className="mt-1 flex items-start gap-1.5 text-sm text-text-secondary"><Clock size={14} aria-hidden="true" className="mt-0.5 shrink-0" /><span>{eventTime.slice(0, 5)}</span></p>}
                     <p className="mt-1 flex items-start gap-1.5 text-sm text-text-secondary"><MapPin size={14} aria-hidden="true" className="mt-0.5 shrink-0" /><span className="break-words">{location || "Location to be confirmed"}</span></p>

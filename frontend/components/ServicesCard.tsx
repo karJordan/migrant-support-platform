@@ -1,5 +1,6 @@
 import Card from "@/components/ui/Card";
 import { MapPin } from "lucide-react";
+import SaveButton from "@/components/SaveButton";
 
 type ServiceCardProps = {
   id: string | number;
@@ -10,6 +11,7 @@ type ServiceCardProps = {
 };
 
 export default function ServiceCard({
+  id,
   name,
   category,
   description,
@@ -21,6 +23,10 @@ export default function ServiceCard({
         <span className="text-sm text-primary font-medium min-w-0 break-words">
           {category}
         </span>
+        <SaveButton
+        itemId={id}
+        listingType="service"
+    />
       </div>
 
       <h2 className="heading-4 mt-2 break-words">
