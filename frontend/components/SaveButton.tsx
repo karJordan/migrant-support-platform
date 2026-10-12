@@ -1,32 +1,41 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Star } from "lucide-react";
+import { Heart } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
-type FavouriteButtonProps = {
+type ListingType =
+    | "job"
+    | "service"
+    | "resource"
+    | "community_event"
+    | "community_group";
+
+type SaveButtonProps = {
     itemId: string | number;
+    listingType: ListingType;
 };
 
-export default function FavouriteButton({
+export default function SaveButton({
     itemId,
-}: FavouriteButtonProps) {
+    listingType,
+}: SaveButtonProps) {
     const { user, isLoading } = useAuth();
-    const [isFavourite, setIsFavourite] = useState(false);
+    const [isSaved, setIsSaved] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         if (!isLoading && user && itemId) {
-            void checkIfFavourite();
+            void checkIfSaved();
         }
-    }, [isLoading, user, itemId]);
+    }, [isLoading, user, itemId, listingType]);
 
-    async function checkIfFavourite() {
+    async function checkIfSaved() {
         if (!user) return;
 
         try {
             const response = await fetch(
-                `http://localhost:4000/api/saved/check/${user.id}/job/${itemId}`,
+                `http://localhost:4000/api/saved/check/${user.id}/${listingType}/${itemId}`
             );
 
             if (!response.ok) {
@@ -34,14 +43,14 @@ export default function FavouriteButton({
             }
 
             const data = await response.json();
-            setIsFavourite(data.saved);
+            setIsSaved(data.saved);
         } catch (error) {
-            console.error("Error checking favourite status", error);
+            console.error("Error checking saved status", error);
         }
     }
 
-    async function toggleFavourite(
-        event: React.MouseEvent<HTMLButtonElement>,
+    async function toggleSaved(
+        event: React.MouseEvent<HTMLButtonElement>
     ) {
         event.stopPropagation();
 
@@ -58,57 +67,59 @@ export default function FavouriteButton({
             const response = await fetch(
                 "http://localhost:4000/api/saved/",
                 {
-                    method: isFavourite ? "DELETE" : "POST",
+                    method: isSaved ? "DELETE" : "POST",
                     headers: {
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
                         user_id: user.id,
                         listing_id: Number(itemId),
-                        listing_type: "job",
+                        listing_type: listingType,
                     }),
-                },
+                }
             );
 
             if (!response.ok) {
                 throw new Error(`HTTP error: ${response.status}`);
             }
 
-            setIsFavourite((current) => !current);
+            setIsSaved((current) => !current);
         } catch (error) {
-            console.error("Error updating favourite", error);
+            console.error("Error updating saved listing", error);
         } finally {
             setIsSaving(false);
         }
     }
 
-    if (isLoading || !user) return null;
+    if (isLoading || !user || user.role === "admin") {
+        return null;
+    }
 
     return (
         <button
             type="button"
-            onClick={toggleFavourite}
-            onKeyDown={(event) => {
-                event.stopPropagation();
-            }}
+            onClick={toggleSaved}
+            onKeyDown={(event) => event.stopPropagation()}
             disabled={isSaving}
-            aria-pressed={isFavourite}
+            aria-pressed={isSaved}
             aria-label={
-                isFavourite
-                    ? "Remove job from favourites"
-                    : "Add job to favourites"
+                isSaved
+                    ? "Remove from saved listings"
+                    : "Save listing"
             }
             className={
-                "shrink-0 rounded-full p-1 transition focus:outline-none focus:ring-2 focus:ring-primary disabled:cursor-wait disabled:opacity-50 " +
-                (isFavourite
-                    ? "text-amber-400"
-                    : "text-gray-300 hover:text-amber-400")
+                "shrink-0 rounded-full p-1 transition " +
+                "focus:outline-none focus:ring-2 focus:ring-primary " +
+                "disabled:cursor-wait disabled:opacity-50 " +
+                (isSaved
+                    ? "text-red-500"
+                    : "text-gray-300 hover:text-red-500")
             }
         >
-            <Star
+            <Heart
                 aria-hidden="true"
                 size={23}
-                fill={isFavourite ? "currentColor" : "none"}
+                fill={isSaved ? "currentColor" : "none"}
             />
         </button>
     );
