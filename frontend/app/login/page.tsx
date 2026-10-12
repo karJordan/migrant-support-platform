@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useAuth } from "../../context/AuthContext";
 
 // The LoginContent component handles the login form and its logic.
 function LoginContent() {
@@ -13,6 +14,8 @@ function LoginContent() {
     // UI state
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+
+    const { login } = useAuth();
 
     const router = useRouter();
     // Get the query parameters from the URL to check if the user has just reset their password
@@ -52,6 +55,13 @@ function LoginContent() {
                 throw new Error(
                     data.message || "Invalid username or password"
                 );
+            }
+
+            // If the backend skipped 2FA (test mode) it returns a token + user directly.
+            if (data.token) {
+                login(data.token, data.user);
+                router.push("/userDashboard");
+                return;
             }
 
             // If the password is correct, the backend sends a 2FA code

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useAuth } from "../../context/AuthContext";
 
 export default function SignUpPage() {
   const [name, setName] = useState("");
@@ -11,6 +12,7 @@ export default function SignUpPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { login } = useAuth();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -46,11 +48,21 @@ export default function SignUpPage() {
         return;
       }
 
-      // The backend creates the user, generates a 2FA code,
+      // Test mode: backend skips 2FA and returns a token + user directly.
+      if (data.token) {
+        login(data.token, data.user);
+        router.push("/userDashboard");
+        return;
+      }
+
+      // Normal flow: backend creates the user, generates a 2FA code,
       // stores the hashed code, and sends the real code by email.
       // The returned userId tells the verification page which user
       // is completing the login process.
-      router.push(`/verify-login?userId=${data.userId}`);
+      if (data.requiresTwoFactor) {
+        router.push(`/verify-login?userId=${data.userId}`);
+        return;
+      }
     } catch {
       setError("Could not connect to server");
     } finally {
