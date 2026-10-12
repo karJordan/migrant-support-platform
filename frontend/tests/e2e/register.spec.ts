@@ -66,7 +66,7 @@ test.describe('Register Flow', () => {
         });
 
         await test.step('Successful registration opens the login page', async () => {
-            await expect(page).toHaveURL('/login', { timeout: 10000 });
+            await expect(page).toHaveURL('/userDashboard', { timeout: 10000 });
         });
     });
 });
