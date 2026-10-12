@@ -1,5 +1,6 @@
 const express = require('express');
 const request = require('supertest');
+const { validJob, validService, validResource, validGroup, validEvent } = require('./fixtures');
 
 jest.mock('../db', () => ({ query: jest.fn() }));
 jest.mock('../middleware/authMiddleware', () => (req, res, next) => {
@@ -13,14 +14,17 @@ for (const route of ['services', 'jobs', 'resources', 'community', 'admin']) {
     app.use(`/api/${route}`, require(`../routes/${route}`));
 }
 const listings = [
-    ['services', 'service', { name: 'Clinic' }],
-    ['jobs', 'job', { title: 'Nurse', company: 'Clinic' }],
-    ['resources', 'resource', { title: 'Guide', link: 'https://example.com' }],
-    ['community/groups', 'community', { name: 'Group' }],
-    ['community/events', 'community', { title: 'Meetup', event_date: '2026-10-01', event_time: '12:00' }]
+    ['services', 'service', validService],
+    ['jobs', 'job', validJob],
+    ['resources', 'resource', validResource],
+    ['community/groups', 'community', validGroup],
+    ['community/events', 'community', validEvent],
 ];
 
-beforeEach(() => pool.query.mockReset());
+    beforeEach(() => {
+        pool.query.mockReset();
+        pool.query.mockResolvedValue({ rows: [] }); 
+    });
 
 // These tests exercise the actual HTTP handlers with a mocked database; no real data is touched.
 describe.each(listings)('%s category validation', (route, type, body) => {

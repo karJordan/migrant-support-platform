@@ -3,10 +3,12 @@
 import Button from "@/components/ui/Button";
 import Input, { Textarea, Select } from "@/components/ui/Input";
 import Feedback from "@/components/ui/Feedback";
+import FieldError from "@/components/ui/FieldError";
 import CategoryField, { useCategoryOptions } from "@/components/CategoryField";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Job } from "@/types/job";
+import { parseFieldErrors } from "@/utils/parseFieldErrors";
 
 type JobsFormProps = {
     job?: Job;
@@ -34,6 +36,7 @@ export default function JobsForm({
 
     const [message, setMessage] = useState("");
     const [messageType, setMessageType] = useState<"success" | "error">("error");
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -42,6 +45,7 @@ export default function JobsForm({
         if (isSubmitting) return;
         setMessage("");
         setMessageType("error");
+        setFieldErrors({});
 
         if (!token || !user) {
             setMessage("You must be logged in to submit a job.");
@@ -86,6 +90,14 @@ export default function JobsForm({
 
             if (!response.ok) {
                 const failure = await response.json().catch(() => null);
+                const parsed = parseFieldErrors(failure);
+
+                if (parsed) {
+                    setFieldErrors(parsed);
+                    setIsSubmitting(false);
+                    return;
+                }
+
                 if (failure?.message || failure?.error) throw new Error(failure.message || failure.error);
                 throw new Error(
                     job
@@ -160,6 +172,7 @@ export default function JobsForm({
                     onChange={(event) => setTitle(event.target.value)}
                     required
                 />
+                <FieldError message={fieldErrors.title} />
             </div>
 
             <div>
@@ -177,6 +190,7 @@ export default function JobsForm({
                     onChange={(event) => setCompany(event.target.value)}
                     required
                 />
+                <FieldError message={fieldErrors.company} />
             </div>
 
             <div>
@@ -194,6 +208,7 @@ export default function JobsForm({
                     onChange={(event) => setLocation(event.target.value)}
                     required
                 />
+                <FieldError message={fieldErrors.location} />
             </div>
 
             <div>
@@ -215,6 +230,7 @@ export default function JobsForm({
                     <option value="Contract">Contract</option>
                     <option value="Casual">Casual</option>
                 </Select>
+                <FieldError message={fieldErrors.employment_type} />
             </div>
 
             <div>
@@ -231,6 +247,7 @@ export default function JobsForm({
                     onChange={(event) => setDescription(event.target.value)}
                     required
                 />
+                <FieldError message={fieldErrors.description} />
             </div>
 
             <CategoryField
@@ -241,6 +258,7 @@ export default function JobsForm({
                 optional={false}
                 disabled={isSubmitting}
             />
+            <FieldError message={fieldErrors.category_id} />
 
             <Button
                 type="submit"
