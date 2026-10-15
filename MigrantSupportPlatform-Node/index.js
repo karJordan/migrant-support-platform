@@ -13,11 +13,16 @@ const savedRoutes = require('./routes/saved');
 const categoriesRoutes = require('./routes/categories');
 const authenticateToken = require('./middleware/authMiddleware');
 const app = express();
-const PORT = process.env.PORT || 4000;
 const usersRoutes = require("./routes/users");
+const PORT = process.env.PORT || 4000;
 
 
-app.use(cors({origin: 'http://localhost:3000'}));
+const FRONTEND_URL =
+    process.env.FRONTEND_URL || "http://localhost:3000";
+
+app.use(cors({
+    origin: FRONTEND_URL,
+}));
 app.use(express.json());
 app.use('/api/admin', adminRoutes);
 app.use('/api/services', servicesRoutes);

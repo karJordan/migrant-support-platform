@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Users, Briefcase, GraduationCap, MapPinSearch, Calendar } from "lucide-react";
+import { API_URL } from "@/lib/api";
+
 
 interface Event {
   id: number;
@@ -72,21 +74,21 @@ export default function Home() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const eventsRes = await fetch("http://localhost:4000/api/community/events");
+        const eventsRes = await fetch(`${API_URL}/api/community/events`);
         const eventsData = await eventsRes.json();
         const approvedEvents = eventsData.filter((e: Event) => e.status === 'approved');
         if (approvedEvents.length > 0) {
           setUpcomingEvent(approvedEvents[0]);
         }
 
-        const jobsRes = await fetch("http://localhost:4000/api/jobs");
+        const jobsRes = await fetch(`${API_URL}/api/jobs`);
         const jobsData = await jobsRes.json();
         const approvedJobs = jobsData.filter((j: Job) => j.status === 'approved');
         if (approvedJobs.length > 0) {
           setNewestJob(approvedJobs[0]);
         }
 
-        const groupsRes = await fetch("http://localhost:4000/api/community/groups");
+        const groupsRes = await fetch(`${API_URL}/api/community/groups`);
         const groupsData = await groupsRes.json();
         const approvedGroups = groupsData.filter((g: Group) => g.status === 'approved');
         if (approvedGroups.length > 0) {

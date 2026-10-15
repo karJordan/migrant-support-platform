@@ -9,6 +9,7 @@ import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Job } from "@/types/job";
 import { parseFieldErrors } from "@/utils/parseFieldErrors";
+import { API_URL } from "@/lib/api";
 
 type JobsFormProps = {
     job?: Job;
@@ -69,8 +70,8 @@ export default function JobsForm({
         try {
             const response = await fetch(
                 job
-                    ? `http://localhost:4000/api/jobs/${job.id}`
-                    : "http://localhost:4000/api/jobs",
+                    ? `${API_URL}/api/jobs/${job.id}`
+                    : `${API_URL}/api/jobs`,
                 {
                     method: job ? "PATCH" : "POST",
                     headers: {

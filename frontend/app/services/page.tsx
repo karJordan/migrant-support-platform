@@ -9,6 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Service } from "@/types/service";
 import FilterChipRow from "@/components/FilterChipRow";
 import SearchBar from "@/components/SearchBar";
+import { API_URL } from "@/lib/api";
 
 function ServicesContent() {
     const [services, setServices] = useState<Service[]>([]);
@@ -23,7 +24,7 @@ function ServicesContent() {
     useEffect(() => {
         async function fetchServices() {
             try {
-                const response = await fetch("http://localhost:4000/api/services");
+                const response = await fetch(`${API_URL}/api/services`);
                 if (!response.ok) throw new Error("Failed to fetch services");
                 const data = await response.json();
                 setServices(data);

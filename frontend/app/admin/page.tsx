@@ -20,6 +20,7 @@ import JobsForm from "@/components/JobsForm";
 import ResourcesForm from "@/components/ResourcesForm";
 import CommunityGroupForm from "@/components/CommunityGroupForm";
 import CommunityEventForm from "@/components/CommunityEventForm";
+import { API_URL } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
@@ -80,8 +81,6 @@ type SelectedPost =
     | { type: "group"; post: CommunityGroup }
     | { type: "event"; post: CommunityEvent }
     | { type: "resource"; post: Resource };
-
-const API_URL = "http://localhost:4000";
 
 const buttonClass =
     "bg-primary text-white px-6 py-3 rounded-lg " +

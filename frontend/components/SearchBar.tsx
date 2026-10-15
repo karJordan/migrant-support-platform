@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Search } from "lucide-react";
+import { API_URL } from "@/lib/api";
 
 type SearchResult = {
   id: number;
@@ -39,7 +40,7 @@ export default function SearchBar({ type, placeholder = "Search..." }: SearchBar
         const params = new URLSearchParams({ query });
         if (type) params.set("type", type);
 
-        const res = await fetch(`http://localhost:4000/api/search?${params}`);
+        const res = await fetch(`${API_URL}/api/search?${params}`);
         const data = await res.json();
         setResults(data);
         setShowDropdown(true);

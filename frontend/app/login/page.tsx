@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { API_URL } from "@/lib/api";
 
 // The LoginContent component handles the login form and its logic.
 function LoginContent() {
@@ -32,7 +33,7 @@ function LoginContent() {
         try {
             // Send the email and password to the backend login endpoint
             const response = await fetch(
-                "http://localhost:4000/api/auth/login",
+                `${API_URL}/api/auth/login`,
                 {
                     method: "POST",
                     headers: {

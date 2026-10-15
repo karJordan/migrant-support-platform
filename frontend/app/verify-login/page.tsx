@@ -3,6 +3,7 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
+import { API_URL } from "@/lib/api";
 
 // The VerifyLoginPageContent component handles the verification form and its logic.
 function VerifyLoginContent() {
@@ -29,7 +30,7 @@ function VerifyLoginContent() {
 
         try {
             const response = await fetch(
-                "http://localhost:4000/api/auth/verify-2fa",
+                `${API_URL}/api/auth/verify-2fa`,
                 {
                     method: "POST",
                     headers: {

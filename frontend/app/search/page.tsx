@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Briefcase, MapPin, Users, Calendar, ArrowLeft, BookOpen } from "lucide-react";
 import Modal from "@/components/Modal";
+import { API_URL } from "@/lib/api";
 
 interface SearchResult {
     id: number;
@@ -47,7 +48,7 @@ function SearchContent() {
         setError(null);
 
         try {
-            const response = await fetch(`http://localhost:4000/api/search?query=${encodeURIComponent(query)}`);
+            const response = await fetch(`${API_URL}/api/search?query=${encodeURIComponent(query)}`);
             if (!response.ok) {
                 throw new Error("Failed to fetch search results");
             }

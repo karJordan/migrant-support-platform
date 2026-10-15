@@ -9,6 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Service } from "@/types/service";
 import FieldError from "./ui/FieldError";
 import { parseFieldErrors } from "@/utils/parseFieldErrors";
+import { API_URL } from "@/lib/api";
 
 type ServiceFormProps = {
     service?: Service;
@@ -68,8 +69,8 @@ export default function ServiceForm({
         try {
             const response = await fetch(
                 service
-                    ? `http://localhost:4000/api/services/${service.id}`
-                    : "http://localhost:4000/api/services",
+                    ? `${API_URL}/api/services/${service.id}`
+                    : `${API_URL}/api/services`,
                 {
                     method: service ? "PATCH" : "POST",
                     headers: {

@@ -21,6 +21,7 @@ import JobsForm from "@/components/JobsForm";
 import ResourcesForm from "@/components/ResourcesForm";
 import CommunityGroupForm from "@/components/CommunityGroupForm";
 import CommunityEventForm from "@/components/CommunityEventForm";
+import { API_URL } from "@/lib/api";
 
 //card to display services
 interface DashboardService {
@@ -127,7 +128,7 @@ export default function UserDashboardPage() {
         async function fetchSavedCount() {
             try {
                 const response = await fetch(
-                    "http://localhost:4000/api/users/me/summary",
+                    `${API_URL}/api/users/me/summary`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -164,8 +165,8 @@ export default function UserDashboardPage() {
     async function fetchDashboardContent() {
         try {
             const [servicesResponse, jobsResponse] = await Promise.all([
-                fetch("http://localhost:4000/api/services"),
-                fetch("http://localhost:4000/api/jobs"),
+                fetch(`${API_URL}/api/services`),
+                fetch(`${API_URL}/api/jobs`),
             ]);
 
             if (servicesResponse.ok) {
