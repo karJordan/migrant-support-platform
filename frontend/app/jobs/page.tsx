@@ -9,6 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Job } from "@/types/job";
 import FilterChipRow from "@/components/FilterChipRow";
 import SearchBar from "@/components/SearchBar";
+import { API_URL } from "@/lib/api";
 
 function JobsContent() {
     const [jobs, setJobs] = useState<Job[]>([]);
@@ -27,7 +28,7 @@ function JobsContent() {
     useEffect(() => {
         async function fetchJobs() {
             try {
-                const res = await fetch("http://localhost:4000/api/jobs");
+                const res = await fetch(`${API_URL}/api/jobs`);
                 if (!res.ok) throw new Error("Failed to fetch jobs");
                 const data = await res.json();
                 setJobs(data);
