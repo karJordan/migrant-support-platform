@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Heart } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
+import { API_URL } from "@/lib/api";
 
 type ListingType =
     | "job"
@@ -35,7 +36,7 @@ export default function SaveButton({
 
         try {
             const response = await fetch(
-                `http://localhost:4000/api/saved/check/${user.id}/${listingType}/${itemId}`
+                `${API_URL}/api/saved/check/${user.id}/${listingType}/${itemId}`
             );
 
             if (!response.ok) {
@@ -65,7 +66,7 @@ export default function SaveButton({
 
         try {
             const response = await fetch(
-                "http://localhost:4000/api/saved/",
+                `${API_URL}/api/saved/`,
                 {
                     method: isSaved ? "DELETE" : "POST",
                     headers: {
