@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { API_URL } from "@/lib/api";
 
 export default function ForgotPasswordPage() {
     // Form state
@@ -23,7 +24,7 @@ export default function ForgotPasswordPage() {
         try {
             // Ask the backend to generate and email a reset code
             const response = await fetch(
-                "http://localhost:4000/api/auth/forgot-password",
+                `${API_URL}/api/auth/forgot-password`,
                 {
                     method: "POST",
                     headers: {
