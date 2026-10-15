@@ -9,6 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Resource } from "@/types/resource";
 import FilterChipRow from "@/components/FilterChipRow";
 import SearchBar from "@/components/SearchBar";
+import { API_URL } from "@/lib/api";
 
 function ResourceContent() {
     const [resources, setResources] = useState<Resource[]>([]);
@@ -23,7 +24,7 @@ function ResourceContent() {
     useEffect(() => {
         async function fetchResources() {
             try {
-                const res = await fetch("http://localhost:4000/api/resources");
+                const res = await fetch(`${API_URL}/api/resources`);
                 if (!res.ok) throw new Error("Failed to fetch resources");
                 const data = await res.json();
                 setResources(data);

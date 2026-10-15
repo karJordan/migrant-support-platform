@@ -14,6 +14,7 @@ import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import Feedback from "@/components/ui/Feedback";
 import Modal from "@/components/Modal";
+import { API_URL } from "@/lib/api";
 
 type ProfileSummary = {
     userId: string;
@@ -130,7 +131,7 @@ export default function ProfilePage() {
         async function loadProfileSummary() {
             try {
                 const response = await fetch(
-                    "http://localhost:4000/api/users/me/summary",
+                    `${API_URL}/api/users/me/summary`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -196,7 +197,7 @@ export default function ProfilePage() {
 
         try {
             const response = await fetch(
-                "http://localhost:4000/api/jobs/applications/me",
+                `${API_URL}/api/jobs/applications/me`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -232,7 +233,7 @@ export default function ProfilePage() {
 
         try {
             const response = await fetch(
-                `http://localhost:4000/api/jobs/${jobId}/apply`,
+                `${API_URL}/api/jobs/${jobId}/apply`,
                 {
                     method: "DELETE",
                     headers: {
@@ -288,7 +289,7 @@ export default function ProfilePage() {
 
         try {
             const response = await fetch(
-                "http://localhost:4000/api/community/groups/joined",
+                `${API_URL}/api/community/groups/joined`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -324,7 +325,7 @@ export default function ProfilePage() {
 
         try {
             const response = await fetch(
-                `http://localhost:4000/api/community/groups/${groupId}/join`,
+                `${API_URL}/api/community/groups/${groupId}/join`,
                 {
                     method: "DELETE",
                     headers: {
@@ -701,7 +702,7 @@ export default function ProfilePage() {
 
                                     try {
                                         const response = await fetch(
-                                            `http://localhost:4000/api/users/${user.id}`,
+                                            `${API_URL}/api/users/${user.id}`,
                                             {
                                                 method: "PATCH",
                                                 headers: {

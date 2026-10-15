@@ -12,6 +12,8 @@ import { useAuth } from "@/context/AuthContext";
 import { CommunityGroup } from "@/types/group";
 import { CommunityEvent } from "@/types/event";
 import SearchBar from "@/components/SearchBar";
+import { API_URL } from "@/lib/api";
+
 
 function CommunityContent() {
     const [event, setEvent] = useState<CommunityEvent[]>([]);
@@ -52,7 +54,7 @@ function CommunityContent() {
         async function fetchEvents() {
             setEventsError("");
             try {
-                const res = await fetch("http://localhost:4000/api/community/events", {
+                const res = await fetch(`${API_URL}/api/community/events`, {
                     method: "GET",
                     headers: { "Content-Type": "application/json" }
                 });
@@ -69,7 +71,7 @@ function CommunityContent() {
         async function fetchGroups() {
             setGroupsError("");
             try {
-                const res = await fetch("http://localhost:4000/api/community/groups", {
+                const res = await fetch(`${API_URL}/api/community/groups`, {
                     method: "GET",
                     headers: { "Content-Type": "application/json" }
                 });
@@ -97,7 +99,7 @@ function CommunityContent() {
         async function fetchJoinedGroups() {
             try {
                 const response = await fetch(
-                    "http://localhost:4000/api/community/groups/joined",
+                    `${API_URL}/api/community/groups/joined`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -161,7 +163,7 @@ function CommunityContent() {
 
         try {
             const response = await fetch(
-                `http://localhost:4000/api/community/groups/${groupId}/join`,
+                `${API_URL}/api/community/groups/${groupId}/join`,
                 {
                     method: "POST",
                     headers: {
@@ -208,7 +210,7 @@ function CommunityContent() {
 
         try {
             const response = await fetch(
-                `http://localhost:4000/api/community/groups/${groupId}/join`,
+                `${API_URL}/api/community/groups/${groupId}/join`,
                 {
                     method: "DELETE",
                     headers: {
