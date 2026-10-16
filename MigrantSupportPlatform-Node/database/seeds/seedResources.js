@@ -11,6 +11,7 @@ async function seedResources() {
             healthcare: await getCategoryId('Healthcare', 'resource'),
             housing: await getCategoryId('Accommodation', 'resource'),
             banking: await getCategoryId('Banking', 'resource'),
+            other: await getCategoryId('Other', 'resource'),
         };
 
         const rows = [
@@ -18,6 +19,14 @@ async function seedResources() {
                 title: 'Immigration New Zealand',
                 description: 'Official information about visas, immigration requirements, and settling in New Zealand.',
                 link: 'https://www.immigration.govt.nz',
+                category_id: categoryMap.immigration,
+                status: 'approved',
+                created_by: null,
+            },
+            {
+                title: 'Multicultural New Zealand',
+                description: 'Find your local multicultural council',
+                link: 'https://multiculturalnz.org.nz/find%20a%20local%20multicultural%20council', 
                 category_id: categoryMap.immigration,
                 status: 'approved',
                 created_by: null,
@@ -95,6 +104,14 @@ async function seedResources() {
                 created_by: null,
             },
             {
+                name: 'Plunket',
+                description: 'Support for families with young children, including health checks and parenting advice.',
+                link: 'https://www.plunket.org.nz',
+                category_id: categoryMap.healthcare,
+                status: 'approved',
+                created_by: null,
+            },
+            {
                 title: 'Sorted - Budgeting Tool',
                 description: 'Free online budgeting tool to help you plan and manage your money.',
                 link: 'https://sorted.org.nz',
@@ -110,6 +127,30 @@ async function seedResources() {
                 status: 'approved',
                 created_by: null,
             },
+            {
+                name: 'Mental Health Foundation of New Zealand',
+                description: 'Support and resources for mental health and wellbeing.',
+                website: 'https://www.mentalhealth.org.nz',
+                category_id: categoryMap.healthcare,
+                status: 'approved',
+                created_by: null,
+            },
+            {
+                title: 'Parent to Parent',
+                description: 'For parents and whanau of disabled kids.',
+                link: 'https://parent2parent.org.nz',
+                category_id: categoryMap.other,
+                status: 'approved',
+                created_by: null,
+            },
+            {
+                title: 'Volunteering New Zealand',
+                description: 'Find volunteer opportunities and support for volunteering across New Zealand.',
+                link: 'https://www.volunteeringnz.org.nz',
+                category_id: categoryMap.other,
+                status: 'approved',
+                created_by: null,
+            }
         ];
 
         const client = await pool.connect();
