@@ -104,7 +104,7 @@ async function seedResources() {
                 created_by: null,
             },
             {
-                name: 'Plunket',
+                title: 'Plunket',
                 description: 'Support for families with young children, including health checks and parenting advice.',
                 link: 'https://www.plunket.org.nz',
                 category_id: categoryMap.healthcare,
@@ -128,7 +128,7 @@ async function seedResources() {
                 created_by: null,
             },
             {
-                name: 'Mental Health Foundation of New Zealand',
+                title: 'Mental Health Foundation of New Zealand',
                 description: 'Support and resources for mental health and wellbeing.',
                 website: 'https://www.mentalhealth.org.nz',
                 category_id: categoryMap.healthcare,
