@@ -9,6 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Resource } from "@/types/resource";
 import FieldError from "./ui/FieldError";
 import { parseFieldErrors } from "@/utils/parseFieldErrors";
+import { API_URL } from "@/lib/api";
 
 type ResourcesFormProps = {
     resource?: Resource;
@@ -68,8 +69,8 @@ export default function ResourcesForm({
         try {
             const response = await fetch(
                 resource
-                    ? `http://localhost:4000/api/resources/${resource.id}`
-                    : "http://localhost:4000/api/resources",
+                    ? `${API_URL}/api/resources/${resource.id}`
+                    : `${API_URL}/api/resources`,
                 {
                     method: resource ? "PATCH" : "POST",
                     headers: {

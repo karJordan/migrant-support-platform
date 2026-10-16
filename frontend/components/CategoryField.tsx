@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Select } from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
+import { API_URL } from "@/lib/api";
 
 export type CategoryType = "service" | "job" | "resource" | "community";
 type Category = { id: number; name: string; applies_to: CategoryType[] };
@@ -14,7 +15,7 @@ export function useCategoryOptions(type: CategoryType) {
         const controller = new AbortController();
         async function load() {
             try {
-                const response = await fetch(`http://localhost:4000/api/categories?type=${type}`, { signal: controller.signal });
+                const response = await fetch(`${API_URL}/api/categories?type=${type}`, { signal: controller.signal });
                 if (!response.ok) throw new Error("Could not load categories. Please try again.");
                 const options: Category[] = await response.json();
                 if (!Array.isArray(options) || options.some(option => !Number.isInteger(option.id) || typeof option.name !== "string")) {

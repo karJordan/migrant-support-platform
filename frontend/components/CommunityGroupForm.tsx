@@ -9,6 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { CommunityGroup } from "@/types/group";
 import FieldError from "./ui/FieldError";
 import { parseFieldErrors } from "@/utils/parseFieldErrors";
+import { API_URL } from "@/lib/api";
 
 type CommunityGroupFormProps = {
     group?: CommunityGroup;
@@ -63,8 +64,8 @@ export default function CommunityGroupForm({
         try {
             const response = await fetch(
                 group
-                    ? `http://localhost:4000/api/community/groups/${group.id}`
-                    : "http://localhost:4000/api/community/groups",
+                    ? `${API_URL}/api/community/groups/${group.id}`
+                    : `${API_URL}/api/community/groups`,
                 {
                     method: group ? "PATCH" : "POST",
                     headers: {

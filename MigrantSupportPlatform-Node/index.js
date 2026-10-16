@@ -13,11 +13,19 @@ const savedRoutes = require('./routes/saved');
 const categoriesRoutes = require('./routes/categories');
 const authenticateToken = require('./middleware/authMiddleware');
 const app = express();
-const PORT = process.env.PORT || 4000;
 const usersRoutes = require("./routes/users");
+const PORT = process.env.PORT || 4000;
 
 
-app.use(cors({origin: 'http://localhost:3000'}));
+const cloudflare = require("../cloudflare.config.cjs");
+
+const FRONTEND_URL =
+    cloudflare.frontendUrl || "http://localhost:3000";
+
+app.use(cors({
+    origin: FRONTEND_URL,
+}));
+
 app.use(express.json());
 app.use('/api/admin', adminRoutes);
 app.use('/api/services', servicesRoutes);

@@ -9,6 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { CommunityEvent } from "@/types/event";
 import FieldError from "./ui/FieldError";
 import { parseFieldErrors } from "@/utils/parseFieldErrors";
+import { API_URL } from "@/lib/api";
 
 type CommunityEventFormProps = {
     communityEvent?: CommunityEvent;
@@ -74,8 +75,8 @@ export default function CommunityEventForm({
         try {
             const response = await fetch(
                 communityEvent
-                    ? `http://localhost:4000/api/community/events/${communityEvent.id}`
-                    : "http://localhost:4000/api/community/events",
+                    ? `${API_URL}/api/community/events/${communityEvent.id}`
+                    : `${API_URL}/api/community/events`,
                 {
                     method: communityEvent ? "PATCH" : "POST",
                     headers: {

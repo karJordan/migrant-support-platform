@@ -2,6 +2,7 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { API_URL } from "@/lib/api";
 
 // The ResetPasswordContent component handles the password reset form and its logic.
 function ResetPasswordContent() {
@@ -37,7 +38,7 @@ function ResetPasswordContent() {
 
         try {
             const response = await fetch(
-                "http://localhost:4000/api/auth/verify-reset-code",
+    `${API_URL}/api/auth/verify-reset-code`,
                 {
                     method: "POST",
                     headers: {
@@ -92,7 +93,7 @@ function ResetPasswordContent() {
 
         try {
             const response = await fetch(
-                "http://localhost:4000/api/auth/reset-password",
+                `${API_URL}/api/auth/reset-password`,
                 {
                     method: "POST",
                     headers: {

@@ -372,3 +372,6 @@ MigrantSupportPlatform-Node/.env
 # next.js
 /.next/
 /out/
+
+# cloudflare config
+cloudflare.config.cjs

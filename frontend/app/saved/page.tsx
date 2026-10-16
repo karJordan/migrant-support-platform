@@ -5,6 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import Link from "next/link";
 import Modal from "@/components/Modal";
 import { useRouter } from "next/navigation";
+import { API_URL } from "@/lib/api";
 
 interface SavedItem {
     listing_type: string;
@@ -50,7 +51,7 @@ export default function SavedPage() {
 
     async function fetchSavedItems() {
         try {
-            const response = await fetch(`http://localhost:4000/api/saved/${user?.id}`);
+            const response = await fetch(`${API_URL}/api/saved/${user?.id}`);
             const data = await response.json();
             setSavedItems(data);
             await fetchItemDetails(data);
@@ -66,21 +67,21 @@ export default function SavedPage() {
         for (const item of items) {
             try {
                 if (item.listing_type === 'community_event') {
-                    const response = await fetch(`http://localhost:4000/api/community/events`);
+                    const response = await fetch(`${API_URL}/api/community/events`);
                     if (response.ok) {
                         const allItems = await response.json();
                         const found = allItems.find((i: SavedItemDetail) => i.id === item.listing_id);
                         if (found) details[`${item.listing_type}-${item.listing_id}`] = found;
                     }
                 } else if (item.listing_type === 'community_group') {
-                    const response = await fetch(`http://localhost:4000/api/community/groups`);
+                    const response = await fetch(`${API_URL}/api/community/groups`);
                     if (response.ok) {
                         const allItems = await response.json();
                         const found = allItems.find((i: SavedItemDetail) => i.id === item.listing_id);
                         if (found) details[`${item.listing_type}-${item.listing_id}`] = found;
                     }
                 } else {
-                    const response = await fetch(`http://localhost:4000/api/${item.listing_type}s`);
+                    const response = await fetch(`${API_URL}/api/${item.listing_type}s`);
                     if (response.ok) {
                         const allItems = await response.json();
                         const found = allItems.find((i: SavedItemDetail) => i.id === item.listing_id);
