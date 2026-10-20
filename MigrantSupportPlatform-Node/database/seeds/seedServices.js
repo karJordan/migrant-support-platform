@@ -27,16 +27,6 @@ async function seedServices() {
                 created_by: null,
             },
             {
-                name: 'Community Housing Support',
-                description: 'Help with housing and tenancy issues.',
-                category_id: categoryMap.housing,
-                location: 'Wellington',
-                phone: null,
-                website: 'https://example.org',
-                status: 'approved',
-                created_by: null,
-            },
-            {
                 name: 'New Zealand Police',
                 description: 'Information about reporting crime, community safety, and contacting New Zealand Police.',
                 category_id: categoryMap.police,
