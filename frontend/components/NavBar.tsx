@@ -6,11 +6,10 @@ import { useAuth } from "../context/AuthContext";
 import { Handshake } from "lucide-react";
 
 const navLinks = [
-    { label : "Home", href: "/" },
-    { label : "Services", href: "/services" },
-    { label : "Jobs", href: "/jobs" },
-    { label : "Community", href: "/community" },
-    { label : "Resources", href: "/resources" },
+    { label: "Services", href: "/services" },
+    { label: "Jobs", href: "/jobs" },
+    { label: "Community", href: "/community" },
+    { label: "Resources", href: "/resources" },
 ];
 
 export default function NavBar() {
@@ -19,6 +18,13 @@ export default function NavBar() {
     const router = useRouter();
     const pathname = usePathname();
 
+    // Determine the appropriate home link based on the user's role
+    const homeHref = user
+        ? user.role === "admin"
+            ? "/admin"
+            : "/userDashboard"
+        : "/";
+
     function handleLogout() {
         logout();
         router.push("/");
@@ -26,7 +32,7 @@ export default function NavBar() {
 
     return (
         <nav className={`${pathname === "/" ? "flex" : "hidden md:flex"} w-full flex-wrap gap-3 items-center justify-between px-4 md:px-8 py-4 border-b border-neutral/20 bg-white`}>
-            <Link href="/" className="flex items-center gap-2">
+            <Link href={homeHref} className="flex items-center gap-2">
                 <div className="w-8 h-8 flex items-center justify-center bg-primary rounded-lg flex-shrink-0">
                     <Handshake size={18} className="text-white" />
                 </div>
@@ -34,6 +40,12 @@ export default function NavBar() {
             </Link>
 
             <div className="hidden md:flex items-center gap-6">
+                <Link
+                    href={homeHref}
+                    className="text-black hover:text-primary transition-colors"
+                >
+                    Home
+                </Link>
                 {navLinks.map((link) => (
                     <Link
                         key={link.href}
@@ -47,35 +59,35 @@ export default function NavBar() {
 
             <div className="flex items-center gap-1 sm:gap-3">
                 {user ? (
+                    <>{/* Show the appropriate link based on the user's role */}
+                        <Link
+                            href={user.role === "admin" ? "/admin" : "/profile"}
+                            className="text-sm font-medium text-black hover:text-primary transition-colors"
+                        >
+                            {user.role === "admin" ? "Dashboard" : "Profile"}
+                        </Link>
+                        <button
+                            onClick={handleLogout}
+                            className="px-4 py-2 text-primary border border-primary rounded-lg hover:bg-primary/5 transition-colors text-sm"
+                        >
+                            Log out
+                        </button>
+                    </>
+                ) : (
                     <>
-                    <Link 
-                    href={user.role === "admin" ? "/admin" : "/userDashboard"} 
-                    className="text-sm font-medium text-black hover:text-primary transition-colors"
-                    >
-              Dashboard
-            </Link>
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 text-primary border border-primary rounded-lg hover:bg-primary/5 transition-colors text-sm"
-            >
-              Log out
-            </button>
-          </>
-        ) : (
-          <>    
-                <Link
-                    href="/login"
-                    className="px-3 sm:px-4 py-2 text-sm font-bold text-black rounded-lg hover:text-primary transition-colors"
-                >
-                    Login
-                </Link>
-                <Link
-                    href="/signup"
-                    className="px-3 sm:px-4 py-2 text-sm bg-primary font-bold text-white rounded-lg hover:bg-primary-hover transition-colors"
-                >
-                    Sign Up
-                </Link>
-            </>
+                        <Link
+                            href="/login"
+                            className="px-3 sm:px-4 py-2 text-sm font-bold text-black rounded-lg hover:text-primary transition-colors"
+                        >
+                            Login
+                        </Link>
+                        <Link
+                            href="/signup"
+                            className="px-3 sm:px-4 py-2 text-sm bg-primary font-bold text-white rounded-lg hover:bg-primary-hover transition-colors"
+                        >
+                            Sign Up
+                        </Link>
+                    </>
                 )}
             </div>
         </nav>
