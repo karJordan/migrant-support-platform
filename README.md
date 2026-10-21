@@ -35,6 +35,49 @@ The frontend communicates with the backend through a RESTful API, while the back
 frontend/                  # Next.js frontend
 MigrantSupportPlatform-Node/ # Node.js backend
 ```
+## Set up 
+### Backend 
+```
+cd MigrantSupportPlatform-Node
+npm install
+```
+
+### Database
+TODO
+### Run the migrations and seed data
+```
+npm run migrate
+npm run seed
+```
+
+### Frontend
+```
+cd frontend
+npm install
+```
+
+## Running Locally
+### Backend
+```
+just run
+```
+### Frontend 
+```
+just run
+```
+
+## Testing
+### Backend
+```
+npm test
+npm run lint
+```
+### Frontend
+```
+npm run lint
+npm run build
+npm run test:e2e
+```
 
 ## Team Members
 
