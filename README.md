@@ -83,14 +83,19 @@ npm install
 ```
 
 ## Running Locally
+Open two CLIs one for the back end and one for the front end
 ### Backend
 ```
+cd (your_path)/migrant-support-platform/MigrantSupportPlatform-Node
 npm run dev
 ```
 ### Frontend 
 ```
+cd (your_path)/migrant-support-platform/frontend
 npm run dev
 ```
+Once both are running go to localhost:3000
+You should be up and running on the landing page of Migrant Hub.
 
 ## Testing
 ### Backend
