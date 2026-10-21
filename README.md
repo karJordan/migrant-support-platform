@@ -82,7 +82,7 @@ npm install
 ```
 
 ## Running Locally
-Open two CLIs one for the back end and one for the front end
+Open two CLIs one for the backend and one for the frontend
 ### Backend
 ```
 cd (your_path)/migrant-support-platform/MigrantSupportPlatform-Node
