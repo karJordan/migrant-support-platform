@@ -69,8 +69,6 @@ SMTP_PASS=f08be2cdaecd8bef9cd177f47c44ef30
 EMAIL_FROM=migranthub.testing@gmail.com
 ```
 
-### Database
-TODO
 ### Run the migrations and seed data
 ```
 npm run migrate
