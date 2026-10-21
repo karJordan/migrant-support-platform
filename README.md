@@ -39,6 +39,7 @@ MigrantSupportPlatform-Node/ # Node.js backend
 
 ### Prerequisites
 Make sure you have the following installed
+- Git
 - postgresql https://www.postgresql.org
 - Nodejs
 
